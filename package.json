@@ -1,0 +1,25 @@
+{
+  "name": "fundb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "de": "rm -rf ./databases && clear",
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matheusmelchiades/fundb.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/matheusmelchiades/fundb/issues"
+  },
+  "homepage": "https://github.com/matheusmelchiades/fundb#readme",
+  "dependencies": {
+    "figlet": "^1.2.1"
+  }
+}

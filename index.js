@@ -29,7 +29,7 @@ rl.on('line', (line) => {
             break;
 
         case 'find':
-            actions.find(commands[1], commands[2])
+            actions.findByIndex(commands[1], commands[2])
 
         case 'insert':
             const obj = {

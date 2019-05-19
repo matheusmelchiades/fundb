@@ -6,11 +6,10 @@ const DATA_SIZE = 100;
 class SGDB {
 
     constructor() {
-        this.db = {}
+        this.databases = {}
         this.currentDb = ''
         this.currentTable = ''
-        // this.rootDir = `${__dirname}/databases`
-        this.rootDir = `/tmp/databases`
+        this.rootDir = `${__dirname}/databases`
         this.init()
     }
 
@@ -23,9 +22,10 @@ class SGDB {
             verticalLayout: 'default'
         }))
 
-        if (instance) return
+        if (!instance) return fs.mkdirSync(this.rootDir)
 
-        fs.mkdirSync(this.rootDir)
+        const dbs = this.listDatabases
+
     }
 
     createDB(name) {
@@ -47,7 +47,7 @@ class SGDB {
         try {
             const dbName = this.currentDb
             fs.openSync(`${this.rootDir}/${dbName}/${table}`, 'w')
-            this.db[dbName] = {
+            this.databases[dbName] = {
                 [table]: {
                     fileSystem: new handleFile(`${this.rootDir}/${dbName}/${table}`, DATA_SIZE)
                 }
@@ -60,16 +60,15 @@ class SGDB {
 
     insert(table, dados) {
         const dbName = this.currentDb
-        this.db[dbName][table].fileSystem.open('r+')
-        this.db[dbName][table].fileSystem.append(dados)
-        this.db[dbName][table].fileSystem.close()
+        this.databases[dbName][table].fileSystem.open('r+')
+        this.databases[dbName][table].fileSystem.append(dados)
+        this.databases[dbName][table].fileSystem.close()
     }
 
-    find(table, index) {
+    findByIndex(table, index) {
         const dbName = this.currentDb
-        this.db[dbName][table].fileSystem.open('r+')
-        const obj = this.db[dbName][table].fileSystem.read(index)
-        console.log(obj)
+        this.databases[dbName][table].fileSystem.open('r+')
+        return this.databases[dbName][table].fileSystem.read(index)
     }
 
     setCurrentDatabase(databaseName) {
@@ -78,6 +77,18 @@ class SGDB {
         if (!dbs.includes(databaseName)) return false
 
         this.currentDb = databaseName
+
+        const tables = this.listTables()
+
+        tables.map(table => {
+            this.databases[databaseName] = {
+                ...this.databases[databaseName],
+                [table]: {
+                    fileSystem: new handleFile(`${this.rootDir}/${databaseName}/${table}`, DATA_SIZE)
+                }
+            }
+        })
+
         return databaseName
     }
 

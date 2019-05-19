@@ -27,8 +27,12 @@ exports.listDatabases = () => {
     dbs.map(db => console.log(` 🛢\  >> ${db}\n`))
 }
 
-exports.find = (table, index) => {
-    fundb.find(table, index)
+exports.findByIndex = (table, index) => {
+    const users = fundb.findByIndex(table, index)
+
+    console.log(' Result: \n')
+    console.log(users)
+    console.log()
 }
 
 exports.insert = (table, dados) => {
@@ -36,6 +40,7 @@ exports.insert = (table, dados) => {
 }
 
 exports.setDatabase = (dbName) => {
+    console.log(fundb)
     const db = fundb.setCurrentDatabase(dbName)
 
     if (db)

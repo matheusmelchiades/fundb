@@ -12,46 +12,53 @@ console.log("\nYou're welcome to FunDB!\n")
 rl.prompt('\n');
 
 rl.on('line', (line) => {
-    const commands = line.split(' ')
 
-    switch (commands[0].trim()) {
-        case 'new_db':
-            actions.createDB(commands[1])
-            break;
-        case 'new_table':
-            actions.createTable(commands[1])
-            break;
-        case 'show_dbs':
-            actions.listDatabases()
-            break;
-        case 'show_tables':
-            actions.listTables()
-            break;
+    try {
 
-        case 'find':
-            actions.findByIndex(commands[1], commands[2])
-            break;
-            
-        case 'insert':
-            const obj = {
-                name: commands[2],
-                description: commands[3]
-            }
-            actions.insert(commands[1], obj)
-            break;
+        const commands = line.split(' ')
 
-        case 'use':
-            const db = actions.setDatabase(commands[1])
-            if (!db) break
+        switch (commands[0].trim()) {
+            case 'new_db':
+                actions.createDB(commands[1])
+                break;
+            case 'new_table':
+                actions.createTable(commands[1])
+                break;
+            case 'show_dbs':
+                actions.listDatabases()
+                break;
+            case 'show_tables':
+                actions.listTables()
+                break;
 
-            rl.setPrompt(`🛢\  >> ${db} 👉 `)
-            break;
-        default:
-            console.log('\nCommand invalid!\n')
-            break;
+            case 'find':
+                actions.findByIndex(commands[1], commands[2])
+                break;
+                
+            case 'insert':
+                const obj = {
+                    name: commands[2],
+                    description: commands[3]
+                }
+                actions.insert(commands[1], obj)
+                break;
+
+            case 'use':
+                const db = actions.setDatabase(commands[1])
+                if (!db) break
+
+                rl.setPrompt(`🛢\  >> ${db} 👉 `)
+                break;
+            default:
+                console.log('\nCommand invalid!\n')
+                break;
+        }
+
+        rl.prompt('\n');
+
+    } catch(error) {
+        console.error(error.message);
     }
-
-    rl.prompt('\n');
 
 }).on('close', () => {
     console.log('\n\n FUNDB Is THE BEST MOTHER FUCK!\n\n');

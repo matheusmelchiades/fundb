@@ -30,7 +30,8 @@ rl.on('line', (line) => {
 
         case 'find':
             actions.findByIndex(commands[1], commands[2])
-
+            break;
+            
         case 'insert':
             const obj = {
                 name: commands[2],

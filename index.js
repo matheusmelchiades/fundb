@@ -1,11 +1,14 @@
 const readline = require('readline');
 const prompt = '🚀 FunDB  👉 '
+const actions = require('./actions')
+
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
     prompt
 });
-const actions = require('./actions')
+
+const { new_db, find, help, insert, new_table, show_dbs, show_tables, use } = require('./types')
 
 console.log("\nYou're welcome to FunDB!\n")
 
@@ -17,38 +20,41 @@ rl.on('line', (line) => {
 
         const commands = line.split(' ')
 
-        switch (commands[0].trim()) {
-            case 'new_db':
-                actions.createDB(commands[1])
+        const command = commands.shift().trim()
+
+        switch (command) {
+            case new_db.label:
+                actions.createDB(commands)
                 break;
-            case 'new_table':
-                actions.createTable(commands[1])
+
+            case new_table.label:
+                actions.createTable(commands)
                 break;
-            case 'show_dbs':
+
+            case show_dbs.label:
                 actions.listDatabases()
                 break;
-            case 'show_tables':
+
+            case show_tables.label:
                 actions.listTables()
                 break;
 
-            case 'find':
-                actions.findByIndex(commands[1], commands[2])
+            case find.label:
+                actions.findByIndex(commands)
                 break;
                 
-            case 'insert':
-                const obj = {
-                    name: commands[2],
-                    description: commands[3]
-                }
-                actions.insert(commands[1], obj)
+            case insert.label:
+                actions.insert(commands)
                 break;
 
-            case 'use':
-                const db = actions.setDatabase(commands[1])
-                if (!db) break
-
-                rl.setPrompt(`🛢\  >> ${db} 👉 `)
+            case use.label:
+                actions.setDatabase(commands, rl)
                 break;
+
+            case help.label:
+                actions.help(commands, rl)
+                break;
+
             default:
                 console.log('\nCommand invalid!\n')
                 break;
@@ -60,7 +66,9 @@ rl.on('line', (line) => {
         console.error(error.message);
     }
 
-}).on('close', () => {
+})
+
+rl.on('close', () => {
     console.log('\n\n FUNDB Is THE BEST MOTHER FUCK!\n\n');
     process.exit(0);
 });

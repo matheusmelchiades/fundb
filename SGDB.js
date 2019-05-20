@@ -22,10 +22,9 @@ class SGDB {
             verticalLayout: 'default'
         }))
 
-        if (!instance) return fs.mkdirSync(this.rootDir)
+        if (!instance) fs.mkdirSync(this.rootDir)
 
-        const dbs = this.listDatabases
-
+        this.setDependencies()
     }
 
     createDB(name) {
@@ -47,12 +46,8 @@ class SGDB {
         try {
             const dbName = this.currentDb
             fs.openSync(`${this.rootDir}/${dbName}/${table}`, 'w')
-            this.databases[dbName] = {
-                [table]: {
-                    fileSystem: new handleFile(`${this.rootDir}/${dbName}/${table}`, DATA_SIZE)
-                }
-            }
             console.log(`Created Table ${table} from ${dbName} with success!`)
+            this.setDependencies()
         } catch (err) {
             console.log(err)
         }
@@ -78,16 +73,7 @@ class SGDB {
 
         this.currentDb = databaseName
 
-        const tables = this.listTables()
-
-        tables.map(table => {
-            this.databases[databaseName] = {
-                ...this.databases[databaseName],
-                [table]: {
-                    fileSystem: new handleFile(`${this.rootDir}/${databaseName}/${table}`, DATA_SIZE)
-                }
-            }
-        })
+        this.setDependencies()
 
         return databaseName
     }
@@ -98,6 +84,26 @@ class SGDB {
 
     getCurrentDatabase() {
         return this.currentDb
+    }
+
+    setDependencies() {
+        const dbs = this.listDatabases()
+
+        dbs.map(dbName => {
+            const tables = fs.readdirSync(`${this.rootDir}/${dbName}`)
+
+            this.databases[dbName] = {}
+
+            tables.map(table => {
+                this.databases[dbName] = {
+                    ...this.databases[dbName],
+                    [table]: {
+                        url: `${this.rootDir}/${dbName}/${table}`,
+                        fileSystem: new handleFile(`${this.rootDir}/${dbName}/${table}`, DATA_SIZE)
+                    }
+                }
+            })
+        })
     }
 }
 

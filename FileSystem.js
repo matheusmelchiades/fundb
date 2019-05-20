@@ -2,13 +2,11 @@ const Fs = require('fs');
 
 
 class File {
-
-    fd;
-    fillString = ' ';
-    path;
-    dataSize;
-
     constructor(path, dataSize) {
+        this.fd;
+        this.fillString = ' ';
+        this.path;
+        this.dataSize;
         this.path = path;
         this.dataSize = dataSize;
     }

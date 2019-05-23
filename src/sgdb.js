@@ -1,15 +1,15 @@
 const figlet = require('figlet')
 const fs = require('fs')
-const handleFile = require('./FileSystem')
+const handleFile = require('./file')
 const DATA_SIZE = 100;
 
-class SGDB {
+class Sgdb {
 
-    constructor() {
+    constructor(rootDir) {
         this.databases = {}
         this.currentDb = ''
         this.currentTable = ''
-        this.rootDir = `${__dirname}/databases`
+        this.rootDir = rootDir || `${__dirname}/databases`
         this.init()
     }
 
@@ -27,27 +27,21 @@ class SGDB {
         this.setDependencies()
     }
 
-    createDB(name) {
-        fs.mkdirSync(`${this.rootDir}/${name}`)
-    }
-
     listDatabases() {
         const dbs = fs.readdirSync(this.rootDir)
         return dbs
     }
 
     listTables() {
-        const dbName = this.currentDb
-        const tables = fs.readdirSync(`${this.rootDir}/${dbName}`)
-        return tables
+        const tables = fs.readdirSync(`${this.rootDir}`);
+        return tables;
     }
 
     createTable(table) {
         try {
-            const dbName = this.currentDb
-            fs.openSync(`${this.rootDir}/${dbName}/${table}`, 'w')
-            console.log(`Created Table ${table} from ${dbName} with success!`)
-            this.setDependencies()
+            fs.openSync(`${this.rootDir}/${table}`, 'w');
+            fs.writeFileSync(`${this.rootDir}/${table}.json`, '[]');
+            console.log(`Created Table ${table} with success!`);
         } catch (err) {
             console.log(err)
         }
@@ -66,31 +60,15 @@ class SGDB {
         return this.databases[dbName][table].fileSystem.read(index)
     }
 
-    setCurrentDatabase(databaseName) {
-        const dbs = this.listDatabases()
-
-        if (!dbs.includes(databaseName)) return false
-
-        this.currentDb = databaseName
-
-        this.setDependencies()
-
-        return databaseName
-    }
-
     setCurrentTable(table) {
         this.currentTable = table
-    }
-
-    getCurrentDatabase() {
-        return this.currentDb
     }
 
     setDependencies() {
         const dbs = this.listDatabases()
 
         dbs.map(dbName => {
-            const tables = fs.readdirSync(`${this.rootDir}/${dbName}`)
+            const tables = fs.readdirSync(`${this.rootDir}`)
 
             this.databases[dbName] = {}
 
@@ -107,4 +85,4 @@ class SGDB {
     }
 }
 
-module.exports = new SGDB
+module.exports = Sgdb;

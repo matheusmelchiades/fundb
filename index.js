@@ -1,17 +1,10 @@
-const readline = require('readline');
-const prompt = '🚀 FunDB  👉 '
+require('./src/samples').intro();
+const rl = require('./config').rl
 const actions = require('./src/actions')
-const load = require('./src/load');
-
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    prompt
-});
-
-const { find, help, insert, new_table, show_tables } = require('./src/types')
-
-load();
+const {
+    find, help, insert, new_table, list_tables,
+    use
+} = require('./src/types')
 
 rl.prompt('\n');
 
@@ -28,14 +21,18 @@ rl.on('line', (line) => {
                 actions.createTable(commands)
                 break;
 
-            case show_tables.label:
+            case use.label:
+                actions.setTable(commands)
+                break;
+
+            case list_tables.label:
                 actions.listTables()
                 break;
 
             case find.label:
-                actions.findByIndex(commands)
+                actions.find(commands)
                 break;
-                
+
             case insert.label:
                 actions.insert(commands)
                 break;
@@ -51,7 +48,7 @@ rl.on('line', (line) => {
 
         rl.prompt('\n');
 
-    } catch(error) {
+    } catch (error) {
         console.error(error.message);
     }
 

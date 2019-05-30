@@ -1,0 +1,1 @@
+exports.withOutExt = (file) => file.split('.').shift()

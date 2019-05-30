@@ -1,87 +1,107 @@
-const figlet = require('figlet')
-const fs = require('fs')
-const handleFile = require('./file')
-const DATA_SIZE = 100;
+const fs = require('fs');
+const helper = require('./helper');
 
 class Sgdb {
 
     constructor(rootDir) {
-        this.databases = {}
-        this.currentDb = ''
+        this.database = {
+            system: {}
+        }
         this.currentTable = ''
-        this.rootDir = rootDir || `${__dirname}/databases`
+        this.rootDir = rootDir || `${__dirname}/tables`
         this.init()
     }
 
     init() {
-        const instance = fs.existsSync(this.rootDir)
+        const instance = fs.existsSync(this.rootDir);
 
-        console.log(figlet.textSync('Fun DB', {
-            font: 'Slant Relief',
-            horizontalLayout: 'default',
-            verticalLayout: 'default'
-        }))
-
-        if (!instance) fs.mkdirSync(this.rootDir)
-
-        this.setDependencies()
+        if (!instance)
+            fs.mkdirSync(this.rootDir);
+        else
+            this.load();
     }
 
-    listDatabases() {
-        const dbs = fs.readdirSync(this.rootDir)
-        return dbs
-    }
+    load() {
+        try {
+            const files = fs.readdirSync(this.rootDir);
 
-    listTables() {
-        const tables = fs.readdirSync(`${this.rootDir}`);
-        return tables;
+            files.map(file => {
+                const table = helper.withOutExt(file);
+                const path = `${this.rootDir}/${file}`;
+                const data = fs.readFileSync(path, 'utf-8');
+
+                this.database[table] = { path, data: JSON.parse(data) };
+            })
+        } catch (err) {
+            console.log(err)
+            console.log('Erro in Load resources fundb!');
+        }
     }
 
     createTable(table) {
         try {
-            fs.openSync(`${this.rootDir}/${table}`, 'w');
             fs.writeFileSync(`${this.rootDir}/${table}.json`, '[]');
+
             console.log(`Created Table ${table} with success!`);
         } catch (err) {
-            console.log(err)
+            console.log('Error in create table!');
         }
     }
 
-    insert(table, dados) {
-        const dbName = this.currentDb
-        this.databases[dbName][table].fileSystem.open('r+')
-        this.databases[dbName][table].fileSystem.append(dados)
-        this.databases[dbName][table].fileSystem.close()
+    setCurrentTable(tableName) {
+        const tables = Object.keys(this.database)
+
+        if (!tables.includes(tableName)) return false
+
+        this.currentTable = tableName
+
+        return tableName
+    }
+
+    getCurrentTable() {
+        return this.currentTable
+    }
+
+    listTables() {
+        try {
+            const files = fs.readdirSync(this.rootDir);
+            const tables = files.map(helper.withOutExt)
+            return tables;
+        } catch (err) {
+            console.log('Error in Listing tables!')
+        }
+    }
+
+    insert(dados) {
+        try {
+            const table = this.database[this.currentTable];
+            const id = table.data.length + 1;
+
+            table.data.push({ id, ...dados });
+
+            fs.writeFileSync(table.path, JSON.stringify(table.data, null, 2));
+
+        } catch (err) {
+            console.log('Error in insert a new register!')
+        }
+
+        this.load()
+    }
+
+    findAll() {
+        try {
+            const table = this.database[this.currentTable]
+
+            return table.data
+        } catch (err) {
+            console.log('Error in find data!')
+        }
     }
 
     findByIndex(table, index) {
-        const dbName = this.currentDb
-        this.databases[dbName][table].fileSystem.open('r+')
-        return this.databases[dbName][table].fileSystem.read(index)
-    }
-
-    setCurrentTable(table) {
-        this.currentTable = table
-    }
-
-    setDependencies() {
-        const dbs = this.listDatabases()
-
-        dbs.map(dbName => {
-            const tables = fs.readdirSync(`${this.rootDir}`)
-
-            this.databases[dbName] = {}
-
-            tables.map(table => {
-                this.databases[dbName] = {
-                    ...this.databases[dbName],
-                    [table]: {
-                        url: `${this.rootDir}/${dbName}/${table}`,
-                        fileSystem: new handleFile(`${this.rootDir}/${dbName}/${table}`, DATA_SIZE)
-                    }
-                }
-            })
-        })
+        const dbName = this.currentDb;
+        this.databases[dbName][table].fileSystem.open('r+');
+        return this.databases[dbName][table].fileSystem.read(index);
     }
 }
 

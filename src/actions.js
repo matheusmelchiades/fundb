@@ -1,12 +1,11 @@
-const fs = require('fs');
-
-const sgdb = require('./sgdb');
 const config = require('../config');
 const types = require('./types')
-
+const sgdb = require('./sgdb');
 const fundb = new sgdb(config.path);
 
-exports.createTable = ([ table ]) => {
+const noTable = () => console.log('\nTable not selected!\n');
+
+exports.createTable = ([table]) => {
 
     if (!table)
         return console.log('Input invalid!')
@@ -15,51 +14,57 @@ exports.createTable = ([ table ]) => {
 
 }
 
-exports.findByIndex = ([ table, index ]) => {
+exports.findByIndex = ([table, index]) => {
 
     const data = global.database[table].data;
-    
-    const object = data[index -1] || null;
+
+    const object = data[index - 1] || null;
 
     console.log(' Result: \n')
     console.log(object)
     console.log()
 }
 
-exports.insert = ([ tableName, codigo, descricao ]) => {
+exports.find = ([]) => {
+    if (!fundb.getCurrentTable())
+        return noTable()
 
-    const obj = { codigo, descricao }
+    const data = fundb.findAll()
 
-    const table = global.database[tableName];
-
-    table.data.push(obj);
-
-    fs.writeFileSync(table.path, JSON.stringify(table.data));
-
-    global.database[tableName].data = table.data;
-
+    console.log('\n')
+    console.table(data[0], data)
+    console.log('\n')
+    return
 }
 
-exports.setDatabase = ([ dbName ], rl) => {
+exports.insert = ([codigo, descricao]) => {
 
-    console.log(fundb)
+    if (!fundb.getCurrentTable())
+        return noTable()
 
-    const db = fundb.setCurrentDatabase(dbName)
+    fundb.insert({ codigo, descricao });
+}
 
-    if (!db)
-        console.log('Database not exists')
+exports.setTable = ([name]) => {
 
-    rl.setPrompt(`🛢\  >> ${db} 👉 `)
+    const table = fundb.setCurrentTable(name)
 
+    if (!table)
+        console.log('\nTable not exists\n')
+
+    config.rl.setPrompt(`${config.samplePrompt} 📂\  ${table} 👉 `)
 }
 
 exports.listTables = () => {
 
-    const tables = Object.keys(global.database);
+    const tables = fundb.listTables();
 
-    console.log('\n');
+    if (!tables.length)
+        return console.log('\nNo exists tables!\n')
+
+    console.log('\n')
     tables.map(table => console.log(`  📂\ >> ${table}`))
-    console.log('\n');
+    console.log('\n')
 
 }
 

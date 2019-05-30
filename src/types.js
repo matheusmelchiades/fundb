@@ -3,9 +3,9 @@ module.exports = {
         label: 'new_table',
         help: 'new_table <table>'
     },
-    show_tables: {
-        label: 'show_tables',
-        help: 'show_tables'
+    list_tables: {
+        label: 'list_tables',
+        help: 'list_tables'
     },
     find: {
         label: 'find',
@@ -14,6 +14,10 @@ module.exports = {
     insert: {
         label: 'insert',
         help: 'insert <table> <name> <description>'
+    },
+    use: {
+        label: 'use',
+        help: 'use <table>'
     },
     help: {
         label: 'help',

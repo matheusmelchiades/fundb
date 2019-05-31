@@ -55,6 +55,7 @@ rl.on('line', (line) => {
 })
 
 rl.on('close', () => {
+    actions.exit()
     console.log('\n\n FUNDB Is THE BEST MOTHER FUCK!\n\n');
     process.exit(0);
 });

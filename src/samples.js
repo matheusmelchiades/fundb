@@ -22,7 +22,7 @@ console.table = (model, data) => {
     data.map(item => {
         const row = []
         fields.map(field => {
-            row.push(item[field])
+            row.push(item[field] || '')
         })
 
         table.push(row)

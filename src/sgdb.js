@@ -1,14 +1,16 @@
 const fs = require('fs');
 const helper = require('./helper');
+const logger = require('./logger')
 
 class Sgdb {
 
     constructor(rootDir) {
-        this.database = {
-            system: {}
-        }
+        const argv = process.argv[2]
+
+        this.transation = argv === 'main' ? 'fundb' : helper.generateId()
+        this.database = {}
         this.currentTable = ''
-        this.rootDir = rootDir || `${__dirname}/tables`
+        this.rootDir = rootDir || `${__dirname}/tmp/tables`
         this.init()
     }
 
@@ -16,10 +18,17 @@ class Sgdb {
         const instance = fs.existsSync(this.rootDir);
 
         if (!instance)
-            fs.mkdirSync(this.rootDir);
+            helper.mkdirRecursively(this.rootDir)
         else
             this.load();
+
+        logger.register(this.transation, logger.start)
     }
+
+    exit() {
+        logger.register(this.transation, logger.end)
+    }
+
 
     load() {
         try {
@@ -81,6 +90,8 @@ class Sgdb {
 
             fs.writeFileSync(table.path, JSON.stringify(table.data, null, 2));
 
+            logger.register(this.transation, logger.insert, dados)
+
         } catch (err) {
             console.log('Error in insert a new register!')
         }
@@ -92,6 +103,7 @@ class Sgdb {
         try {
             const table = this.database[this.currentTable]
 
+            logger.register(this.transation, logger.find)
             return table.data
         } catch (err) {
             console.log('Error in find data!')

@@ -7,7 +7,10 @@ const handleReadLine = readline.createInterface({
 });
 
 module.exports = {
-    path: __dirname + '/tables',
+    path: __dirname + '/tmp/tables',
+    systemPath: __dirname + '/tmp/system',
+    logPath: __dirname + '/tmp/logs',
+
     samplePrompt: prompt,
-    rl: handleReadLine //READ LINE
+    rl: handleReadLine, //READ LINE,
 }

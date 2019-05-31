@@ -5,6 +5,10 @@ const fundb = new sgdb(config.path);
 
 const noTable = () => console.log('\nTable not selected!\n');
 
+exports.exit = () => {
+    fundb.exit()
+}
+
 exports.createTable = ([table]) => {
 
     if (!table)

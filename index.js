@@ -3,7 +3,7 @@ const rl = require('./config').rl
 const actions = require('./src/actions')
 const {
     find, help, insert, new_table, list_tables,
-    use
+    use, checkpoint, commit,
 } = require('./src/types')
 
 rl.prompt('\n');
@@ -35,6 +35,14 @@ rl.on('line', (line) => {
 
             case insert.label:
                 actions.insert(commands)
+                break;
+
+            case checkpoint.label:
+                actions.checkpoint();
+                break;
+
+            case commit.label:
+                actions.commit();
                 break;
 
             case help.label:

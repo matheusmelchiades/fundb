@@ -33,7 +33,7 @@ exports.find = ([]) => {
     if (!fundb.getCurrentTable())
         return noTable()
 
-    const data = fundb.findAll()
+    const data = fundb.find()
 
     console.log('\n')
     console.table(data[0], data)
@@ -70,6 +70,14 @@ exports.listTables = () => {
     tables.map(table => console.log(`  📂\ >> ${table}`))
     console.log('\n')
 
+}
+
+exports.checkpoint = () => {
+    fundb.checkpoint()
+}
+
+exports.commit = () => {
+    fundb.commit()
 }
 
 exports.help = () => {

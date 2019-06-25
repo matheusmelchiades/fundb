@@ -15,6 +15,14 @@ module.exports = {
         label: 'insert',
         help: 'insert <table> <name> <description>'
     },
+    commit: {
+        label: 'commit',
+        help: 'commit'
+    },
+    checkpoint: {
+        label: 'checkpoint',
+        help: 'checkpoint'
+    },
     use: {
         label: 'use',
         help: 'use <table>'

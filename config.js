@@ -10,6 +10,7 @@ module.exports = {
     path: __dirname + '/tmp/tables',
     systemPath: __dirname + '/tmp/system',
     logPath: __dirname + '/tmp/logs',
+    encoding: 'utf-8',
 
     samplePrompt: prompt,
     rl: handleReadLine, //READ LINE,

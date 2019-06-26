@@ -9,7 +9,11 @@ module.exports = {
     },
     find: {
         label: 'find',
-        help: 'find <table> <index>'
+        help: 'find'
+    },
+    findById: {
+        label: 'findById',
+        help: 'findById <index>'
     },
     insert: {
         label: 'insert',

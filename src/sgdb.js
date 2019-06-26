@@ -5,9 +5,7 @@ const logger = require('./logger')
 class Sgdb {
 
     constructor(rootDir) {
-        const argv = process.argv[2]
-        this.main = 'fundb'
-        this.transation = argv === 'main' ? this.main : helper.generateId()
+        this.transation = helper.generateId()
         this.database = {}
         this.currentTable = ''
         this.rootDir = rootDir || `${__dirname}/tmp/tables`
@@ -37,7 +35,7 @@ class Sgdb {
 
             switch (log.event) {
                 case 'checkpoint':
-                    this.transation !== this.main ? this.checkpoint(log) : false
+                    this.transation === log.transation ? this.checkpoint(log) : false
                     break;
                 case 'commit':
                     this.commit(log);
@@ -126,10 +124,14 @@ class Sgdb {
         }
     }
 
-    findByIndex(table, index) {
-        const dbName = this.currentDb;
-        this.databases[dbName][table].fileSystem.open('r+');
-        return this.databases[dbName][table].fileSystem.read(index);
+    findById(index = 0) {
+        const dataTable = this.database[this.currentTable].data
+        const dataFilter = dataTable.filter(data => data.id == index)
+
+        if (dataFilter.length > 2)
+            return [dataFilter[0] || {}]
+
+        return dataFilter
     }
 
     commit(log) {
@@ -147,12 +149,12 @@ class Sgdb {
                 if (event === logger.commit)
                     commited++
 
-                if (commited < 2 && event === logger.insert && log.transation !== this.transation ) {
-                    dataToUpload.push({ id: currentData.length + 1, ...transations[i].data })
+                if (commited < 2 && event === logger.insert && log.transation !== this.transation) {
+                    dataToUpload.unshift(transations[i].data)
                 }
             }
 
-            this.database[log.table].data = [...currentData, ...dataToUpload]
+            this.database[log.table].data = [...currentData, ...dataToUpload].map((data, id) => ({ id: id + 1, ...data }))
         }
     }
 
@@ -162,13 +164,13 @@ class Sgdb {
             logger.register(this.transation, logger.checkpoint, this.currentTable)
 
         if (log.transation) {
-            const dataToSave = [];
+            let check = 0;
+            let dataToSave = [];
             let isCommit = false;
             const table = this.database[log.table]
             const textSaved = fs.readFileSync(table.path, 'utf-8')
             const dataSaved = JSON.parse(textSaved)
             const transations = logger.getLogByTransation(log.transation)
-            let check = 0;
 
             for (let i = transations.length; i >= 0; i--) {
                 const event = transations[i] ? transations[i].event : {}
@@ -182,12 +184,13 @@ class Sgdb {
                 }
 
                 if (isCommit && event === logger.insert) {
-                    dataToSave.unshift({ id: dataSaved.length + 1, ...transations[i].data })
+                    dataToSave.unshift(transations[i].data)
                 }
             }
 
+            dataToSave = [...dataSaved, ...dataToSave].map((data, id) => ({ id: id + 1, ...data }))
 
-            fs.writeFileSync(table.path, JSON.stringify([...dataSaved, ...dataToSave], null, 2));
+            fs.writeFileSync(table.path, JSON.stringify(dataToSave, null, 2));
         }
     }
 

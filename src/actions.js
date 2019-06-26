@@ -18,15 +18,28 @@ exports.createTable = ([table]) => {
 
 }
 
-exports.findByIndex = ([table, index]) => {
+exports.findById = ([index]) => {
 
-    const data = global.database[table].data;
+    if (!fundb.getCurrentTable())
+        return noTable()
 
-    const object = data[index - 1] || null;
+    if (!index) {
+        console.log('\n')
+        console.log('Please inform a id')
+        console.log('\n')
+    }
 
-    console.log(' Result: \n')
-    console.log(object)
-    console.log()
+    const data = fundb.findById(index);
+
+    if (data.length) {
+        console.log('\n')
+        console.table(data[0], data)
+        console.log('\n')
+    } else {
+        console.log('\n')
+        console.log('Data not found')
+        console.log('\n')
+    }
 }
 
 exports.find = ([]) => {
@@ -35,18 +48,24 @@ exports.find = ([]) => {
 
     const data = fundb.find()
 
-    console.log('\n')
-    console.table(data[0], data)
-    console.log('\n')
-    return
+    if (!data.length) {
+        console.log('\n')
+        console.log('TABLE EMPTY')
+        console.log('\n')
+    } else {
+        console.log('\n')
+        console.table(data[0], data)
+        console.log('\n')
+        return
+    }
 }
 
-exports.insert = ([codigo, descricao]) => {
+exports.insert = ([descricao]) => {
 
     if (!fundb.getCurrentTable())
         return noTable()
 
-    fundb.insert({ codigo, descricao });
+    fundb.insert({ descricao });
 }
 
 exports.setTable = ([name]) => {
@@ -73,10 +92,18 @@ exports.listTables = () => {
 }
 
 exports.checkpoint = () => {
+
+    if (!fundb.getCurrentTable())
+        return noTable()
+
     fundb.checkpoint()
 }
 
 exports.commit = () => {
+
+    if (!fundb.getCurrentTable())
+        return noTable()
+
     fundb.commit()
 }
 

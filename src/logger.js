@@ -41,14 +41,15 @@ const getLogByTransation = (transation) => {
     return logsParsed
 }
 
-const getOpens = (withMain = false) => {
-    const logsText = !withMain ? getAll() : getAll().filter(log => !log.includes('"transation": "fundb"'))
+const getOpens = () => {
+    const logsText = getAll()
     const logsParsed = logsText.map(log => log ? JSON.parse(log) : false)
     const logsOpend = logsParsed.filter(log => log.event === events.start)
     const logsClosed = logsParsed.filter(log => log.event === events.end)
     const logsOnlyOpen = logsOpend.filter((log) => !logsClosed.filter(closed => closed.transation === log.transation).length)
+    const allLogsOpen = logsParsed.filter(log => logsOnlyOpen.some(logOpen => logOpen.transation === log.transation))
 
-    return logsOnlyOpen
+    return allLogsOpen
 }
 
 module.exports = { register, getLogByTransation, getOpens, watch, ...events }

@@ -3,7 +3,7 @@ const rl = require('./config').rl
 const actions = require('./src/actions')
 const {
     find, help, insert, new_table, list_tables,
-    use, checkpoint, commit,
+    use, checkpoint, commit, findById,
 } = require('./src/types')
 
 rl.prompt('\n');
@@ -31,6 +31,10 @@ rl.on('line', (line) => {
 
             case find.label:
                 actions.find(commands)
+                break;
+
+            case findById.label:
+                actions.findById(commands)
                 break;
 
             case insert.label:

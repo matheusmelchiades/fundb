@@ -13,7 +13,7 @@ exports.intro = () => {
     console.log('\n')
 }
 
-console.table = (model, data) => {
+console.table = (model = {}, data = []) => {
     const fields = Object.keys(model)
     const table = new Table({
         head: fields,

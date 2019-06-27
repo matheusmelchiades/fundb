@@ -1,1 +1,10 @@
-{}
+{
+  "test": {
+    "sequence": 5,
+    "locks": []
+  },
+  "tools": {
+    "sequence": 12,
+    "locks": []
+  }
+}

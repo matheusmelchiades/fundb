@@ -10,7 +10,8 @@ const events = {
     start: 'start',
     end: 'end',
     commit: 'commit',
-    checkpoint: 'checkpoint'
+    checkpoint: 'checkpoint',
+    deadlock: 'DEAD_LOCK'
 }
 
 const register = (transation, event, table = '', data = {}) => {
@@ -27,11 +28,19 @@ const watch = (cb) => {
 };
 
 const watchSystem = () => {
+    try {
 
-    global.system = JSON.parse(fs.readFileSync(config.systemPath));
+        if (!fs.existsSync(config.systemPath)) {
+            fs.writeFileSync(config.systemPath, '{}')
+        }
+
+        global.system = JSON.parse(fs.readFileSync(config.systemPath));
+    } catch (err) {
+        console.log('ERROR CONFIG SYSTEM')
+    }
 
     fs.watchFile(config.systemPath, () => {
-    
+
         global.system = JSON.parse(fs.readFileSync(config.systemPath));
 
     });

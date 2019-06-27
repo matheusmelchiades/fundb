@@ -13,64 +13,67 @@ logger.watchSystem();
 
 rl.on('line', (line) => {
 
-    try {
+    if (global.handleSystem.stop) {
+        return global.handleSystem.message()
+    } else {
+        try {
 
-        const commands = line.split(' ')
+            const commands = line.split(' ')
 
-        const command = commands.shift().trim()
+            const command = commands.shift().trim()
 
-        switch (command) {
-            case new_table.label:
-                actions.createTable(commands)
-                break;
+            switch (command) {
+                case new_table.label:
+                    actions.createTable(commands)
+                    break;
 
-            case use.label:
-                actions.setTable(commands)
-                break;
+                case use.label:
+                    actions.setTable(commands)
+                    break;
 
-            case list_tables.label:
-                actions.listTables()
-                break;
+                case list_tables.label:
+                    actions.listTables()
+                    break;
 
-            case find.label:
-                actions.find(commands)
-                break;
+                case find.label:
+                    actions.find(commands)
+                    break;
 
-            case findById.label:
-                actions.findById(commands)
-                break;
+                case findById.label:
+                    actions.findById(commands)
+                    break;
 
-            case insert.label:
-                actions.insert(commands)
-                break;
+                case insert.label:
+                    actions.insert(commands)
+                    break;
 
-            case checkpoint.label:
-                actions.checkpoint();
-                break;
+                case checkpoint.label:
+                    actions.checkpoint();
+                    break;
 
-            case commit.label:
-                actions.commit();
-                break;
+                case commit.label:
+                    actions.commit();
+                    break;
 
-            case help.label:
-                actions.help(commands, rl)
-                break;
+                case help.label:
+                    actions.help(commands, rl)
+                    break;
 
-            case update.label:
-                actions.update(commands)
-                break;
+                case update.label:
+                    actions.update(commands)
+                    break;
 
-            default:
-                console.log('\nCommand invalid!\n')
-                break;
+                default:
+                    console.log('\nCommand invalid!\n')
+                    break;
+            }
+
+            rl.prompt('\n');
+
+        } catch (error) {
+            console.error(error.message);
         }
-
-        rl.prompt('\n');
-
-    } catch (error) {
-        console.error(error.message);
     }
-
 })
 
 rl.on('close', () => {

@@ -34,5 +34,9 @@ module.exports = {
     help: {
         label: 'help',
         help: 'help'
+    },
+    update: {
+        label: 'update',
+        help: 'update <id> <description>'
     }
 }

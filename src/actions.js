@@ -68,6 +68,14 @@ exports.insert = ([descricao]) => {
     fundb.insert({ descricao });
 }
 
+exports.update = ([id, descricao]) => {
+
+    if (!fundb.getCurrentTable())
+        return noTable()
+
+    fundb.update({ id: parseInt(id), descricao });
+}
+
 exports.setTable = ([name]) => {
 
     const table = fundb.setCurrentTable(name)

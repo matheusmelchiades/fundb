@@ -9,6 +9,8 @@ class Sgdb {
         this.database = {}
         this.currentTable = ''
         this.rootDir = rootDir || `${__dirname}/tmp/tables`
+        this.isWait = false
+        this.waitBy = ''
         this.init()
     }
 
@@ -26,6 +28,10 @@ class Sgdb {
     }
 
     exit() {
+
+        // if (global.system[this.currentTable].locks.include(dados.id)) {
+        // }
+
         logger.register(this.transation, logger.end)
     }
 
@@ -64,9 +70,20 @@ class Sgdb {
 
     createTable(table) {
         try {
-            fs.writeFileSync(`${this.rootDir}/${table}.json`, '[]');
 
-            this.database[table] = {};
+            const path = `${this.rootDir}/${table}`;
+            const data = [];
+
+            fs.writeFileSync(`${path}.json`, '[]');
+
+            this.database[table] = { path, data: data };
+
+            global.system[table] = {
+                sequence: 0, 
+                locks: []
+            }
+
+            logger.writeSystem(global.system);
 
             console.log(`Created Table ${table} with success!`);
         } catch (err) {
@@ -78,6 +95,8 @@ class Sgdb {
         const tables = Object.keys(this.database)
 
         if (!tables.includes(tableName)) return false
+
+        this.load();
 
         this.currentTable = tableName
 
@@ -100,16 +119,68 @@ class Sgdb {
 
     insert(dados) {
         try {
-            const table = this.database[this.currentTable];
-            const data = { id: table.data.length + 1, ...dados }
+
+            const sequence = global.system[this.currentTable].sequence + 1;
+
+            const data = { id: sequence, ...dados }
 
             this.database[this.currentTable].data.push(data);
 
-            logger.register(this.transation, logger.insert, this.currentTable, dados)
+            logger.register(this.transation, logger.insert, this.currentTable, data)
+
+            global.system[this.currentTable].sequence = sequence;
+
+            logger.writeSystem(global.system);
 
         } catch (err) {
+            console.log(err)
             console.log('Error in insert a new register!')
         }
+    }
+
+    update(dados) {
+        try {
+
+            const table = this.database[this.currentTable];
+            
+            const idx = table.data.findIndex(o => o.id === dados.id);
+            
+            if (idx === -1)
+                return false
+            
+            const data = this.database[this.currentTable].data[idx]
+            
+            this.database[this.currentTable].data[idx].descricao = dados.descricao
+            
+            logger.register(this.transation, logger.update, this.currentTable, data)
+            
+            global.system[this.currentTable].locks.push({transation: this.transation, dataId: dados.id})
+            
+            logger.writeSystem(global.system);
+
+        } catch (err) {
+            console.log('Error in Updtae a register!')
+        }
+    }
+
+    wait(transation, cb) {
+        this.isWait = true
+        this.waitBy = transation
+
+        console.log('\n')
+        console.log('IN WAIT')
+        console.log('\n')
+
+        while(this.isWait) {
+
+            this.wait = this.wait
+
+            console.log('\n')
+            console.log('IN WAIT')
+            console.log('\n')
+
+        }
+
     }
 
     find() {
@@ -140,6 +211,7 @@ class Sgdb {
         else {
             let commited = 0
             const dataToUpload = []
+            const dataToUpdate = []
             const currentData = this.database[log.table].data
             const transations = logger.getLogByTransation(log.transation)
 
@@ -150,11 +222,32 @@ class Sgdb {
                     commited++
 
                 if (commited < 2 && event === logger.insert && log.transation !== this.transation) {
+                    
                     dataToUpload.unshift(transations[i].data)
                 }
+
+                if (commited < 2 && event === logger.update && log.transation !== this.transation) {
+                    
+                    dataToUpdate.unshift(transations[i].data)
+                }
+
             }
 
-            this.database[log.table].data = [...currentData, ...dataToUpload].map((data, id) => ({ id: id + 1, ...data }))
+            if (dataToUpdate.length) {
+
+                dataToUpdate.map(data => {
+                    const idx = currentData.findIndex(o => o.id === data.id);
+                    this.database[log.table].data[idx].descricao = data.descricao
+                })
+
+            }
+
+            if (dataToUpload.length) {
+                
+                this.database[log.table].data = [...currentData, ...dataToUpload]
+
+            }
+            
         }
     }
 
@@ -165,8 +258,9 @@ class Sgdb {
 
         if (log.transation) {
             let check = 0;
-            let dataToSave = [];
-            let isCommit = false;
+            let dataToSave = []
+            let dataToUpdload = []
+            let isCommit = false
             const table = this.database[log.table]
             const textSaved = fs.readFileSync(table.path, 'utf-8')
             const dataSaved = JSON.parse(textSaved)
@@ -186,9 +280,22 @@ class Sgdb {
                 if (isCommit && event === logger.insert) {
                     dataToSave.unshift(transations[i].data)
                 }
+
+                if (isCommit && event === logger.update) {
+                    dataToUpdload.unshift(transations[i].data)
+                }
+
             }
 
-            dataToSave = [...dataSaved, ...dataToSave].map((data, id) => ({ id: id + 1, ...data }))
+            dataToSave = [...dataSaved, ...dataToSave]
+
+            if (dataToUpdload.length) {
+                dataToUpdload.map(data => {
+                    const idx = dataToSave.findIndex(o => o.id === data.id);
+                    
+                    dataToSave[idx].descricao = data.descricao
+                })
+            }
 
             fs.writeFileSync(table.path, JSON.stringify(dataToSave, null, 2));
         }

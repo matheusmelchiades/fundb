@@ -1,12 +1,15 @@
 require('./src/samples').intro();
+const logger = require('./src/logger')
 const rl = require('./config').rl
 const actions = require('./src/actions')
 const {
     find, help, insert, new_table, list_tables,
-    use, checkpoint, commit, findById,
+    use, checkpoint, commit, findById, update
 } = require('./src/types')
 
 rl.prompt('\n');
+
+logger.watchSystem();
 
 rl.on('line', (line) => {
 
@@ -51,6 +54,10 @@ rl.on('line', (line) => {
 
             case help.label:
                 actions.help(commands, rl)
+                break;
+
+            case update.label:
+                actions.update(commands)
                 break;
 
             default:

@@ -26,6 +26,24 @@ const watch = (cb) => {
     tail.on('line', cb)
 };
 
+const watchSystem = () => {
+
+    global.system = JSON.parse(fs.readFileSync(config.systemPath));
+
+    fs.watchFile(config.systemPath, () => {
+    
+        global.system = JSON.parse(fs.readFileSync(config.systemPath));
+
+    });
+
+}
+
+const writeSystem = system => {
+
+    fs.writeFileSync(config.systemPath, JSON.stringify(system, null, 2));
+
+}
+
 const getAll = () => {
     const logsText = fs.readFileSync(config.logPath, config.encoding)
     const logsSplited = logsText.split('\n')
@@ -52,4 +70,4 @@ const getOpens = () => {
     return allLogsOpen
 }
 
-module.exports = { register, getLogByTransation, getOpens, watch, ...events }
+module.exports = { register, getLogByTransation, getOpens, watchSystem, watch, writeSystem, ...events }

@@ -60,12 +60,12 @@ exports.find = ([]) => {
     }
 }
 
-exports.insert = ([descricao]) => {
+exports.insert = ([description]) => {
 
     if (!fundb.getCurrentTable())
         return noTable()
 
-    fundb.insert({ descricao });
+    fundb.insert({ description });
 }
 
 exports.update = ([id, description]) => {

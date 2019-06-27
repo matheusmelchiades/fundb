@@ -81,7 +81,7 @@ exports.setTable = ([name]) => {
     const table = fundb.setCurrentTable(name)
 
     if (!table)
-        console.log('\nTable not exists\n')
+        return console.log('\nTable not exists\n')
 
     config.rl.setPrompt(`${config.samplePrompt} 📂\  ${table} 👉 `)
 }

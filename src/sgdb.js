@@ -36,6 +36,8 @@ class Sgdb {
         const tables = this.listTables()
 
         tables.map(table => {
+            if (!global.system[table] || !global.system[table].locks) return
+
             let currentLocks = []
             if (event === logger.deadlock && waitBy) {
                 currentLocks = global.system[table].locks.filter(lock => !lock.waitBy)

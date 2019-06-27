@@ -11,7 +11,7 @@ const events = {
     end: 'end',
     commit: 'commit',
     checkpoint: 'checkpoint',
-    deadlock: 'DEAD_LOCK'
+    deadlock: 'DEAD_LOCK',
 }
 
 const register = (transation, event, table = '', data = {}) => {

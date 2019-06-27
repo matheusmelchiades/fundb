@@ -1,3 +1,4 @@
+require('./config')
 require('./src/samples').intro();
 const logger = require('./src/logger')
 const rl = require('./config').rl

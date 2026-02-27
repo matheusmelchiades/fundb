@@ -11,6 +11,11 @@ serde.workspace      = true
 thiserror.workspace  = true
 anyhow.workspace     = true
 tracing.workspace    = true
+fundb-core           = { path = "../fundb-core" }
+fundb-sql            = { path = "../fundb-sql" }
+fundb-optimizer      = { path = "../fundb-optimizer" }
+fundb-storage        = { path = "../fundb-storage" }
+fundb-indexes        = { path = "../fundb-indexes" }
 
 
 [dev-dependencies]

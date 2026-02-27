@@ -1,0 +1,14 @@
+target/
+.git/
+.claude/
+.claire/
+docs/
+hackathon/
+sdks/nodejs/node_modules/
+sdks/python/__pycache__/
+sdks/python/*.egg-info/
+*.md
+!crates/
+Dockerfile
+docker-compose.yml
+.dockerignore

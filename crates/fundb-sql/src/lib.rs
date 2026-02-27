@@ -2,9 +2,17 @@ pub mod token;
 pub mod lexer;
 pub mod ast;
 pub mod parser;
+pub mod logical_plan;
+pub mod binder;
 
 pub use ast::Statement;
 pub use parser::ParseError;
+
+pub use logical_plan::{
+    AggExpr, AggFunc, BinaryOp, ContextOptions, Expr, Literal, LogicalPlan, SortExpr,
+    UnaryOp, UnderstandOptions,
+};
+pub use binder::{bind, BindError, Catalog};
 
 /// Parse a FunQL query string into a typed AST.
 ///

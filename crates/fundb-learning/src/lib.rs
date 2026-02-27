@@ -1,1 +1,5 @@
-// fundb-learning — stub. Implement per docs/BACKLOG.md STORY for this crate.
+// fundb-learning — learning-to-rank and adaptive ranking for FunDB.
+
+pub mod ltr;
+
+pub use ltr::{LtrRanker};

@@ -4,6 +4,7 @@
 /// the plan reaches a fixed point (no further rule fires), or until the maximum
 /// iteration limit is reached.
 pub mod rules;
+pub mod cost;
 
 use fundb_sql::LogicalPlan;
 
@@ -42,3 +43,5 @@ fn apply_all_rules(plan: LogicalPlan) -> LogicalPlan {
 fn plans_equal(a: &LogicalPlan, b: &LogicalPlan) -> bool {
     format!("{:?}", a) == format!("{:?}", b)
 }
+
+pub use cost::{CostOptimizer, Histogram, PhysicalPlan, Statistics};

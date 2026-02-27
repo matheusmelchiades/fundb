@@ -18,9 +18,13 @@ pub mod wal;
 pub mod sstable;
 pub mod block_cache;
 pub mod mvcc;
+pub mod compaction;
+pub mod lsm;
 
 pub use memtable::{ImmutableMemTable, MemTable};
 pub use wal::{Wal, WalEntry};
 pub use sstable::{SstableReader, SstableWriter, merge_sstables};
 pub use block_cache::{BlockCache, CacheKey, SharedBlockCache, new_shared_cache};
 pub use mvcc::MvccStore;
+pub use compaction::CompactionPolicy;
+pub use lsm::LsmTree;

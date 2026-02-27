@@ -21,3 +21,4 @@ fundb-indexes        = { path = "../fundb-indexes" }
 [dev-dependencies]
 proptest.workspace   = true
 criterion.workspace  = true
+tempfile             = "3"

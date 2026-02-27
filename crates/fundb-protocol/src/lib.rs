@@ -1,1 +1,5 @@
-// fundb-protocol — stub. Implement per docs/BACKLOG.md STORY for this crate.
+pub mod pg_wire;
+
+pub use pg_wire::{
+    ConnContext, FieldDescription, PgConnection, QueryError, QueryHandler, QueryResult,
+};

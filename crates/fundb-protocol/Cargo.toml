@@ -11,8 +11,12 @@ serde.workspace      = true
 thiserror.workspace  = true
 anyhow.workspace     = true
 tracing.workspace    = true
+bytes.workspace      = true
+async-trait.workspace = true
 
 
 [dev-dependencies]
 proptest.workspace   = true
 criterion.workspace  = true
+tokio.workspace      = true
+bytes.workspace      = true

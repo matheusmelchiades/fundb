@@ -1,0 +1,66 @@
+[workspace]
+members = [
+    "crates/fundb-core",
+    "crates/fundb-storage",
+    "crates/fundb-indexes",
+    "crates/fundb-sql",
+    "crates/fundb-optimizer",
+    "crates/fundb-executor",
+    "crates/fundb-cognitive",
+    "crates/fundb-causal",
+    "crates/fundb-semantic",
+    "crates/fundb-learning",
+    "crates/fundb-raft",
+    "crates/fundb-cluster",
+    "crates/fundb-protocol",
+    "crates/fundb-server",
+]
+resolver = "2"
+
+[workspace.package]
+version     = "0.1.0"
+edition     = "2021"
+authors     = ["FunDB Team"]
+license     = "Apache-2.0"
+repository  = "https://github.com/fundb/fundb"
+
+[workspace.dependencies]
+# Async runtime
+tokio       = { version = "1", features = ["full"] }
+
+# Serialization
+serde       = { version = "1", features = ["derive"] }
+rmp-serde   = "1"                   # MessagePack
+flatbuffers = "23"
+bytes       = "1"
+
+# IDs
+uuid        = { version = "1", features = ["v7", "serde"] }
+
+# Compression
+zstd        = "0.13"
+snap        = "1"                   # Snappy
+
+# Hashing / bloom filter
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+
+# Error handling
+thiserror   = "1"
+anyhow      = "1"
+
+# Logging / tracing
+tracing     = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Testing
+proptest    = "1"
+criterion   = { version = "0.5", features = ["html_reports"] }
+
+[profile.release]
+opt-level   = 3
+lto         = "thin"
+codegen-units = 1
+
+[profile.bench]
+inherits    = "release"
+debug       = true

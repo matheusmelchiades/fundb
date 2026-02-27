@@ -1,0 +1,29 @@
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock       # library crate — don't commit lock file
+*.pdb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.env
+.envrc
+
+# Benchmarks / profiling output
+criterion/
+flamegraph.svg
+perf.data*
+
+# Generated code
+crates/fundb-sql/src/grammar.rs   # lalrpop generated
+
+# Test artifacts
+*.log
+*.prof
+
+# Build cache
+.cargo/

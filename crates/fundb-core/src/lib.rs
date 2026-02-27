@@ -4,6 +4,8 @@ pub mod types;
 pub mod record;
 pub mod builder;
 pub mod id;
+pub mod codec;
+pub mod page;
 
 pub use types::*;
 pub use record::*;

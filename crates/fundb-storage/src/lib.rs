@@ -1,7 +1,4 @@
-// fundb-storage — shared types used across all storage stories.
-//
-// Per CONTRIBUTING.md merge order, STORY-2-4 (mvcc.rs) is last and will
-// add `pub mod` declarations for all four storage modules.
+// fundb-storage — in-memory + on-disk storage engine for FunDB.
 
 use fundb_core::Timestamp;
 
@@ -9,13 +6,21 @@ use fundb_core::Timestamp;
 pub type Lsn = u64;
 
 /// A read/write transaction token.
-///
-/// Created by `MvccStore::begin_txn()`.  Encapsulates the snapshot timestamp
-/// used for snapshot-isolation reads, and the transaction ID used to tag WAL entries.
 #[derive(Debug, Clone)]
 pub struct Transaction {
-    /// Monotonically increasing transaction identifier.
     pub txn_id:      u64,
-    /// System timestamp at which this transaction began (used for snapshot reads).
     pub snapshot_ts: Timestamp,
 }
+
+// Storage modules — per CONTRIBUTING.md, STORY-2-4 (this story) adds all pub mod declarations.
+pub mod memtable;
+pub mod wal;
+pub mod sstable;
+pub mod block_cache;
+pub mod mvcc;
+
+pub use memtable::{ImmutableMemTable, MemTable};
+pub use wal::{Wal, WalEntry};
+pub use sstable::{SstableReader, SstableWriter, merge_sstables};
+pub use block_cache::{BlockCache, CacheKey, SharedBlockCache, new_shared_cache};
+pub use mvcc::MvccStore;

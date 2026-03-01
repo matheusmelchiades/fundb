@@ -292,7 +292,7 @@ impl MetricsRegistry {
                     format_f64(bound)
                 };
                 out.push_str(&format!(
-                    "{}_bucket{{{}}le=\"{}\"}} {}\n",
+                    "{}_bucket{{{}le=\"{}\"}} {}\n",
                     h.name,
                     if label_str.is_empty() {
                         String::new()

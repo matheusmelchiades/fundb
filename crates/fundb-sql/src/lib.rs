@@ -30,8 +30,8 @@ pub fn parse(input: &str) -> Result<Statement, ParseError> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::ast::*;
+    use super::{parse, ParseError, bind, BindError, Catalog, LogicalPlan, Statement};
+    use crate::ast::{self, AsOfClause, Expr, Statement as AstStatement, UnderstandOption};
     use crate::lexer::Lexer;
     use crate::token::Token;
 

@@ -36,7 +36,7 @@ flatbuffers = "23"
 bytes       = "1"
 
 # IDs
-uuid        = { version = "1", features = ["v7", "serde"] }
+uuid        = { version = "1", features = ["v4", "v7", "serde"] }
 
 # Compression
 zstd        = "0.13"

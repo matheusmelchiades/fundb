@@ -139,7 +139,7 @@ impl AgentMemory {
         opts: RememberOptions,
     ) -> Result<Uuid> {
         let embedding = bag_of_words_embed(content);
-        let id = Uuid::new_v4();
+        let id = Uuid::now_v7();
         let now = self.clock;
 
         let entry = MemoryEntry {

@@ -66,7 +66,14 @@ impl Executor {
     // -----------------------------------------------------------------------
 
     /// Recursively execute a (possibly nested) [`LogicalPlan`] tree.
-    async fn execute_plan(&self, plan: LogicalPlan) -> Result<RecordBatch> {
+    fn execute_plan<'a>(
+        &'a self,
+        plan: LogicalPlan,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<RecordBatch>> + Send + 'a>> {
+        Box::pin(async move { self.execute_plan_inner(plan).await })
+    }
+
+    async fn execute_plan_inner(&self, plan: LogicalPlan) -> Result<RecordBatch> {
         match plan {
             // ── Full-collection scan ─────────────────────────────────────
             LogicalPlan::Scan {

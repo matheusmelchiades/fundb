@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FunDB - The cognitive database for the AI era</title>
+  <meta name="description" content="FunDB unifies vectors, graphs, documents, time-series, and agent memory under one AI-native engine. Built in Rust, PostgreSQL wire-compatible.">
+  <meta property="og:title" content="FunDB - The cognitive database for the AI era">
+  <meta property="og:description" content="Replace 5 databases with 1. AI-native. Built in Rust. PostgreSQL compatible.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none'><rect width='48' height='48' rx='10' fill='%231A1A2E'/><text x='8' y='36' font-family='monospace' font-weight='700' font-size='28' letter-spacing='-2'><tspan fill='%23E8872B'>F</tspan><tspan fill='%23D97706'>%7B</tspan></text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ===== CSS Custom Properties ===== */
+    :root {
+      --amber: #E8872B;
+      --amber-deep: #C46A15;
+      --amber-gradient: linear-gradient(135deg, #E8872B 0%, #D97706 50%, #C46A15 100%);
+      --midnight: #1A1A2E;
+      --slate: #3D5A80;
+      --gray: #6B7280;
+      --bg: #0F0F1A;
+      --card: #1E1E2E;
+      --border: #374151;
+      --fog: #E5E7EB;
+      --white: #FAFAFA;
+      --vectors: #7C3AED;
+      --graphs: #0D9488;
+      --documents: #2563EB;
+      --timeseries: #E11D48;
+      --memory: #D97706;
+      --syn-keyword: #E8872B;
+      --syn-fundb: #D97706;
+      --syn-string: #0D9488;
+      --syn-number: #7C3AED;
+      --syn-comment: #6B7280;
+      --syn-function: #2563EB;
+      --syn-operator: #E11D48;
+      --syn-bg: #1A1A2E;
+      --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-code: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--fog);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+    a { color: var(--amber); text-decoration: none; transition: color var(--transition); }
+    a:hover { color: var(--amber-deep); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .hidden { display: none !important; }
+
+    /* ===== Navigation ===== */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .nav.scrolled {
+      background: rgba(15, 15, 26, 0.85);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom-color: rgba(55, 65, 81, 0.5);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo svg { height: 36px; width: auto; display: block; }
+    .nav-links {
+      display: flex; align-items: center; gap: 32px;
+      font-size: 14px; font-weight: 500;
+    }
+    .nav-links a { color: var(--fog); }
+    .nav-links a:hover { color: var(--amber); }
+    .nav-cta {
+      background: var(--amber-gradient) !important;
+      color: #fff !important;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 600 !important;
+      transition: opacity var(--transition), transform var(--transition) !important;
+    }
+    .nav-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+    .nav-mobile-toggle {
+      display: none; background: none; border: none; cursor: pointer;
+      padding: 8px; color: var(--fog);
+    }
+    .nav-mobile-toggle svg { width: 24px; height: 24px; }
+
+    /* ===== Hero ===== */
+    .hero {
+      position: relative;
+      padding: 160px 0 100px;
+      text-align: center;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -20%; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(232, 135, 43, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-content { position: relative; z-index: 1; }
+    .hero-badge {
+      display: inline-block;
+      font-size: 13px; font-family: var(--font-code);
+      color: var(--amber);
+      background: rgba(232, 135, 43, 0.1);
+      border: 1px solid rgba(232, 135, 43, 0.2);
+      border-radius: 999px;
+      padding: 6px 18px;
+      margin-bottom: 32px;
+    }
+    .hero-title {
+      font-size: 64px; font-weight: 700; line-height: 1.1;
+      letter-spacing: -0.03em; color: var(--white);
+      max-width: 800px; margin: 0 auto;
+    }
+    .hero-subtitle {
+      font-size: 20px; font-weight: 400; color: var(--gray);
+      max-width: 620px; margin: 24px auto 0; line-height: 1.6;
+    }
+    .hero-ctas {
+      display: flex; gap: 12px;
+      justify-content: center; align-items: center;
+      margin-top: 40px; flex-wrap: wrap;
+    }
+
+    /* ===== Buttons ===== */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; border-radius: 10px;
+      font-family: var(--font-body); font-size: 16px; font-weight: 600;
+      transition: all var(--transition);
+      cursor: pointer; border: none; text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--amber-gradient); color: #fff;
+      box-shadow: 0 0 24px rgba(232, 135, 43, 0.3);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 40px rgba(232, 135, 43, 0.5);
+      transform: translateY(-1px);
+      color: #fff;
+    }
+    .btn-secondary {
+      background: transparent; color: var(--fog);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      border-color: var(--slate);
+      background: rgba(30, 30, 46, 0.5);
+      color: var(--fog);
+    }
+    .btn-secondary svg { width: 20px; height: 20px; }
+
+    /* ===== Hero Visual ===== */
+    .hero-visual {
+      margin-top: 64px;
+      display: flex; justify-content: center;
+    }
+    .hero-visual svg { max-width: 400px; width: 100%; height: auto; }
+    .convergence-path {
+      stroke-dasharray: var(--path-len);
+      stroke-dashoffset: var(--path-len);
+      animation: drawLine 1.5s ease-out forwards;
+    }
+    .convergence-path:nth-child(2) { animation-delay: 0.15s; }
+    .convergence-path:nth-child(3) { animation-delay: 0.3s; }
+    .convergence-path:nth-child(4) { animation-delay: 0.45s; }
+    .convergence-path:nth-child(5) { animation-delay: 0.6s; }
+    .convergence-dot {
+      opacity: 0;
+      animation: fadeInDot 0.4s ease-out forwards;
+    }
+    .convergence-dot:nth-child(7) { animation-delay: 0.15s; }
+    .convergence-dot:nth-child(8) { animation-delay: 0.3s; }
+    .convergence-dot:nth-child(9) { animation-delay: 0.45s; }
+    .convergence-dot:nth-child(10) { animation-delay: 0.6s; }
+    .convergence-dot:nth-child(11) { animation-delay: 0.75s; }
+    @keyframes drawLine {
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes fadeInDot {
+      to { opacity: 1; }
+    }
+    .central-glow {
+      animation: pulseGlow 3s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.15; }
+      50% { opacity: 0.35; }
+    }
+
+    /* ===== Section Header ===== */
+    .section-header { text-align: center; max-width: 700px; margin: 0 auto; }
+    .section-header h2 {
+      font-size: 40px; font-weight: 700; color: var(--white);
+      letter-spacing: -0.02em; line-height: 1.2;
+    }
+    .section-header p {
+      font-size: 18px; color: var(--gray); margin-top: 16px; line-height: 1.6;
+    }
+    .section-header code {
+      font-family: var(--font-code); font-size: 0.9em;
+      background: rgba(232, 135, 43, 0.1); color: var(--amber);
+      padding: 2px 6px; border-radius: 4px;
+    }
+
+    /* ===== Features ===== */
+    .features { padding: 120px 0; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 64px;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      transition: all var(--transition);
+    }
+    .feature-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 32px rgba(var(--accent-rgb), 0.15);
+      transform: translateY(-2px);
+    }
+    .feature-icon { width: 48px; height: 48px; margin-bottom: 20px; }
+    .feature-icon svg { width: 100%; height: 100%; }
+    .feature-card h3 {
+      font-size: 20px; font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .feature-card p { font-size: 15px; color: var(--gray); line-height: 1.6; }
+
+    /* Feature card accent colors via inline style */
+    .feature-card[data-type="vectors"] { --accent: var(--vectors); --accent-rgb: 124, 58, 237; }
+    .feature-card[data-type="graphs"] { --accent: var(--graphs); --accent-rgb: 13, 148, 136; }
+    .feature-card[data-type="documents"] { --accent: var(--documents); --accent-rgb: 37, 99, 235; }
+    .feature-card[data-type="timeseries"] { --accent: var(--timeseries); --accent-rgb: 225, 29, 72; }
+    .feature-card[data-type="memory"] { --accent: var(--memory); --accent-rgb: 217, 119, 6; }
+
+    /* Center last 2 cards in the bottom row */
+    .features-grid .feature-card:nth-child(4),
+    .features-grid .feature-card:nth-child(5) {
+      /* Offset by half a column to center */
+    }
+    @media (min-width: 1024px) {
+      .features-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+      .features-grid .feature-card:nth-child(1) { grid-column: 1 / 3; }
+      .features-grid .feature-card:nth-child(2) { grid-column: 3 / 5; }
+      .features-grid .feature-card:nth-child(3) { grid-column: 5 / 7; }
+      .features-grid .feature-card:nth-child(4) { grid-column: 2 / 4; }
+      .features-grid .feature-card:nth-child(5) { grid-column: 4 / 6; }
+    }
+
+    /* ===== Code Section ===== */
+    .code-section { padding: 120px 0; }
+    .code-examples { max-width: 800px; margin: 48px auto 0; }
+    .code-tabs { display: flex; gap: 4px; }
+    .code-tab {
+      padding: 10px 20px; border-radius: 8px 8px 0 0;
+      background: transparent;
+      border: 1px solid transparent;
+      border-bottom: none;
+      color: var(--gray); font-family: var(--font-code); font-size: 13px;
+      cursor: pointer; transition: all var(--transition);
+    }
+    .code-tab:hover { color: var(--fog); }
+    .code-tab.active {
+      background: var(--syn-bg);
+      border-color: var(--border);
+      color: var(--amber);
+    }
+    .code-block {
+      background: var(--syn-bg);
+      border: 1px solid var(--border);
+      border-radius: 0 12px 12px 12px;
+      overflow: hidden;
+    }
+    .code-header {
+      display: flex; align-items: center;
+      padding: 12px 16px;
+      background: rgba(15, 15, 26, 0.5);
+      border-bottom: 1px solid var(--border);
+    }
+    .code-dots { display: flex; gap: 6px; margin-right: 12px; }
+    .code-dots span {
+      width: 12px; height: 12px; border-radius: 50%;
+    }
+    .code-dots span:nth-child(1) { background: #E11D48; }
+    .code-dots span:nth-child(2) { background: #D97706; }
+    .code-dots span:nth-child(3) { background: #0D9488; }
+    .code-filename {
+      font-family: var(--font-code); font-size: 12px; color: var(--gray);
+      flex: 1;
+    }
+    .code-copy {
+      background: none; border: none; cursor: pointer;
+      color: var(--gray); font-family: var(--font-code); font-size: 12px;
+      padding: 4px 8px; border-radius: 4px;
+      transition: all var(--transition);
+    }
+    .code-copy:hover { color: var(--amber); background: rgba(232, 135, 43, 0.1); }
+    .code-content {
+      padding: 24px; overflow-x: auto;
+      font-family: var(--font-code); font-size: 14px; line-height: 1.7;
+      color: var(--fog); white-space: pre; margin: 0;
+    }
+    .syn-kw { color: var(--syn-keyword); }
+    .syn-fb { color: var(--syn-fundb); font-weight: 700; }
+    .syn-str { color: var(--syn-string); }
+    .syn-num { color: var(--syn-number); }
+    .syn-cm { color: var(--syn-comment); font-style: italic; }
+    .syn-fn { color: var(--syn-function); }
+    .syn-op { color: var(--syn-operator); }
+
+    /* ===== Quick Start ===== */
+    .quickstart { padding: 120px 0; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-top: 64px;
+    }
+    .step-number {
+      width: 36px; height: 36px;
+      background: var(--amber-gradient);
+      color: #fff; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 16px;
+      margin-bottom: 16px;
+    }
+    .step h3 {
+      font-size: 18px; font-weight: 600; color: var(--white);
+      margin-bottom: 16px;
+    }
+    .terminal {
+      background: var(--syn-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .terminal-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px;
+      background: rgba(15, 15, 26, 0.5);
+      border-bottom: 1px solid var(--border);
+    }
+    .terminal-header span {
+      font-family: var(--font-code); font-size: 11px; color: var(--gray);
+    }
+    .terminal pre {
+      padding: 16px; overflow-x: auto;
+      font-family: var(--font-code); font-size: 13px; line-height: 1.6;
+      color: var(--fog); margin: 0; white-space: pre;
+    }
+
+    /* ===== Final CTA ===== */
+    .final-cta {
+      padding: 120px 0;
+      text-align: center;
+      position: relative;
+    }
+    .final-cta::before {
+      content: '';
+      position: absolute;
+      bottom: -20%; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(232, 135, 43, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-content { position: relative; z-index: 1; }
+    .cta-content h2 {
+      font-size: 40px; font-weight: 700; color: var(--white);
+      letter-spacing: -0.02em;
+    }
+    .cta-content > p {
+      font-size: 18px; color: var(--gray); margin-top: 16px;
+    }
+    .cta-content .hero-ctas { margin-top: 32px; }
+
+    /* ===== Footer ===== */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 64px 0 32px;
+    }
+    .footer-inner {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 48px;
+    }
+    .footer-brand svg { height: 32px; width: auto; display: block; margin-bottom: 12px; }
+    .footer-brand p { font-size: 14px; color: var(--gray); }
+    .footer-links {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+    .footer-col h4 {
+      font-size: 13px; font-weight: 600; color: var(--fog);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+    .footer-col a {
+      display: block; color: var(--gray); font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .footer-col a:hover { color: var(--amber); }
+    .footer-bottom {
+      grid-column: 1 / -1;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      font-size: 13px; color: var(--gray);
+      margin-top: 16px;
+    }
+
+    /* ===== Animations ===== */
+    .fade-in {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+    .fade-in-stagger > * {
+      opacity: 0; transform: translateY(16px);
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    }
+    .fade-in-stagger.visible > *:nth-child(1) { transition-delay: 0s; opacity: 1; transform: translateY(0); }
+    .fade-in-stagger.visible > *:nth-child(2) { transition-delay: 0.1s; opacity: 1; transform: translateY(0); }
+    .fade-in-stagger.visible > *:nth-child(3) { transition-delay: 0.15s; opacity: 1; transform: translateY(0); }
+    .fade-in-stagger.visible > *:nth-child(4) { transition-delay: 0.2s; opacity: 1; transform: translateY(0); }
+    .fade-in-stagger.visible > *:nth-child(5) { transition-delay: 0.25s; opacity: 1; transform: translateY(0); }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 1023px) {
+      .hero-title { font-size: 48px; }
+      .hero-subtitle { font-size: 18px; }
+      .section-header h2 { font-size: 32px; }
+      .features, .code-section, .quickstart, .final-cta { padding: 100px 0; }
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+      .features-grid .feature-card { grid-column: auto !important; }
+      .features-grid .feature-card:nth-child(5) {
+        grid-column: 1 / -1 !important;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      .steps { grid-template-columns: 1fr; max-width: 500px; margin: 64px auto 0; }
+      .footer-inner { grid-template-columns: 1fr; gap: 32px; }
+    }
+    @media (max-width: 639px) {
+      .hero { padding: 120px 0 80px; }
+      .hero-title { font-size: 36px; }
+      .hero-subtitle { font-size: 16px; }
+      .section-header h2 { font-size: 28px; }
+      .features, .code-section, .quickstart, .final-cta { padding: 80px 0; }
+      .features-grid { grid-template-columns: 1fr !important; }
+      .features-grid .feature-card:nth-child(5) { max-width: none; }
+      .nav-links {
+        display: none; flex-direction: column;
+        position: absolute; top: 64px; left: 0; right: 0;
+        background: rgba(15, 15, 26, 0.95);
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        padding: 24px;
+        gap: 16px;
+        transform-origin: top;
+        transform: scaleY(0);
+        transition: transform 0.2s ease-out;
+      }
+      .nav-links.open { display: flex; transform: scaleY(1); }
+      .nav-mobile-toggle { display: block; }
+      .code-tabs { flex-wrap: wrap; }
+      .code-tab { font-size: 12px; padding: 8px 14px; }
+      .footer-links { grid-template-columns: 1fr; gap: 24px; }
+      .cta-content h2 { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAVIGATION ===== -->
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a href="#" class="nav-logo" aria-label="FunDB Home">
+        <svg viewBox="0 0 400 100" fill="none">
+          <g transform="translate(50, 50)">
+            <rect x="-14" y="-14" width="28" height="28" rx="7" fill="#E8872B"/>
+            <path d="M-36,-30 Q-20,-18 -10,-10" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M36,-30 Q20,-18 10,-10" stroke="#0D9488" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M-40,5 Q-25,3 -12,1" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M40,5 Q25,3 12,1" stroke="#E11D48" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M0,38 Q0,25 0,12" stroke="#D97706" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <circle cx="-36" cy="-30" r="3" fill="#7C3AED"/>
+            <circle cx="36" cy="-30" r="3" fill="#0D9488"/>
+            <circle cx="-40" cy="5" r="3" fill="#2563EB"/>
+            <circle cx="40" cy="5" r="3" fill="#E11D48"/>
+            <circle cx="0" cy="38" r="3" fill="#D97706"/>
+            <rect x="-14" y="-14" width="28" height="28" rx="7" fill="#E8872B" opacity="0.2" filter="url(#nav-glow)"/>
+          </g>
+          <defs>
+            <filter id="nav-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <text x="110" y="62" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-weight="700" font-size="42" letter-spacing="-1">
+            <tspan fill="#E8872B">Fun</tspan><tspan fill="#E5E7EB">DB</tspan>
+          </text>
+        </svg>
+      </a>
+      <div class="nav-links">
+        <a href="https://github.com/fundb/fundb" target="_blank" rel="noopener">GitHub</a>
+        <a href="#quickstart">Quick Start</a>
+        <a href="#quickstart" class="nav-cta">Get Started</a>
+      </div>
+      <button class="nav-mobile-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+    <!-- ===== HERO ===== -->
+    <section id="hero" class="hero">
+      <div class="container hero-content">
+        <div class="hero-badge">v0.1.0 &mdash; Now available</div>
+        <h1 class="hero-title">The cognitive database<br>for the AI era</h1>
+        <p class="hero-subtitle">
+          FunDB unifies vectors, graphs, documents, time-series, and agent memory
+          under one engine. Replace five databases with one query language,
+          one transaction, one source of truth.
+        </p>
+        <div class="hero-ctas">
+          <a href="#quickstart" class="btn btn-primary">Get Started</a>
+          <a href="https://github.com/fundb/fundb" target="_blank" rel="noopener" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            View on GitHub
+          </a>
+        </div>
+
+        <!-- Hero Convergence Visual -->
+        <div class="hero-visual fade-in">
+          <svg viewBox="0 0 400 300" fill="none">
+            <defs>
+              <filter id="hero-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="8" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <g transform="translate(200, 140)">
+              <!-- Convergence paths -->
+              <path class="convergence-path" d="M-160,-100 Q-80,-60 -20,-16" stroke="#7C3AED" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <path class="convergence-path" d="M160,-100 Q80,-60 20,-16" stroke="#0D9488" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <path class="convergence-path" d="M-170,20 Q-90,14 -24,2" stroke="#2563EB" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <path class="convergence-path" d="M170,20 Q90,14 24,2" stroke="#E11D48" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <path class="convergence-path" d="M0,130 Q0,80 0,20" stroke="#D97706" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+              <!-- Central node -->
+              <rect x="-24" y="-24" width="48" height="48" rx="12" fill="#E8872B"/>
+              <rect class="central-glow" x="-24" y="-24" width="48" height="48" rx="12" fill="#E8872B" opacity="0.15" filter="url(#hero-glow)"/>
+
+              <!-- Endpoint labels -->
+              <g class="convergence-dot">
+                <circle cx="-160" cy="-100" r="6" fill="#7C3AED"/>
+                <text x="-160" y="-114" text-anchor="middle" fill="#7C3AED" font-family="Inter, sans-serif" font-size="13" font-weight="600">Vectors</text>
+              </g>
+              <g class="convergence-dot">
+                <circle cx="160" cy="-100" r="6" fill="#0D9488"/>
+                <text x="160" y="-114" text-anchor="middle" fill="#0D9488" font-family="Inter, sans-serif" font-size="13" font-weight="600">Graphs</text>
+              </g>
+              <g class="convergence-dot">
+                <circle cx="-170" cy="20" r="6" fill="#2563EB"/>
+                <text x="-170" y="42" text-anchor="middle" fill="#2563EB" font-family="Inter, sans-serif" font-size="13" font-weight="600">Documents</text>
+              </g>
+              <g class="convergence-dot">
+                <circle cx="170" cy="20" r="6" fill="#E11D48"/>
+                <text x="170" y="42" text-anchor="middle" fill="#E11D48" font-family="Inter, sans-serif" font-size="13" font-weight="600">Time-Series</text>
+              </g>
+              <g class="convergence-dot">
+                <circle cx="0" cy="130" r="6" fill="#D97706"/>
+                <text x="0" y="152" text-anchor="middle" fill="#D97706" font-family="Inter, sans-serif" font-size="13" font-weight="600">Agent Memory</text>
+              </g>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FEATURES ===== -->
+    <section id="features" class="features">
+      <div class="container">
+        <div class="section-header fade-in">
+          <h2>Five databases. One engine.</h2>
+          <p>Every data type your AI agents need, unified in a single cognitive engine with native confidence tracking, causal reasoning, and context-aware retrieval.</p>
+        </div>
+        <div class="features-grid fade-in-stagger">
+          <!-- Vectors -->
+          <div class="feature-card" data-type="vectors">
+            <div class="feature-icon">
+              <svg viewBox="0 0 48 48" fill="none">
+                <g stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="8" y1="8" x2="22" y2="22"/>
+                  <polyline points="16,8 8,8 8,16"/>
+                  <line x1="40" y1="10" x2="26" y2="24"/>
+                  <polyline points="34,10 40,10 40,16"/>
+                  <line x1="14" y1="40" x2="22" y2="28"/>
+                  <polyline points="8,36 14,40 20,36"/>
+                </g>
+                <circle cx="24" cy="24" r="4" fill="#7C3AED" opacity="0.2"/>
+                <circle cx="24" cy="24" r="2" fill="#7C3AED"/>
+              </svg>
+            </div>
+            <h3>Vectors</h3>
+            <p>HNSW approximate nearest neighbor search with adaptive recall and product quantization. Sub-5ms p99 on 10M vectors.</p>
+          </div>
+
+          <!-- Graphs -->
+          <div class="feature-card" data-type="graphs">
+            <div class="feature-icon">
+              <svg viewBox="0 0 48 48" fill="none">
+                <g stroke="#0D9488" stroke-width="2" stroke-linecap="round">
+                  <line x1="24" y1="10" x2="10" y2="36"/>
+                  <line x1="24" y1="10" x2="38" y2="36"/>
+                  <line x1="10" y1="36" x2="38" y2="36"/>
+                </g>
+                <circle cx="24" cy="10" r="5" fill="#0D9488"/>
+                <circle cx="10" cy="36" r="5" fill="#0D9488"/>
+                <circle cx="38" cy="36" r="5" fill="#0D9488"/>
+                <circle cx="24" cy="10" r="2" fill="white"/>
+                <circle cx="10" cy="36" r="2" fill="white"/>
+                <circle cx="38" cy="36" r="2" fill="white"/>
+              </svg>
+            </div>
+            <h3>Graphs</h3>
+            <p>SPO triple store with multi-hop traversal, causal DAG indexing, and native path queries. Traverse 1M edges in under 10ms.</p>
+          </div>
+
+          <!-- Documents -->
+          <div class="feature-card" data-type="documents">
+            <div class="feature-icon">
+              <svg viewBox="0 0 48 48" fill="none">
+                <g stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                  <rect x="14" y="6" width="24" height="30" rx="3" opacity="0.3"/>
+                  <rect x="10" y="10" width="24" height="30" rx="3" fill="#1E1E2E" stroke="#2563EB"/>
+                  <path d="M20,18 Q17,18 17,21 L17,23 Q17,25 15,25 Q17,25 17,27 L17,29 Q17,32 20,32" stroke="#2563EB" stroke-width="2"/>
+                  <line x1="24" y1="21" x2="30" y2="21" opacity="0.5"/>
+                  <line x1="24" y1="25" x2="32" y2="25" opacity="0.5"/>
+                  <line x1="24" y1="29" x2="28" y2="29" opacity="0.5"/>
+                </g>
+              </svg>
+            </div>
+            <h3>Documents</h3>
+            <p>Flexible JSON documents with schema-on-read. Every record carries confidence scores, provenance chains, and causal metadata.</p>
+          </div>
+
+          <!-- Time-Series -->
+          <div class="feature-card" data-type="timeseries">
+            <div class="feature-icon">
+              <svg viewBox="0 0 48 48" fill="none">
+                <g stroke="#E11D48" stroke-width="2.5" stroke-linecap="round" fill="none">
+                  <path d="M6,30 Q12,10 18,24 Q24,38 30,20 Q36,6 42,18"/>
+                </g>
+                <circle cx="6" cy="30" r="3" fill="#E11D48"/>
+                <circle cx="18" cy="24" r="3" fill="#E11D48"/>
+                <circle cx="30" cy="20" r="3" fill="#E11D48"/>
+                <circle cx="42" cy="18" r="3" fill="#E11D48"/>
+                <circle cx="6" cy="30" r="1.5" fill="white"/>
+                <circle cx="18" cy="24" r="1.5" fill="white"/>
+                <circle cx="30" cy="20" r="1.5" fill="white"/>
+                <circle cx="42" cy="18" r="1.5" fill="white"/>
+              </svg>
+            </div>
+            <h3>Time-Series</h3>
+            <p>Bitemporal MVCC with system time and valid time. Time-travel queries, temporal range scans, and Granger causality built in.</p>
+          </div>
+
+          <!-- Agent Memory -->
+          <div class="feature-card" data-type="memory">
+            <div class="feature-icon">
+              <svg viewBox="0 0 48 48" fill="none">
+                <g stroke="#D97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                  <path d="M18,36 C10,36 6,30 6,24 C6,18 10,14 14,12 C14,8 18,4 24,4 C30,4 34,8 34,12 C38,14 42,18 42,24 C42,30 38,36 30,36"/>
+                  <path d="M24,4 L24,14 Q24,20 20,22 Q24,24 24,30 L24,36" opacity="0.4"/>
+                  <path d="M30,36 Q36,42 30,44 Q24,46 20,42"/>
+                  <polyline points="17,40 20,42 18,45"/>
+                </g>
+              </svg>
+            </div>
+            <h3>Agent Memory</h3>
+            <p>REMEMBER, RECALL, and FORGET primitives with semantic decay. Give your AI agents persistent, searchable long-term memory.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CODE EXAMPLE ===== -->
+    <section id="code" class="code-section">
+      <div class="container">
+        <div class="section-header fade-in">
+          <h2>SQL for the AI era</h2>
+          <p>FunQL extends PostgreSQL with native primitives for vectors, graphs, causal reasoning, context-aware retrieval, and agent memory. Connect with <code>psql</code> and start querying.</p>
+        </div>
+        <div class="code-examples fade-in">
+          <div class="code-tabs">
+            <button class="code-tab active" data-tab="semantic">Semantic Query</button>
+            <button class="code-tab" data-tab="causal">Causal Reasoning</button>
+            <button class="code-tab" data-tab="memory">Agent Memory</button>
+          </div>
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span></span><span></span><span></span></div>
+              <span class="code-filename">funql</span>
+              <button class="code-copy" aria-label="Copy code">Copy</button>
+            </div>
+            <pre class="code-content" id="code-semantic"><code><span class="syn-cm">-- Context-aware retrieval optimized for LLM token budgets</span>
+<span class="syn-kw">SELECT</span> title, abstract, _confidence, _sources
+<span class="syn-kw">FROM</span> research_papers
+<span class="syn-kw">WHERE</span> <span class="syn-fn">_vector</span>(<span class="syn-str">'content_embedding'</span>) <span class="syn-op">&lt;-&gt;</span> :query <span class="syn-op">&lt;</span> <span class="syn-num">0.5</span>
+  <span class="syn-kw">AND</span> _confidence <span class="syn-op">&gt;</span> <span class="syn-num">0.7</span>
+<span class="syn-fb">WITHIN CONTEXT</span> (
+  max_tokens: <span class="syn-num">4000</span>,
+  coherence: <span class="syn-num">0.8</span>,
+  diversity: <span class="syn-num">0.3</span>
+);</code></pre>
+            <pre class="code-content hidden" id="code-causal"><code><span class="syn-cm">-- Trace what caused the error spike</span>
+<span class="syn-fb">TRACE CAUSALITY</span>
+<span class="syn-kw">FROM</span> deployment_event <span class="syn-kw">TO</span> error_spike
+MAX_DEPTH <span class="syn-num">5</span>
+MIN_STRENGTH <span class="syn-num">0.6</span>;
+
+<span class="syn-cm">-- Counterfactual: what if we had spent more?</span>
+<span class="syn-fb">ESTIMATE COUNTERFACTUAL</span>
+  <span class="syn-kw">GIVEN</span> revenue <span class="syn-op">=</span> <span class="syn-num">100000</span>, marketing_spend <span class="syn-op">=</span> <span class="syn-num">30000</span>
+  <span class="syn-kw">HAD</span> marketing_spend <span class="syn-op">=</span> <span class="syn-num">50000</span>
+  <span class="syn-kw">PREDICT</span> revenue;</code></pre>
+            <pre class="code-content hidden" id="code-memory"><code><span class="syn-cm">-- Give your AI agent persistent memory</span>
+<span class="syn-fb">REMEMBER</span> agent_id<span class="syn-op">=</span><span class="syn-str">'agent-007'</span>
+  CONTENT <span class="syn-str">'User prefers concise answers with code examples'</span>
+  IMPORTANCE <span class="syn-num">0.8</span>;
+
+<span class="syn-cm">-- Recall with semantic search + decay</span>
+<span class="syn-fb">RECALL BY</span> agent_id<span class="syn-op">=</span><span class="syn-str">'agent-007'</span>
+  QUERY <span class="syn-str">'user preferences'</span>
+  TOP_K <span class="syn-num">5</span>;</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== QUICK START ===== -->
+    <section id="quickstart" class="quickstart">
+      <div class="container">
+        <div class="section-header fade-in">
+          <h2>Up and running in 60 seconds</h2>
+          <p>FunDB speaks PostgreSQL wire protocol. Your existing tools already work.</p>
+        </div>
+        <div class="steps fade-in-stagger">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3>Start FunDB</h3>
+            <div class="terminal">
+              <div class="terminal-header">
+                <div class="code-dots"><span></span><span></span><span></span></div>
+                <span>terminal</span>
+              </div>
+              <pre><code><span class="syn-cm"># Docker (recommended)</span>
+docker compose up -d</code></pre>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3>Connect</h3>
+            <div class="terminal">
+              <div class="terminal-header">
+                <div class="code-dots"><span></span><span></span><span></span></div>
+                <span>terminal</span>
+              </div>
+              <pre><code>psql -h localhost -p 5433 -U fundb</code></pre>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3>Query</h3>
+            <div class="terminal">
+              <div class="terminal-header">
+                <div class="code-dots"><span></span><span></span><span></span></div>
+                <span>funql</span>
+              </div>
+              <pre><code><span class="syn-fb">UNDERSTAND</span> <span class="syn-str">'find recent papers
+  about transformers with
+  high confidence'</span>;</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FINAL CTA ===== -->
+    <section id="cta" class="final-cta">
+      <div class="container">
+        <div class="cta-content fade-in">
+          <h2>Start building with FunDB</h2>
+          <p>One engine for all your AI data. Open source. Apache-2.0.</p>
+          <div class="hero-ctas">
+            <a href="#quickstart" class="btn btn-primary">Get Started</a>
+            <a href="https://github.com/fundb/fundb" target="_blank" rel="noopener" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <svg viewBox="0 0 400 100" fill="none">
+          <g transform="translate(50, 50)">
+            <rect x="-14" y="-14" width="28" height="28" rx="7" fill="#E8872B"/>
+            <path d="M-36,-30 Q-20,-18 -10,-10" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M36,-30 Q20,-18 10,-10" stroke="#0D9488" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M-40,5 Q-25,3 -12,1" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M40,5 Q25,3 12,1" stroke="#E11D48" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M0,38 Q0,25 0,12" stroke="#D97706" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <circle cx="-36" cy="-30" r="3" fill="#7C3AED"/>
+            <circle cx="36" cy="-30" r="3" fill="#0D9488"/>
+            <circle cx="-40" cy="5" r="3" fill="#2563EB"/>
+            <circle cx="40" cy="5" r="3" fill="#E11D48"/>
+            <circle cx="0" cy="38" r="3" fill="#D97706"/>
+            <rect x="-14" y="-14" width="28" height="28" rx="7" fill="#E8872B" opacity="0.2" filter="url(#footer-glow)"/>
+          </g>
+          <defs>
+            <filter id="footer-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <text x="110" y="62" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-weight="700" font-size="42" letter-spacing="-1">
+            <tspan fill="#E8872B">Fun</tspan><tspan fill="#E5E7EB">DB</tspan>
+          </text>
+        </svg>
+        <p>The cognitive database for the AI era</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <a href="https://github.com/fundb/fundb" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/fundb/fundb#documentation" target="_blank" rel="noopener">Documentation</a>
+          <a href="https://github.com/fundb/fundb/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <a href="#">Discord</a>
+          <a href="#">Twitter</a>
+          <a href="https://github.com/fundb/fundb/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="https://github.com/fundb/fundb/blob/main/LICENSE" target="_blank" rel="noopener">Apache-2.0 License</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FunDB Contributors. Licensed under Apache-2.0.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ===== Scroll Animations (IntersectionObserver) =====
+    document.addEventListener('DOMContentLoaded', () => {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.fade-in, .fade-in-stagger').forEach(el => {
+        observer.observe(el);
+      });
+
+      // ===== SVG Path Length Calculation =====
+      document.querySelectorAll('.convergence-path').forEach(path => {
+        const length = path.getTotalLength();
+        path.style.setProperty('--path-len', length);
+        path.style.strokeDasharray = length;
+        path.style.strokeDashoffset = length;
+      });
+
+      // ===== Code Tab Switcher =====
+      document.querySelectorAll('.code-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.code-content').forEach(c => c.classList.add('hidden'));
+          tab.classList.add('active');
+          document.getElementById('code-' + tab.dataset.tab).classList.remove('hidden');
+        });
+      });
+
+      // ===== Mobile Nav Toggle =====
+      const toggle = document.querySelector('.nav-mobile-toggle');
+      const navLinks = document.querySelector('.nav-links');
+      toggle.addEventListener('click', () => {
+        navLinks.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', navLinks.classList.contains('open'));
+      });
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => navLinks.classList.remove('open'));
+      });
+
+      // ===== Copy Code Button =====
+      document.querySelectorAll('.code-copy').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const block = btn.closest('.code-block');
+          const activeCode = block.querySelector('.code-content:not(.hidden)');
+          const text = activeCode.textContent;
+          navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+          });
+        });
+      });
+
+      // ===== Nav Background on Scroll =====
+      const nav = document.querySelector('.nav');
+      window.addEventListener('scroll', () => {
+        nav.classList.toggle('scrolled', window.scrollY > 20);
+      }, { passive: true });
+    });
+  </script>
+</body>
+</html>

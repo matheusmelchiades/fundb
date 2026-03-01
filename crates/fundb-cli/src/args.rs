@@ -63,7 +63,7 @@ impl CliArgs {
                     i += 1;
                     let v = Self::require_next(&raw, i, arg)?;
                     args.port = v.parse::<u16>().map_err(|_| {
-                        anyhow::anyhow!("Invalid port number: {}", v)
+                        anyhow::anyhow!("Invalid port number '{}': must be a number between 1 and 65535", v)
                     })?;
                 }
                 "--database" | "-d" => {
@@ -98,7 +98,7 @@ impl CliArgs {
                     };
                 }
                 other if other.starts_with('-') => {
-                    return Err(anyhow::anyhow!("Unknown argument: {}", other));
+                    return Err(anyhow::anyhow!("Unknown argument '{}'. Run 'fundb --help' for usage information", other));
                 }
                 _ => {
                     // Positional argument: treat as database name
@@ -115,7 +115,7 @@ impl CliArgs {
     fn require_next(raw: &[String], i: usize, flag: &str) -> anyhow::Result<String> {
         raw.get(i)
             .cloned()
-            .ok_or_else(|| anyhow::anyhow!("Flag '{}' requires a value", flag))
+            .ok_or_else(|| anyhow::anyhow!("Flag '{}' requires a value. Usage: {} <value>", flag, flag))
     }
 
     pub fn usage() -> &'static str {

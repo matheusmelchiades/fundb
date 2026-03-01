@@ -340,14 +340,14 @@ impl<'a> Lexer<'a> {
 
         let tok = if has_dot {
             let v: f64 = raw.parse().map_err(|_| LexError {
-                message: format!("invalid float literal: {}", raw),
+                message: format!("invalid float literal '{}'. Expected format: 3.14 or 0.5", raw),
                 line,
                 col,
             })?;
             Token::FloatLiteral(v)
         } else {
             let v: i64 = raw.parse().map_err(|_| LexError {
-                message: format!("invalid integer literal: {}", raw),
+                message: format!("invalid integer literal '{}'. Value may be out of range (max: {})", raw, i64::MAX),
                 line,
                 col,
             })?;

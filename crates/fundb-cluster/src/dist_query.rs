@@ -62,16 +62,16 @@ impl std::fmt::Display for DistQueryError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DistQueryError::ShardTimeout(id) => {
-                write!(f, "shard {id} timed out")
+                write!(f, "shard {id} timed out. Check shard health and network connectivity between nodes")
             }
             DistQueryError::ShardFailed { shard, reason } => {
                 write!(f, "shard {shard} failed: {reason}")
             }
             DistQueryError::NoShards => {
-                write!(f, "no shards found for the requested collection")
+                write!(f, "no shards found for the requested collection. The collection may not exist or the cluster has no available nodes")
             }
             DistQueryError::MergeError(msg) => {
-                write!(f, "merge error: {msg}")
+                write!(f, "failed to merge results from shards: {msg}")
             }
         }
     }

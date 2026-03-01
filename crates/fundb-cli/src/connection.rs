@@ -84,7 +84,7 @@ impl FunDbConn {
                             // MD5Password — salt is bytes 4..8
                             let pw = password.unwrap_or("");
                             if payload.len() < 8 {
-                                return Err(anyhow::anyhow!("MD5 auth: payload too short"));
+                                return Err(anyhow::anyhow!("MD5 authentication failed: server sent incomplete salt (expected 8 bytes, got {})", payload.len()));
                             }
                             let salt = &payload[4..8];
                             let md5_pw = md5_password(user, pw, salt);
@@ -96,7 +96,7 @@ impl FunDbConn {
                         }
                         other => {
                             return Err(anyhow::anyhow!(
-                                "Unsupported authentication type: {}",
+                                "Unsupported authentication method (type {}). FunDB CLI supports cleartext (3) and MD5 (5) authentication",
                                 other
                             ));
                         }
@@ -121,8 +121,8 @@ impl FunDbConn {
                 }
                 other => {
                     return Err(anyhow::anyhow!(
-                        "Unexpected message type during startup: {}",
-                        other as char
+                        "Unexpected protocol message '{}' (0x{:02x}) during startup. Is the server running FunDB or a compatible PostgreSQL protocol?",
+                        other as char, other
                     ));
                 }
             }

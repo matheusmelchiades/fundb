@@ -66,11 +66,11 @@ impl Default for Catalog {
 
 #[derive(Debug, thiserror::Error)]
 pub enum BindError {
-    #[error("unknown collection: {0}")]
+    #[error("unknown collection '{0}': no such collection exists. Check the collection name and ensure it has been created")]
     UnknownCollection(String),
-    #[error("type mismatch: {0}")]
+    #[error("type mismatch: {0}. Check that column types match the operation being performed")]
     TypeMismatch(String),
-    #[error("bind error: {0}")]
+    #[error("query bind error: {0}")]
     Other(String),
 }
 

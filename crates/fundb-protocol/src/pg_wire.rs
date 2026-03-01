@@ -321,14 +321,14 @@ impl PgConnection {
             let len_bytes = self.read_exact_bytes(4).await?;
             let total_len = i32::from_be_bytes(len_bytes[..4].try_into().unwrap());
             if total_len < 4 {
-                return Err(anyhow!("invalid startup message: length {}", total_len));
+                return Err(anyhow!("invalid startup message: declared length {} is less than the 4-byte minimum. Ensure the client uses PostgreSQL protocol v3.0", total_len));
             }
             let payload_len = (total_len - 4) as usize;
             let payload = self.read_exact_bytes(payload_len).await?;
 
             // Read the protocol version / request code (next 4 bytes).
             if payload.len() < 4 {
-                return Err(anyhow!("startup payload too short"));
+                return Err(anyhow!("startup payload too short: expected at least 4 bytes for protocol version, got {}", payload.len()));
             }
             let code = i32::from_be_bytes(payload[..4].try_into().unwrap());
 
@@ -358,7 +358,7 @@ impl PgConnection {
         let len_bytes = self.read_exact_bytes(4).await?;
         let total_len = i32::from_be_bytes(len_bytes[..4].try_into().unwrap());
         if total_len < 4 {
-            return Err(anyhow!("invalid message length {}", total_len));
+            return Err(anyhow!("invalid message length {}: must be at least 4 bytes", total_len));
         }
         let body_len = (total_len - 4) as usize;
         let body = self.read_exact_bytes(body_len).await?;
@@ -376,7 +376,7 @@ impl PgConnection {
             b'X' => Ok(FrontendMessage::Terminate),
             other => {
                 warn!("unknown frontend message type: 0x{:02x}, closing connection", other);
-                Err(anyhow!("unsupported frontend message type: 0x{:02x}", other))
+                Err(anyhow!("unsupported frontend message type: 0x{:02x} ('{}' as char). Supported: Q (Query), X (Terminate)", other, other as char))
             }
         }
     }

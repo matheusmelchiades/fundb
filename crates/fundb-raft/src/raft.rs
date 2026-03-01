@@ -20,13 +20,13 @@ pub type PeerAddr = String; // "host:port"
 
 #[derive(Debug, thiserror::Error)]
 pub enum RaftError {
-    #[error("not leader: current leader is {0:?}")]
+    #[error("not leader: current leader is node {0:?}. Redirect your query to the leader node")]
     NotLeader(Option<NodeId>),
-    #[error("storage error: {0}")]
+    #[error("raft storage error: {0}. Check disk space and file permissions")]
     Storage(#[from] anyhow::Error),
-    #[error("network error: {0}")]
+    #[error("raft network error: {0}. Check connectivity between cluster nodes")]
     Network(String),
-    #[error("timeout")]
+    #[error("raft operation timed out. The cluster may be electing a new leader — retry after a short delay")]
     Timeout,
 }
 

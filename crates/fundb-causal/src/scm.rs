@@ -16,15 +16,15 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum ScmError {
-    #[error("cycle detected involving variable '{0}'")]
+    #[error("cycle detected involving variable '{0}'. Causal models must be acyclic (DAG). Use MODE EQUILIBRIUM for feedback loops")]
     CycleDetected(String),
-    #[error("unknown variable '{0}'")]
+    #[error("unknown variable '{0}'. Check the variable name exists in the causal model")]
     UnknownVariable(String),
-    #[error("dimension mismatch: expected {expected}, got {got}")]
+    #[error("dimension mismatch: expected {expected} variables, got {got}")]
     DimensionMismatch { expected: usize, got: usize },
-    #[error("no path from '{from}' to '{to}'")]
+    #[error("no causal path from '{from}' to '{to}'. These variables may be independent in the model")]
     NoPath { from: String, to: String },
-    #[error("non-convergence: {0}")]
+    #[error("causal model did not converge: {0}. Try increasing max iterations or check for numerical instability")]
     NonConvergence(String),
 }
 

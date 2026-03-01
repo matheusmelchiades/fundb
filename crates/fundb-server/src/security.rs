@@ -400,10 +400,10 @@ pub enum SecurityError {
     #[error("invalid query: {0}")]
     InvalidQuery(String),
 
-    #[error("tls config error: {0}")]
+    #[error("TLS configuration error: {0}. Check that certificate and key files exist and are readable")]
     TlsConfig(String),
 
-    #[error("unauthenticated")]
+    #[error("authentication required. Connect with valid credentials using -u <user> -W <password>")]
     Unauthenticated,
 }
 

@@ -1,0 +1,30 @@
+[package]
+name = "fundb-integration-tests"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+fundb-core       = { path = "../fundb-core" }
+fundb-storage    = { path = "../fundb-storage" }
+fundb-indexes    = { path = "../fundb-indexes" }
+fundb-sql        = { path = "../fundb-sql" }
+fundb-optimizer  = { path = "../fundb-optimizer" }
+fundb-executor   = { path = "../fundb-executor" }
+fundb-cognitive  = { path = "../fundb-cognitive" }
+fundb-causal     = { path = "../fundb-causal" }
+fundb-raft       = { path = "../fundb-raft" }
+fundb-cluster    = { path = "../fundb-cluster" }
+fundb-protocol   = { path = "../fundb-protocol" }
+fundb-server     = { path = "../fundb-server" }
+tokio            = { workspace = true }
+uuid             = { workspace = true }
+serde            = { workspace = true }
+rmp-serde        = { workspace = true }
+anyhow           = { workspace = true }
+bytes            = { workspace = true }
+async-trait      = { workspace = true }
+tempfile         = "3"
+serde_json       = "1"

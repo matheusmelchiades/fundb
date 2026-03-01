@@ -15,6 +15,7 @@ members = [
     "crates/fundb-protocol",
     "crates/fundb-server",
     "crates/fundb-cli",
+    "crates/fundb-integration-tests",
 ]
 resolver = "2"
 

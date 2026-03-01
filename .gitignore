@@ -4,9 +4,11 @@ target/
 Cargo.lock       # library crate — don't commit lock file
 *.pdb
 
-# IDE
+# IDE / local agent config
 .idea/
 .vscode/
+.claire/
+.claude/
 *.swp
 *.swo
 .DS_Store

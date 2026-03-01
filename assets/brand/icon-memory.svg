@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Agent Memory: Brain outline with circular recall arrow -->
+  <g stroke="#D97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Simplified brain shape -->
+    <path d="M18,36 C10,36 6,30 6,24 C6,18 10,14 14,12 C14,8 18,4 24,4 C30,4 34,8 34,12 C38,14 42,18 42,24 C42,30 38,36 30,36"/>
+    <!-- Brain center division -->
+    <path d="M24,4 L24,14 Q24,20 20,22 Q24,24 24,30 L24,36" opacity="0.4"/>
+    <!-- Circular recall arrow -->
+    <path d="M30,36 Q36,42 30,44 Q24,46 20,42"/>
+    <!-- Arrow tip -->
+    <polyline points="17,40 20,42 18,45"/>
+  </g>
+</svg>

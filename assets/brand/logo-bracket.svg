@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- FunDB Favicon / Compact mark - Fun Bracket F{ -->
+
+  <!-- Background rounded square -->
+  <rect width="48" height="48" rx="10" fill="#1A1A2E"/>
+
+  <!-- Stylized F{ mark -->
+  <text x="8" y="36" font-family="JetBrains Mono, 'SF Mono', 'Fira Code', monospace" font-weight="700" font-size="28" letter-spacing="-2">
+    <tspan fill="#E8872B">F</tspan><tspan fill="#D97706">{</tspan>
+  </text>
+</svg>

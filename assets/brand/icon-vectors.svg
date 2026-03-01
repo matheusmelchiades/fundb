@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Vectors: Three arrows converging to a point -->
+  <g stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Arrow 1 - top left -->
+    <line x1="8" y1="8" x2="22" y2="22"/>
+    <polyline points="16,8 8,8 8,16"/>
+    <!-- Arrow 2 - top right -->
+    <line x1="40" y1="10" x2="26" y2="24"/>
+    <polyline points="34,10 40,10 40,16"/>
+    <!-- Arrow 3 - bottom -->
+    <line x1="14" y1="40" x2="22" y2="28"/>
+    <polyline points="8,36 14,40 20,36"/>
+  </g>
+  <!-- Convergence point -->
+  <circle cx="24" cy="24" r="4" fill="#7C3AED" opacity="0.2"/>
+  <circle cx="24" cy="24" r="2" fill="#7C3AED"/>
+</svg>

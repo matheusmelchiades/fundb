@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100" fill="none">
+  <!-- FunDB Logo - Synaptic Convergence + Wordmark -->
+
+  <!-- Icon: 5 convergence lines into central node -->
+  <g transform="translate(50, 50)">
+    <!-- Central node (rounded square) -->
+    <rect x="-14" y="-14" width="28" height="28" rx="7" fill="#E8872B"/>
+
+    <!-- 5 convergence paths (each representing a data type) -->
+    <!-- Vectors (violet) - top-left -->
+    <path d="M-36,-30 Q-20,-18 -10,-10" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- Graphs (teal) - top-right -->
+    <path d="M36,-30 Q20,-18 10,-10" stroke="#0D9488" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- Documents (blue) - left -->
+    <path d="M-40,5 Q-25,3 -12,1" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- Time-Series (rose) - right -->
+    <path d="M40,5 Q25,3 12,1" stroke="#E11D48" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- Agent Memory (gold) - bottom -->
+    <path d="M0,38 Q0,25 0,12" stroke="#D97706" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+    <!-- Small dots at the ends of convergence paths -->
+    <circle cx="-36" cy="-30" r="3" fill="#7C3AED"/>
+    <circle cx="36" cy="-30" r="3" fill="#0D9488"/>
+    <circle cx="-40" cy="5" r="3" fill="#2563EB"/>
+    <circle cx="40" cy="5" r="3" fill="#E11D48"/>
+    <circle cx="0" cy="38" r="3" fill="#D97706"/>
+
+    <!-- Central glow effect -->
+    <rect x="-14" y="-14" width="28" height="28" rx="7" fill="#E8872B" opacity="0.2" filter="url(#glow)"/>
+  </g>
+
+  <!-- Glow filter -->
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Wordmark -->
+  <text x="110" y="62" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-weight="700" font-size="42" letter-spacing="-1">
+    <tspan fill="#E8872B">Fun</tspan><tspan fill="#1A1A2E">DB</tspan>
+  </text>
+</svg>

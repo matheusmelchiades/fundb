@@ -60,7 +60,7 @@ impl ConfidenceIndex {
     pub fn histogram(&self) -> [u32; 100] {
         let mut buckets = [0u32; 100];
         for (_, confidence) in &self.entries {
-            let idx = (*confidence * 100.0).floor() as usize;
+            let idx = (*confidence * 100.0).round() as usize;
             let idx = idx.min(99); // clamp to handle confidence == 1.0
             buckets[idx] += 1;
         }

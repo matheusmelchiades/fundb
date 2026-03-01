@@ -194,6 +194,15 @@ fn granger_test_at_lag(
         return None;
     }
 
+    // Build y_target early to check for constant series (no variance).
+    // A constant y carries no information — x trivially "fits" it, producing
+    // a spuriously high F-statistic. Return p=1.0 (no causality) immediately.
+    let y_slice = &y[..n_total.min(y.len())];
+    let var_y = variance(y_slice);
+    if var_y < 1e-10 {
+        return Some(GrangerResult { f_stat: 0.0, p_value: 1.0, lag, differenced });
+    }
+
     // Build restricted model: y[t] ~ intercept + y[t-1..t-lag]
     let (x_restricted, y_target) = build_lagged_matrix(y, None, lag);
 

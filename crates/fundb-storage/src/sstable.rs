@@ -111,7 +111,7 @@ impl SstableWriter {
         // Build and serialise the bloom filter so it is stored at the end of
         // the file.  We insert the msgpack bytes of each key.
         let capacity = self.entries.len().max(1);
-        let mut bloom = BloomFilter::new(capacity, 0.01);
+        let mut bloom = BloomFilter::new(capacity, 0.001);
         for (key, _) in &self.entries {
             let key_bytes = rmp_serde::to_vec(key).unwrap_or_default();
             bloom.insert(&key_bytes);

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use crate::id::new_record_id;
 use crate::record::{CausalEdge, Edge, FunRecord, Sample, Source};
 use crate::types::Timestamp;
@@ -33,7 +33,7 @@ pub struct FunRecordBuilder {
     collection:  String,
     tenant:      u32,
     data:        Vec<u8>,
-    vectors:     HashMap<String, Vec<f32>>,
+    vectors:     BTreeMap<String, Vec<f32>>,
     edges:       Vec<Edge>,
     timeseries:  Vec<Sample>,
     confidence:  f32,
@@ -53,7 +53,7 @@ impl FunRecordBuilder {
             collection:  collection.into(),
             tenant:      0,
             data:        Vec::new(),
-            vectors:     HashMap::new(),
+            vectors:     BTreeMap::new(),
             edges:       Vec::new(),
             timeseries:  Vec::new(),
             confidence:  1.0,

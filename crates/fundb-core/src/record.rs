@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use uuid::Uuid;
 use crate::types::{
     CausalOrigin, CausalType, DirectionStatus, SourceMethod, StabilityStatus, Timestamp,
@@ -143,7 +143,7 @@ pub struct FunRecord {
 
     // --- Typed Extensions -------------------------------------------------
     /// Named vector embeddings, e.g. `{ "content_embedding": [...] }`.
-    pub _vectors:     HashMap<String, Vec<f32>>,
+    pub _vectors:     BTreeMap<String, Vec<f32>>,
     /// Graph adjacency list — outbound edges from this record.
     pub _edges:       Vec<Edge>,
     /// Time-series data points embedded in this record.

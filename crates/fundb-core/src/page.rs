@@ -163,7 +163,8 @@ impl PageEncoder {
             }
 
             // Confidence histogram bucket: clamp to [0, 99].
-            let bucket = ((record._confidence * 100.0) as usize).min(99);
+            let bucket = (record._confidence * 100.0).round() as usize;
+            let bucket = bucket.min(99);
             histogram[bucket] += 1;
         }
 

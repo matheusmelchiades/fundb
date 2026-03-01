@@ -81,7 +81,7 @@ impl CausalDagIndex {
         //    adding source_id → target_id would create a cycle.
         let mut visited = HashSet::new();
         if self.can_reach(edge.target_id, edge.source_id, &mut visited) {
-            return Err(CausalError::Cycle { detected_at: edge.source_id });
+            return Err(CausalError::Cycle { detected_at: edge.target_id });
         }
 
         // 3. Insert into both indexes.

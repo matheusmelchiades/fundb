@@ -95,7 +95,7 @@ impl SemanticInterface {
 
         // Rule 1: SELECT-LIKE (lowest specificity, checked last among rules)
         let select_keywords = &[
-            "find", "get", "show", "list", "fetch", "select", "query", "retrieve",
+            "find", "get", "show", "list", "fetch", "select", "query", "retrieve", "top",
         ];
         let select_score = score_multi(&lower, select_keywords);
 
@@ -117,10 +117,12 @@ impl SemanticInterface {
         ];
 
         // Find the rule with the highest keyword score that has at least one hit.
+        // Use reduce (not max_by) so that ties are broken by the order in the
+        // array (most-specific rule first), not by picking the last equal element.
         let winner = candidates_ranked
             .iter()
             .filter(|(s, _, _)| *s > 0.0)
-            .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+            .reduce(|best, cur| if cur.0 > best.0 { cur } else { best });
 
         let (keyword_score, base_confidence, rule_id) = match winner {
             Some(&(s, bc, rid)) => (s, bc, rid),
@@ -343,7 +345,8 @@ fn score_multi(intent: &str, keywords: &[&str]) -> f32 {
     if matches == 0 {
         return 0.0;
     }
-    (matches as f32 / keywords.len() as f32).clamp(0.1, 1.0)
+    // Any keyword match signals high confidence for this rule.
+    1.0
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

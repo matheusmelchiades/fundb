@@ -367,7 +367,12 @@ impl Parser {
         }
 
         let name = self.parse_qualified_name()?;
-        let alias = if self.eat(&Token::As) {
+        // Consume AS as a table alias only when it is NOT followed by "of"
+        // (which would indicate an AS OF temporal clause, not an alias).
+        let alias = if matches!(self.peek(), Token::As)
+            && !matches!(self.peek2(), Some(Token::Ident(s)) if s.eq_ignore_ascii_case("of"))
+        {
+            self.advance(); // eat As
             Some(self.expect_ident()?)
         } else if matches!(self.peek(), Token::Ident(_)) && !self.is_clause_keyword(self.peek()) {
             Some(self.expect_ident()?)
@@ -1853,6 +1858,8 @@ fn keyword_as_ident(tok: &Token) -> Option<String> {
         Token::Traverse    => Some("traverse".into()),
         Token::Trace       => Some("trace".into()),
         Token::With        => Some("with".into()),
+        Token::MaxTokens   => Some("max_tokens".into()),
+        Token::IncludeContradictions => Some("include_contradictions".into()),
         _ => None,
     }
 }

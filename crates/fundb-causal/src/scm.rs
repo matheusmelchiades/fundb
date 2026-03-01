@@ -223,8 +223,16 @@ impl ScmModel {
         }
 
         // Step 2: Action — perform intervention on antecedent
-        // Step 3: Prediction — re-evaluate with noise terms carried over
-        let mut cf_obs = observations.clone();
+        // Step 3: Prediction — re-evaluate with noise terms carried over.
+        // cf_obs must only contain exogenous variables (those without equations),
+        // because endogenous variables must be recomputed with the counterfactual X.
+        // Keeping observed values of endogenous vars would prevent recomputation.
+        let mut cf_obs: HashMap<String, f64> = HashMap::new();
+        for (k, v) in observations {
+            if !self.equations.contains_key(k) {
+                cf_obs.insert(k.clone(), *v);
+            }
+        }
         cf_obs.insert(antecedent.to_string(), antecedent_value);
 
         let result = self.evaluate_counterfactual_with_noise(antecedent, &cf_obs, &noise_terms);

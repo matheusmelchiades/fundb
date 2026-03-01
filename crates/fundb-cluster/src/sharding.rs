@@ -464,7 +464,12 @@ mod tests {
 
         let mut seen: HashSet<NodeId> = HashSet::new();
         for i in 0u64..200 {
-            let id = Uuid::from_u128(i as u128);
+            // Spread sequential i across the full 128-bit UUID space so that
+            // consecutive keys produce diverse FNV routing hashes.
+            let n = (i as u128)
+                .wrapping_mul(6364136223846793005u128)
+                .wrapping_add(1442695040888963407u128);
+            let id = Uuid::from_u128(n);
             let shard = m.shard_for("col", &id);
             if let Some(owner) = m.node_for_shard(shard) {
                 seen.insert(owner);

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Documents: Stacked rectangles with curly brace -->
+  <g stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Back doc -->
+    <rect x="14" y="6" width="24" height="30" rx="3" opacity="0.3"/>
+    <!-- Front doc -->
+    <rect x="10" y="10" width="24" height="30" rx="3" fill="white" stroke="#2563EB"/>
+    <!-- Curly brace { -->
+    <path d="M20,18 Q17,18 17,21 L17,23 Q17,25 15,25 Q17,25 17,27 L17,29 Q17,32 20,32" stroke="#2563EB" stroke-width="2"/>
+    <!-- Lines (content) -->
+    <line x1="24" y1="21" x2="30" y2="21" opacity="0.5"/>
+    <line x1="24" y1="25" x2="32" y2="25" opacity="0.5"/>
+    <line x1="24" y1="29" x2="28" y2="29" opacity="0.5"/>
+  </g>
+</svg>

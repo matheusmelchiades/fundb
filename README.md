@@ -1,13 +1,16 @@
 <p align="center">
-  <strong>FunDB</strong><br>
+  <img src="assets/brand/logo-full.svg" alt="FunDB" width="320">
+  <br>
   <em>The cognitive database for the AI era</em>
 </p>
 
 <p align="center">
   <a href="https://github.com/fundb/fundb/actions/workflows/ci.yml"><img src="https://github.com/fundb/fundb/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/fundb/fundb/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License"></a>
-  <a href="https://github.com/fundb/fundb/releases"><img src="https://img.shields.io/badge/version-0.1.0-green.svg" alt="Version"></a>
-  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/rust-1.85+-orange.svg" alt="Rust"></a>
+  <a href="https://github.com/fundb/fundb/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1A1A2E?style=flat-square&labelColor=E8872B&logoColor=white" alt="License"></a>
+  <a href="https://github.com/fundb/fundb/releases"><img src="https://img.shields.io/badge/v0.1.0-cognitive%20database-1A1A2E?style=flat-square&labelColor=E8872B&logoColor=white" alt="Version"></a>
+  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/rust-1.85+-1A1A2E?style=flat-square&labelColor=C46A15&logo=rust&logoColor=white" alt="Rust"></a>
+  <img src="https://img.shields.io/badge/PostgreSQL-wire%20compatible-1A1A2E?style=flat-square&labelColor=3D5A80&logo=postgresql&logoColor=white" alt="PostgreSQL Compatible">
+  <img src="https://img.shields.io/badge/tests-407%20passing-1A1A2E?style=flat-square&labelColor=0D9488" alt="Tests">
 </p>
 
 ---

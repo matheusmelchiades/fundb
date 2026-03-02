@@ -1,5 +1,6 @@
 // fundb-server — FunDB production server: HTTP API, security, observability.
 
+pub mod handler;
 pub mod http;
 pub mod observability;
 pub mod security;

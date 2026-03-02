@@ -16,6 +16,7 @@ fundb-sql            = { path = "../fundb-sql" }
 fundb-optimizer      = { path = "../fundb-optimizer" }
 fundb-storage        = { path = "../fundb-storage" }
 fundb-indexes        = { path = "../fundb-indexes" }
+rmp-serde.workspace  = true
 
 
 [dev-dependencies]

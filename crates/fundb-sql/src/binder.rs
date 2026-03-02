@@ -37,6 +37,13 @@ impl Catalog {
         self.collections.contains(name)
     }
 
+    /// Return all registered collection names, sorted alphabetically.
+    pub fn list_collections(&self) -> Vec<String> {
+        let mut names: Vec<String> = self.collections.iter().cloned().collect();
+        names.sort();
+        names
+    }
+
     /// Return a catalog pre-populated with the well-known FunDB collections.
     pub fn open() -> Self {
         let mut c = Catalog::new();
@@ -110,9 +117,9 @@ pub fn bind(stmt: Statement, catalog: &Catalog) -> Result<LogicalPlan, BindError
                 predict: c.predict,
             })
         }
+        Statement::Insert(ins) => bind_insert(ins),
         // Statements that produce no result set.
-        Statement::Insert(_)
-        | Statement::Update(_)
+        Statement::Update(_)
         | Statement::Delete(_)
         | Statement::Remember(_)
         | Statement::RecallBy(_)
@@ -269,6 +276,24 @@ fn bind_select(s: ast::SelectStmt, catalog: &Catalog) -> Result<LogicalPlan, Bin
     }
 
     Ok(plan)
+}
+
+// ── INSERT binding ────────────────────────────────────────────────────────
+
+fn bind_insert(ins: ast::InsertStmt) -> Result<LogicalPlan, BindError> {
+    // Collections are implicit in FunDB (created on first write), so we skip
+    // catalog validation here.
+    let values = ins
+        .values
+        .iter()
+        .map(|row| row.iter().map(bind_expr).collect::<Result<Vec<_>, _>>())
+        .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(LogicalPlan::Insert {
+        collection: ins.table,
+        columns: ins.columns,
+        values,
+    })
 }
 
 // ── Expression binding ────────────────────────────────────────────────────────
@@ -819,13 +844,27 @@ mod tests {
     }
 
     #[test]
-    fn test_bind_insert_is_empty() {
+    fn test_bind_insert() {
         let plan = bind_sql("INSERT INTO documents (x) VALUES (1)").unwrap();
-        assert!(
-            matches!(plan, LogicalPlan::Empty),
-            "expected Empty, got {:?}",
-            plan
-        );
+        match plan {
+            LogicalPlan::Insert {
+                ref collection,
+                ref columns,
+                ref values,
+            } => {
+                assert_eq!(collection, "documents");
+                assert_eq!(columns, &["x"]);
+                assert_eq!(values.len(), 1);
+            }
+            other => panic!("expected Insert, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_bind_insert_unknown_collection_ok() {
+        // INSERT should NOT fail for unknown collections (implicit creation)
+        let plan = bind_sql("INSERT INTO brand_new_collection (a) VALUES ('hello')");
+        assert!(plan.is_ok(), "INSERT into unknown collection should succeed");
     }
 
     // ── Additional regression tests ───────────────────────────────────────────

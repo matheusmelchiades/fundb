@@ -23,6 +23,7 @@ fundb-core      = { path = "../fundb-core" }
 fundb-storage   = { path = "../fundb-storage" }
 fundb-executor  = { path = "../fundb-executor" }
 fundb-sql       = { path = "../fundb-sql" }
+rmp-serde.workspace          = true
 
 [[bench]]
 name    = "query_bench"

@@ -203,7 +203,13 @@ pub enum LogicalPlan {
         had: HashMap<String, f64>,
         predict: String,
     },
+    /// INSERT INTO collection (columns) VALUES (row1), (row2), …
+    Insert {
+        collection: String,
+        columns: Vec<String>,
+        values: Vec<Vec<Expr>>,
+    },
     /// Placeholder for statements that produce no result set
-    /// (INSERT, UPDATE, DELETE, REMEMBER, etc.).
+    /// (UPDATE, DELETE, REMEMBER, etc.).
     Empty,
 }

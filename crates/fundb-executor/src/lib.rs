@@ -24,12 +24,15 @@
 pub mod batch;
 pub mod operators;
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::Result;
+use fundb_core::{FunRecordBuilder, RecordKey};
 use fundb_optimizer::optimize;
-use fundb_sql::LogicalPlan;
+use fundb_sql::{Expr, Literal, LogicalPlan};
 use fundb_storage::LsmTree;
+use serde::Serialize;
 
 use crate::batch::RecordBatch;
 use crate::operators::{FilterOperator, ProjectOperator, ScanOperator, VectorScanOperator};
@@ -141,6 +144,54 @@ impl Executor {
                 self.execute_plan(*input).await
             }
 
+            // ── INSERT ────────────────────────────────────────────────────
+            LogicalPlan::Insert {
+                collection,
+                columns,
+                values,
+            } => {
+                let mut count = 0usize;
+                for row in &values {
+                    let mut data_map: HashMap<String, MsgValue> = HashMap::new();
+                    let mut builder = FunRecordBuilder::new(&collection);
+
+                    for (i, expr) in row.iter().enumerate() {
+                        let col_name = columns.get(i).map(|s| s.as_str()).unwrap_or("_unknown");
+                        let value = eval_expr_to_value(expr);
+
+                        match col_name {
+                            "_confidence" => {
+                                let conf = match &value {
+                                    MsgValue::Float(f) => Some(*f as f32),
+                                    MsgValue::Int(i) => Some(*i as f32),
+                                    _ => None,
+                                };
+                                if let Some(c) = conf {
+                                    builder = builder.confidence(c);
+                                }
+                            }
+                            _ => {
+                                data_map.insert(col_name.to_string(), value);
+                            }
+                        }
+                    }
+
+                    // Serialize data map as MessagePack
+                    let data_bytes = rmp_serde::to_vec(&data_map).unwrap_or_default();
+                    builder = builder.data(data_bytes);
+
+                    let record = builder.build();
+                    let key = RecordKey {
+                        collection: collection.clone(),
+                        id: *record._id.as_bytes(),
+                    };
+                    self.lsm.write(key, record).await?;
+                    count += 1;
+                }
+                tracing::info!("INSERT {} rows into {}", count, collection);
+                Ok(RecordBatch::new())
+            }
+
             // ── Placeholder / empty result ───────────────────────────────
             LogicalPlan::Empty => Ok(RecordBatch::new()),
 
@@ -150,6 +201,37 @@ impl Executor {
             // batches until their respective execution stories are implemented.
             _ => Ok(RecordBatch::new()),
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/// A serde-friendly value type for storing INSERT column values as MessagePack.
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
+enum MsgValue {
+    Str(String),
+    Int(i64),
+    Float(f64),
+    Bool(bool),
+    Null,
+    Array(Vec<f64>),
+}
+
+/// Evaluate a LogicalPlan `Expr` into a `MsgValue` for MessagePack storage.
+fn eval_expr_to_value(expr: &Expr) -> MsgValue {
+    match expr {
+        Expr::Literal(lit) => match lit {
+            Literal::String(s) => MsgValue::Str(s.clone()),
+            Literal::Int(i) => MsgValue::Int(*i),
+            Literal::Float(f) => MsgValue::Float(*f),
+            Literal::Bool(b) => MsgValue::Bool(*b),
+            Literal::Null => MsgValue::Null,
+            Literal::Vector(v) => MsgValue::Array(v.iter().map(|f| *f as f64).collect()),
+        },
+        _ => MsgValue::Null,
     }
 }
 

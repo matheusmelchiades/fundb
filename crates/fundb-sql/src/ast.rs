@@ -114,6 +114,8 @@ pub struct ContextOptions {
 pub struct TraverseClause {
     /// Edge relation name, e.g. `follows`
     pub relation: String,
+    /// Full chain for multi-hop: `users -> orders -> products`
+    pub chain: Vec<String>,
     pub depth_min: Option<Expr>,
     pub depth_max: Option<Expr>,
     /// `-> alias` if present
@@ -250,6 +252,8 @@ pub struct DiscoverCausalStmt {
     pub algorithm: Option<String>,
     pub min_confidence: Option<Expr>,
     pub store_as: Option<String>,
+    /// Variables to analyze (from VARIABLES clause)
+    pub variables: Vec<String>,
 }
 
 // ── REMEMBER ─────────────────────────────────────────────────────────────────

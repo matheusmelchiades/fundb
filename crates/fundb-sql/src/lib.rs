@@ -592,4 +592,148 @@ mod tests {
             )";
         parse(sql).unwrap();
     }
+
+    // ── example file integration: every .funsql query must parse ─────────────
+
+    #[test]
+    fn test_all_example_queries_parse() {
+        // ── 01-smoke-test.funsql ─────────────────────────────────────────
+        let queries_01: &[&str] = &[
+            "SELECT 1",
+            "SELECT VERSION()",
+            "SELECT 1",
+            "SELECT 2",
+            "SELECT 3",
+        ];
+
+        // ── 02-seed-data.funsql ──────────────────────────────────────────
+        let queries_02: &[&str] = &[
+            "CREATE COLLECTION users",
+            "CREATE COLLECTION products",
+            "CREATE COLLECTION orders",
+            "CREATE COLLECTION reviews",
+            "CREATE COLLECTION articles",
+            "INSERT INTO users (name, email, role, created_at) VALUES ('Alice Silva', 'alice@example.com', 'admin', '2025-01-15T10:00:00Z')",
+            "INSERT INTO users (name, email, role, created_at) VALUES ('Bob Santos', 'bob@example.com', 'user', '2025-02-20T14:30:00Z')",
+            "INSERT INTO users (name, email, role, created_at) VALUES ('Carol Souza', 'carol@example.com', 'user', '2025-03-10T09:15:00Z')",
+            "INSERT INTO users (name, email, role, created_at) VALUES ('Dave Oliveira', 'dave@example.com', 'moderator', '2025-04-05T16:45:00Z')",
+            "INSERT INTO users (name, email, role, created_at) VALUES ('Eva Lima', 'eva@example.com', 'user', '2025-05-12T11:20:00Z')",
+            "INSERT INTO products (name, category, price, description, _vector) VALUES ('Neural Keyboard', 'hardware', 299.99, 'Mechanical keyboard with AI-powered adaptive key mapping', [0.12, 0.85, 0.33, 0.67, 0.91, 0.22, 0.45, 0.78])",
+            "INSERT INTO products (name, category, price, description, _vector) VALUES ('Quantum Mouse', 'hardware', 149.99, 'Precision mouse with predictive tracking', [0.88, 0.15, 0.42, 0.71, 0.29, 0.63, 0.51, 0.37])",
+            "INSERT INTO products (name, category, price, description, _vector) VALUES ('Holo Monitor', 'display', 1299.99, '32-inch holographic display with eye tracking', [0.55, 0.92, 0.18, 0.44, 0.76, 0.31, 0.89, 0.60])",
+            "INSERT INTO products (name, category, price, description, _vector) VALUES ('Cloud Dock', 'accessories', 89.99, 'Universal docking station with auto-config', [0.33, 0.47, 0.81, 0.19, 0.55, 0.72, 0.28, 0.94])",
+            "INSERT INTO products (name, category, price, description, _vector) VALUES ('Smart Cable Kit', 'accessories', 39.99, 'Self-organizing cable management system', [0.21, 0.68, 0.53, 0.87, 0.14, 0.46, 0.79, 0.35])",
+            "INSERT INTO orders (user_id, product_id, quantity, total, status, ordered_at) VALUES (1, 1, 1, 299.99, 'delivered', '2025-06-01T08:00:00Z')",
+            "INSERT INTO orders (user_id, product_id, quantity, total, status, ordered_at) VALUES (2, 3, 1, 1299.99, 'shipped', '2025-06-15T12:00:00Z')",
+            "INSERT INTO orders (user_id, product_id, quantity, total, status, ordered_at) VALUES (1, 2, 2, 299.98, 'delivered', '2025-06-20T15:30:00Z')",
+            "INSERT INTO orders (user_id, product_id, quantity, total, status, ordered_at) VALUES (3, 5, 3, 119.97, 'pending', '2025-07-01T09:00:00Z')",
+            "INSERT INTO orders (user_id, product_id, quantity, total, status, ordered_at) VALUES (4, 4, 1, 89.99, 'delivered', '2025-07-10T17:00:00Z')",
+            "INSERT INTO reviews (user_id, product_id, rating, text, _confidence) VALUES (1, 1, 5, 'Best keyboard I have ever used. The AI mapping is incredible.', 0.95)",
+            "INSERT INTO reviews (user_id, product_id, rating, text, _confidence) VALUES (2, 3, 4, 'Great display but takes a while to calibrate.', 0.82)",
+            "INSERT INTO reviews (user_id, product_id, rating, text, _confidence) VALUES (3, 5, 3, 'Works fine, nothing special about the smart features.', 0.71)",
+            "INSERT INTO reviews (user_id, product_id, rating, text, _confidence) VALUES (4, 4, 5, 'Plug and play, auto-detected everything instantly.', 0.93)",
+            "INSERT INTO articles (title, body, author, published_at, _vector) VALUES ('Introduction to FunDB', 'FunDB is an AI-native database designed for the next generation of applications...', 'Alice Silva', '2025-08-01T10:00:00Z', [0.45, 0.78, 0.12, 0.93, 0.34, 0.67, 0.55, 0.21])",
+            "INSERT INTO articles (title, body, author, published_at, _vector) VALUES ('Vector Search Deep Dive', 'Understanding how vector similarity search works under the hood...', 'Bob Santos', '2025-08-15T14:00:00Z', [0.82, 0.19, 0.64, 0.37, 0.91, 0.28, 0.73, 0.46])",
+            "INSERT INTO articles (title, body, author, published_at, _vector) VALUES ('Graph Databases vs FunDB', 'Comparing traditional graph databases with FunDB integrated graph traversal...', 'Carol Souza', '2025-09-01T09:00:00Z', [0.56, 0.41, 0.88, 0.23, 0.69, 0.52, 0.17, 0.84])",
+        ];
+
+        // ── 03-vectors.funsql ────────────────────────────────────────────
+        let queries_03: &[&str] = &[
+            "SELECT name, price, description FROM products WHERE _vector <-> [0.10, 0.80, 0.30, 0.65, 0.90, 0.20, 0.40, 0.75] < 0.5 ORDER BY _vector <-> [0.10, 0.80, 0.30, 0.65, 0.90, 0.20, 0.40, 0.75] LIMIT 3",
+            "SELECT title, author, published_at FROM articles WHERE _vector <-> [0.50, 0.75, 0.15, 0.90, 0.40, 0.60, 0.50, 0.25] < 0.8 ORDER BY _vector <-> [0.50, 0.75, 0.15, 0.90, 0.40, 0.60, 0.50, 0.25]",
+            "SELECT name, category, price FROM products WHERE category = 'hardware' AND _vector <-> [0.12, 0.85, 0.33, 0.67, 0.91, 0.22, 0.45, 0.78] < 0.3 ORDER BY price ASC",
+            "SELECT name, description FROM products ORDER BY _vector <-> [0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50] LIMIT 5",
+            "SELECT title, body, _confidence FROM articles WHERE _vector <-> [0.82, 0.19, 0.64, 0.37, 0.91, 0.28, 0.73, 0.46] < 0.4 AND _confidence > 0.7",
+        ];
+
+        // ── 04-temporal.funsql ───────────────────────────────────────────
+        let queries_04: &[&str] = &[
+            "SELECT name, price FROM products AS OF SYSTEM TIME '2025-07-01T00:00:00Z'",
+            "SELECT name, price AS current_price FROM products ORDER BY name",
+            "SELECT name, price AS old_price FROM products AS OF SYSTEM TIME '2025-06-01T00:00:00Z' ORDER BY name",
+            "SELECT name, email, role FROM users AS OF VALID TIME '2025-03-01T00:00:00Z'",
+            "SELECT name, role, _valid_from, _valid_to FROM users WHERE email = 'alice@example.com' ORDER BY _valid_from ASC",
+            "SELECT o.*, u.name AS user_name FROM orders o JOIN users u ON o.user_id = u.id WHERE o.ordered_at >= '2025-06-01T00:00:00Z' AND o.ordered_at < '2025-07-01T00:00:00Z' ORDER BY o.ordered_at",
+            "SELECT * FROM products AS OF SYSTEM TIME '2025-06-15T00:00:00Z' ORDER BY name",
+        ];
+
+        // ── 05-graph.funsql ──────────────────────────────────────────────
+        let queries_05: &[&str] = &[
+            "TRAVERSE users -> orders -> products WHERE users.name = 'Alice Silva'",
+            "TRAVERSE products -> orders -> users WHERE products.name = 'Neural Keyboard'",
+            "TRAVERSE users -> orders -> products -> orders -> users WHERE users.name = 'Alice Silva' AND depth <= 3",
+            "TRAVERSE users -> orders -> products -> reviews WHERE users.email = 'alice@example.com'",
+            "TRAVERSE products -> orders -> users -> orders -> products WHERE products.name = 'Neural Keyboard' AND products.category = 'hardware' LIMIT 5",
+            "SELECT target.name, COUNT(*) AS purchase_count FROM TRAVERSE users -> orders -> products AS target GROUP BY target.name ORDER BY purchase_count DESC LIMIT 10",
+        ];
+
+        // ── 06-causal-agents.funsql ──────────────────────────────────────
+        let queries_06: &[&str] = &[
+            "TRACE CAUSALITY FROM users WHERE name = 'Alice Silva' TO orders WHERE status = 'delivered'",
+            "ESTIMATE EFFECT OF price ON quantity FROM products JOIN orders ON products.id = orders.product_id WHERE category = 'hardware'",
+            "COUNTERFACTUAL SELECT SUM(total) FROM orders JOIN products ON orders.product_id = products.id WHERE products.name = 'Holo Monitor' INTERVENE SET price = 999.99",
+            "DISCOVER CAUSAL STRUCTURE FROM orders JOIN products ON orders.product_id = products.id VARIABLES price, quantity, rating, total",
+            "REMEMBER 'User Alice prefers hardware products under $300' WITHIN CONTEXT 'shopping_assistant'",
+            "RECALL BY 'product recommendations for Alice' WITHIN CONTEXT 'shopping_assistant' WHERE _confidence > 0.5",
+            "UNDERSTAND 'Show me the best reviewed products from last month'",
+            "REMEMBER 'Neural Keyboard has 95% satisfaction rate' WITHIN CONTEXT 'product_analytics' WITH _confidence = 0.95",
+            "RECALL BY 'customer preferences' WITHIN CONTEXT 'shopping_assistant' ORDER BY _confidence DESC LIMIT 10",
+            "FORGET WITHIN CONTEXT 'shopping_assistant' WHERE _confidence < 0.3",
+        ];
+
+        // ── 07-full-demo.funsql ──────────────────────────────────────────
+        let queries_07: &[&str] = &[
+            "SELECT 1",
+            "SELECT VERSION()",
+            "SELECT name, email, role FROM users WHERE role = 'admin' ORDER BY name ASC LIMIT 10",
+            "SELECT category, COUNT(*) AS total_products, AVG(price) AS avg_price, MIN(price) AS min_price, MAX(price) AS max_price FROM products GROUP BY category HAVING COUNT(*) > 1 ORDER BY avg_price DESC",
+            "SELECT u.name AS customer, p.name AS product, o.quantity, o.total, o.status FROM orders o INNER JOIN users u ON o.user_id = u.id INNER JOIN products p ON o.product_id = p.id ORDER BY o.ordered_at DESC",
+            "SELECT u.name, u.email, COUNT(o.id) AS order_count FROM users u LEFT JOIN orders o ON u.id = o.user_id GROUP BY u.name, u.email ORDER BY order_count DESC",
+            "SELECT name, price, description FROM products WHERE _vector <-> [0.15, 0.82, 0.30, 0.70, 0.88, 0.25, 0.42, 0.80] < 0.5 ORDER BY _vector <-> [0.15, 0.82, 0.30, 0.70, 0.88, 0.25, 0.42, 0.80] LIMIT 3",
+            "SELECT title, author, _confidence FROM articles WHERE _vector <-> [0.50, 0.70, 0.20, 0.85, 0.40, 0.55, 0.50, 0.30] < 0.6 AND _confidence > 0.7 ORDER BY _confidence DESC",
+            "SELECT name, price FROM products AS OF SYSTEM TIME '2025-06-01T00:00:00Z'",
+            "SELECT name, role FROM users AS OF VALID TIME '2025-04-01T00:00:00Z'",
+            "TRAVERSE users -> orders -> products WHERE users.name = 'Alice Silva'",
+            "TRAVERSE products -> orders -> users -> orders -> products WHERE products.name = 'Neural Keyboard' LIMIT 5",
+            "TRACE CAUSALITY FROM users WHERE name = 'Bob Santos' TO orders WHERE total > 1000",
+            "COUNTERFACTUAL SELECT COUNT(*) AS order_count FROM orders JOIN products ON orders.product_id = products.id WHERE products.name = 'Holo Monitor' INTERVENE SET price = 799.99",
+            "REMEMBER 'Top seller in hardware category is Neural Keyboard with 5-star average' WITHIN CONTEXT 'sales_dashboard'",
+            "RECALL BY 'what are our best selling products?' WITHIN CONTEXT 'sales_dashboard' WHERE _confidence > 0.6",
+            "UNDERSTAND 'Show me customers who might churn based on recent activity'",
+            "SELECT DISTINCT u.name, u.email FROM users u JOIN orders o ON u.id = o.user_id JOIN products p ON o.product_id = p.id WHERE p.price > (SELECT AVG(price) FROM products)",
+            "SELECT p.name, p.category, p.price FROM products p WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.product_id = p.id)",
+            "SELECT u.name, o.ordered_at, o.total, SUM(o.total) AS running_total FROM orders o JOIN users u ON o.user_id = u.id ORDER BY u.name, o.ordered_at",
+            "SELECT name, price, description FROM products WHERE category = :category AND price BETWEEN :min_price AND :max_price ORDER BY price ASC LIMIT :limit",
+        ];
+
+        let all_groups: &[(&str, &[&str])] = &[
+            ("01-smoke-test.funsql", queries_01),
+            ("02-seed-data.funsql", queries_02),
+            ("03-vectors.funsql", queries_03),
+            ("04-temporal.funsql", queries_04),
+            ("05-graph.funsql", queries_05),
+            ("06-causal-agents.funsql", queries_06),
+            ("07-full-demo.funsql", queries_07),
+        ];
+
+        let mut total = 0;
+        for (file, queries) in all_groups {
+            for query in *queries {
+                parse(query).unwrap_or_else(|e| {
+                    panic!(
+                        "failed to parse query from {}: {:?}\nQuery: {}",
+                        file, e, query
+                    )
+                });
+                total += 1;
+            }
+        }
+
+        // Sanity check: we tested a meaningful number of queries
+        assert!(
+            total >= 70,
+            "expected at least 70 example queries, but only tested {}",
+            total
+        );
+    }
 }

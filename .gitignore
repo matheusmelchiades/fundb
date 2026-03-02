@@ -31,3 +31,8 @@ crates/fundb-sql/src/grammar.rs
 
 # Build cache
 .cargo/
+
+# Node.js
+node_modules/
+dist/
+*.vsix

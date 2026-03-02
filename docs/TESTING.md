@@ -180,10 +180,12 @@ docker run --rm --network fundb_fundb-net \
 |---------|-----------|
 | `SELECT 1` | `?column? = 1` ✅ |
 | `SELECT version()` | `FunDB 0.1.0` ✅ |
-| `SELECT * FROM users WHERE age > 25` | retorna OK (stub handler) ✅ |
+| `INSERT INTO users (name, age) VALUES ('Alice', 30)` | `INSERT 0 1` ✅ |
+| `SELECT * FROM users` | retorna _id, name, age, _confidence ✅ |
+| `SELECT * FROM users WHERE age > 25` | retorna registros filtrados ✅ |
 | `--format json` com `SELECT 1` | `{"columns": ["?column?"], "rows": [["1"]]}` ✅ |
 | `--format csv` com `SELECT 1` | `?column?\n1` ✅ |
-| Query inválida | retorna `OK` (stub não rejeita, comportamento esperado) ✅ |
+| Query inválida | retorna erro de sintaxe com código SQLSTATE ✅ |
 
 ---
 

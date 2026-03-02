@@ -5,6 +5,21 @@ All notable changes to FunDB will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **INSERT pipeline**: Full end-to-end `INSERT INTO ... VALUES (...)` support — data is persisted to LSM-Tree storage and readable via `SELECT`
+- **Real query handler** (`FunDBHandler`): Replaced `StubHandler` with a production handler that routes SQL through the full parse → bind → execute pipeline
+- **`LogicalPlan::Insert`**: New plan variant for INSERT statements with proper binding (collections are created implicitly on first write)
+- **RecordBatch → QueryResult**: SELECT queries now deserialize MessagePack record data and return real column values over the PostgreSQL wire protocol
+- **VSCode extension**: `.funsql` file icons (light/dark themes), marketplace icon, `fundb://` connection string, README
+
+### Changed
+- Server now opens LSM-Tree storage at `./fundb_data` on startup instead of using a stub
+- Binder no longer maps INSERT to `LogicalPlan::Empty` — it produces a full `LogicalPlan::Insert` with collection, columns, and values
+
+---
+
 ## [0.1.0] - 2026-03-01
 
 Initial release of FunDB -- the AI-native cognitive database.

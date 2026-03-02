@@ -403,6 +403,6 @@ FunDB is licensed under [Apache License 2.0](LICENSE).
 
 ## Status
 
-FunDB is in **v0.1.0** (initial release). The core engine is feature-complete with 407/407 tests passing across 16 crates. We are actively working on developer experience, documentation, and ecosystem integrations.
+FunDB is in **v0.1.0** (initial release). The core engine is feature-complete with 407+ tests passing across 16 crates. `INSERT` and `SELECT` queries are fully functional end-to-end via the PostgreSQL wire protocol. We are actively working on developer experience, documentation, and ecosystem integrations.
 
 See the [CHANGELOG](CHANGELOG.md) for detailed release notes.

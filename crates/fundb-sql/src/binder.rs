@@ -3,12 +3,12 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::ast::{
-    self, CounterfactualGiven, Expr as AstExpr, Literal as AstLiteral, SelectItem,
-    Statement, UnderstandOption,
+    self, CounterfactualGiven, Expr as AstExpr, Literal as AstLiteral, SelectItem, Statement,
+    UnderstandOption,
 };
 use crate::logical_plan::{
-    AggExpr, AggFunc, BinaryOp, ContextOptions, Expr, Literal, LogicalPlan, SortExpr,
-    UnaryOp, UnderstandOptions,
+    AggExpr, AggFunc, BinaryOp, ContextOptions, Expr, Literal, LogicalPlan, SortExpr, UnaryOp,
+    UnderstandOptions,
 };
 
 // ── Catalog ───────────────────────────────────────────────────────────────────
@@ -136,11 +136,7 @@ pub fn bind(stmt: Statement, catalog: &Catalog) -> Result<LogicalPlan, BindError
 
 fn bind_select(s: ast::SelectStmt, catalog: &Catalog) -> Result<LogicalPlan, BindError> {
     // ── 1. Base scan ──────────────────────────────────────────────────────────
-    let collection = s
-        .from
-        .as_ref()
-        .map(|t| t.name.clone())
-        .unwrap_or_default();
+    let collection = s.from.as_ref().map(|t| t.name.clone()).unwrap_or_default();
 
     if !collection.is_empty() && !catalog.has_collection(&collection) {
         return Err(BindError::UnknownCollection(collection));
@@ -158,9 +154,7 @@ fn bind_select(s: ast::SelectStmt, catalog: &Catalog) -> Result<LogicalPlan, Bin
         // Check whether the WHERE clause is (or contains at the top level) a
         // VectorDist expression — if so, emit a VectorScan plan instead of
         // wrapping with a plain Filter.
-        if let Some(vector_scan) =
-            try_build_vector_scan(&collection, where_expr, &projections)?
-        {
+        if let Some(vector_scan) = try_build_vector_scan(&collection, where_expr, &projections)? {
             vector_scan
         } else {
             // Regular scan + filter.
@@ -201,7 +195,7 @@ fn bind_select(s: ast::SelectStmt, catalog: &Catalog) -> Result<LogicalPlan, Bin
             Some(ref e) => expr_to_f32(e).unwrap_or(0.0),
             None => 0.0,
         };
-        let min_stability = tc.min_stability.as_ref().and_then(|e| expr_to_f32(e));
+        let min_stability = tc.min_stability.as_ref().and_then(expr_to_f32);
 
         plan = LogicalPlan::CausalTrace {
             from: from_expr,
@@ -214,8 +208,12 @@ fn bind_select(s: ast::SelectStmt, catalog: &Catalog) -> Result<LogicalPlan, Bin
 
     // ── 4. TRAVERSE ───────────────────────────────────────────────────────────
     if let Some(tv) = s.traverse {
-        let depth_min = tv.depth_min.as_ref().and_then(|e| expr_to_u32(e)).unwrap_or(1);
-        let depth_max = tv.depth_max.as_ref().and_then(|e| expr_to_u32(e)).unwrap_or(depth_min);
+        let depth_min = tv.depth_min.as_ref().and_then(expr_to_u32).unwrap_or(1);
+        let depth_max = tv
+            .depth_max
+            .as_ref()
+            .and_then(expr_to_u32)
+            .unwrap_or(depth_min);
         plan = LogicalPlan::GraphTraverse {
             from: Expr::Column(collection.clone()),
             predicate: tv.relation,
@@ -318,9 +316,7 @@ pub(crate) fn bind_expr(e: &AstExpr) -> Result<Expr, BindError> {
         AstExpr::UnaryOp { op, expr } => {
             let lp_op = match op {
                 ast::UnaryOp::Neg => UnaryOp::Neg,
-                ast::UnaryOp::Not | ast::UnaryOp::IsNull | ast::UnaryOp::IsNotNull => {
-                    UnaryOp::Not
-                }
+                ast::UnaryOp::Not | ast::UnaryOp::IsNull | ast::UnaryOp::IsNotNull => UnaryOp::Not,
             };
             Ok(Expr::UnaryOp {
                 op: lp_op,
@@ -334,10 +330,7 @@ pub(crate) fn bind_expr(e: &AstExpr) -> Result<Expr, BindError> {
         }),
 
         AstExpr::FunctionCall { name, args } => {
-            let bound_args = args
-                .iter()
-                .map(bind_expr)
-                .collect::<Result<Vec<_>, _>>()?;
+            let bound_args = args.iter().map(bind_expr).collect::<Result<Vec<_>, _>>()?;
             Ok(Expr::FunctionCall {
                 name: name.clone(),
                 args: bound_args,
@@ -364,10 +357,7 @@ pub(crate) fn bind_expr(e: &AstExpr) -> Result<Expr, BindError> {
             // Translate `x IN (a, b, c)` as a chain of OR-equals for the plan.
             // We represent it as a FunctionCall for simplicity.
             let bound_expr = bind_expr(expr)?;
-            let bound_list = list
-                .iter()
-                .map(bind_expr)
-                .collect::<Result<Vec<_>, _>>()?;
+            let bound_list = list.iter().map(bind_expr).collect::<Result<Vec<_>, _>>()?;
             let mut args = vec![bound_expr];
             args.extend(bound_list);
             Ok(Expr::FunctionCall {
@@ -420,10 +410,7 @@ pub(crate) fn bind_expr(e: &AstExpr) -> Result<Expr, BindError> {
                 Ok(Expr::Literal(Literal::Vector(floats)))
             } else {
                 // Heterogeneous array — represent as a function call.
-                let bound = elems
-                    .iter()
-                    .map(bind_expr)
-                    .collect::<Result<Vec<_>, _>>()?;
+                let bound = elems.iter().map(bind_expr).collect::<Result<Vec<_>, _>>()?;
                 Ok(Expr::FunctionCall {
                     name: "array".to_string(),
                     args: bound,
@@ -587,10 +574,7 @@ fn extract_aggregates(items: &[SelectItem]) -> Result<Vec<AggExpr>, BindError> {
     Ok(aggs)
 }
 
-fn try_extract_agg(
-    expr: &AstExpr,
-    alias: Option<String>,
-) -> Result<Option<AggExpr>, BindError> {
+fn try_extract_agg(expr: &AstExpr, alias: Option<String>) -> Result<Option<AggExpr>, BindError> {
     if let AstExpr::FunctionCall { name, args } = expr {
         let func = match name.to_lowercase().as_str() {
             "count" => Some(AggFunc::Count),
@@ -601,7 +585,11 @@ fn try_extract_agg(
             _ => None,
         };
         if let Some(func) = func {
-            let arg = args.first().map(bind_expr).transpose()?.unwrap_or(Expr::Star);
+            let arg = args
+                .first()
+                .map(bind_expr)
+                .transpose()?
+                .unwrap_or(Expr::Star);
             return Ok(Some(AggExpr {
                 func,
                 arg: Box::new(arg),
@@ -616,9 +604,9 @@ fn try_extract_agg(
 
 fn bind_context_options(ctx: &ast::ContextOptions) -> ContextOptions {
     ContextOptions {
-        max_tokens: ctx.max_tokens.as_ref().and_then(|e| expr_to_u32(e)),
-        coherence: ctx.coherence.as_ref().and_then(|e| expr_to_f32(e)),
-        diversity: ctx.diversity.as_ref().and_then(|e| expr_to_f32(e)),
+        max_tokens: ctx.max_tokens.as_ref().and_then(expr_to_u32),
+        coherence: ctx.coherence.as_ref().and_then(expr_to_f32),
+        diversity: ctx.diversity.as_ref().and_then(expr_to_f32),
         include_contradictions: ctx.include_contradictions,
     }
 }
@@ -801,17 +789,21 @@ mod tests {
                 _ => false,
             }
         }
-        assert!(has_filter(&plan), "expected a Filter node in plan: {:?}", plan);
+        assert!(
+            has_filter(&plan),
+            "expected a Filter node in plan: {:?}",
+            plan
+        );
     }
 
     #[test]
     fn test_bind_understand() {
-        let plan = bind_sql(
-            "UNDERSTAND 'papers about X' WITH confidence > 0.7 DEPTH 2",
-        )
-        .unwrap();
+        let plan = bind_sql("UNDERSTAND 'papers about X' WITH confidence > 0.7 DEPTH 2").unwrap();
         match plan {
-            LogicalPlan::Understand { ref intent, ref options } => {
+            LogicalPlan::Understand {
+                ref intent,
+                ref options,
+            } => {
                 assert_eq!(intent, "papers about X");
                 assert_eq!(options.depth, Some(2));
                 assert!(
@@ -825,10 +817,8 @@ mod tests {
 
     #[test]
     fn test_bind_estimate_effect() {
-        let plan = bind_sql(
-            "SELECT * FROM INTERVENE ON revenue_model SET x = 1 PREDICT y",
-        )
-        .unwrap();
+        let plan =
+            bind_sql("SELECT * FROM INTERVENE ON revenue_model SET x = 1 PREDICT y").unwrap();
         match plan {
             LogicalPlan::EstimateEffect {
                 ref model,
@@ -864,7 +854,10 @@ mod tests {
     fn test_bind_insert_unknown_collection_ok() {
         // INSERT should NOT fail for unknown collections (implicit creation)
         let plan = bind_sql("INSERT INTO brand_new_collection (a) VALUES ('hello')");
-        assert!(plan.is_ok(), "INSERT into unknown collection should succeed");
+        assert!(
+            plan.is_ok(),
+            "INSERT into unknown collection should succeed"
+        );
     }
 
     // ── Additional regression tests ───────────────────────────────────────────

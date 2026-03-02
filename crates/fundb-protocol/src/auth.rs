@@ -179,8 +179,14 @@ mod tests {
             sasl_data.starts_with(&format!("r={}", nonce)),
             "server-first-message must begin with r=<nonce>"
         );
-        assert!(sasl_data.contains(",s="), "server-first-message must contain salt");
-        assert!(sasl_data.contains(",i="), "server-first-message must contain iteration count");
+        assert!(
+            sasl_data.contains(",s="),
+            "server-first-message must contain salt"
+        );
+        assert!(
+            sasl_data.contains(",i="),
+            "server-first-message must contain iteration count"
+        );
     }
 
     // ── test 3: AuthenticationSASLFinal ─────────────────────────────────────
@@ -211,7 +217,10 @@ mod tests {
         let nonce = generate_server_nonce();
         assert!(!nonce.is_empty(), "server nonce must not be empty");
         // RFC 5802: nonce must not contain a comma.
-        assert!(!nonce.contains(','), "server nonce must not contain a comma");
+        assert!(
+            !nonce.contains(','),
+            "server nonce must not contain a comma"
+        );
     }
 
     // ── test 5: verify_scram_response stub always returns true ───────────────

@@ -60,7 +60,12 @@ async fn test_select_with_confidence_filter() {
         },
     };
     let batch = executor.execute(plan).await.unwrap();
-    assert_eq!(batch.len(), 5, "expected 5 records with confidence > 0.5, got {}", batch.len());
+    assert_eq!(
+        batch.len(),
+        5,
+        "expected 5 records with confidence > 0.5, got {}",
+        batch.len()
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -110,7 +115,11 @@ fn test_parse_insert_produces_correct_plan() {
 fn test_parse_vector_scan() {
     let sql = "RECALL BY semantic_similarity(:query, weight: 0.5) + recency(weight: 0.3) + importance(weight: 0.2) FOR AGENT :agent_id LIMIT 20";
     let result = parse(sql);
-    assert!(result.is_ok(), "vector scan should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "vector scan should parse: {:?}",
+        result.err()
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -194,7 +203,11 @@ fn test_parse_counterfactual() {
 fn test_parse_trace_causality() {
     let sql = "TRACE CAUSALITY FROM deployment TO error_rate";
     let result = parse(sql);
-    assert!(result.is_ok(), "TRACE CAUSALITY should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "TRACE CAUSALITY should parse: {:?}",
+        result.err()
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -204,7 +217,11 @@ fn test_parse_trace_causality() {
 fn test_parse_as_of_system_time() {
     let sql = "SELECT * FROM orders AS OF SYSTEM TIME '2024-01-01T00:00:00Z'";
     let result = parse(sql);
-    assert!(result.is_ok(), "AS OF SYSTEM TIME should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "AS OF SYSTEM TIME should parse: {:?}",
+        result.err()
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -214,7 +231,11 @@ fn test_parse_as_of_system_time() {
 fn test_parse_as_of_valid_time() {
     let sql = "SELECT * FROM prices AS OF VALID TIME '2024-06-15T12:00:00Z'";
     let result = parse(sql);
-    assert!(result.is_ok(), "AS OF VALID TIME should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "AS OF VALID TIME should parse: {:?}",
+        result.err()
+    );
 }
 
 // ---------------------------------------------------------------------------

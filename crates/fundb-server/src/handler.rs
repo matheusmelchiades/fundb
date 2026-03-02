@@ -132,10 +132,8 @@ impl QueryHandler for FunDBHandler {
                 }
                 col_names.push("_confidence".to_string());
                 let count = col_names.len();
-                let rows: Vec<Vec<Option<String>>> = col_names
-                    .into_iter()
-                    .map(|n| vec![Some(n)])
-                    .collect();
+                let rows: Vec<Vec<Option<String>>> =
+                    col_names.into_iter().map(|n| vec![Some(n)]).collect();
                 return Ok(QueryResult {
                     columns: vec![FieldDescription {
                         name: "column_name".into(),
@@ -151,10 +149,7 @@ impl QueryHandler for FunDBHandler {
         if upper.contains("FROM _COLLECTIONS") {
             let catalog = self.catalog.read().await;
             let names = catalog.list_collections();
-            let rows: Vec<Vec<Option<String>>> = names
-                .into_iter()
-                .map(|n| vec![Some(n)])
-                .collect();
+            let rows: Vec<Vec<Option<String>>> = names.into_iter().map(|n| vec![Some(n)]).collect();
             let count = rows.len();
             return Ok(QueryResult {
                 columns: vec![FieldDescription {

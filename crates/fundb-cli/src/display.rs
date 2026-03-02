@@ -2,7 +2,6 @@
 ///
 /// Supports three formats: Table (psql-style ASCII), JSON, and CSV.
 /// Optionally wraps output in ANSI escape codes for colour.
-
 use crate::args::OutputFormat;
 use crate::connection::QueryResponse;
 

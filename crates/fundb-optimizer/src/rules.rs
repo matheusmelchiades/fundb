@@ -3,12 +3,13 @@
 /// Each rule takes a `LogicalPlan` by value and returns a (potentially
 /// transformed) `LogicalPlan`. Rules recurse into every child node so the
 /// entire plan tree is rewritten in one pass.
-use fundb_sql::{AggExpr, BinaryOp, ContextOptions, Expr, Literal, LogicalPlan, SortExpr, UnderstandOptions};
+use fundb_sql::{AggExpr, BinaryOp, Expr, Literal, LogicalPlan, SortExpr};
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 /// Recurse the `predicate_pushdown` rule into a single-child plan node,
 /// rebuilding the wrapper after transforming the child.
+#[allow(dead_code)]
 fn pushdown_child(plan: LogicalPlan) -> LogicalPlan {
     predicate_pushdown(plan)
 }
@@ -26,12 +27,12 @@ fn pushdown_child(plan: LogicalPlan) -> LogicalPlan {
 pub fn predicate_pushdown(plan: LogicalPlan) -> LogicalPlan {
     match plan {
         // The key rewrite: Filter over Project → Project over Filter.
-        LogicalPlan::Filter {
-            input,
-            predicate,
-        } => {
+        LogicalPlan::Filter { input, predicate } => {
             match *input {
-                LogicalPlan::Project { input: child, exprs } => {
+                LogicalPlan::Project {
+                    input: child,
+                    exprs,
+                } => {
                     // Push the filter below the projection.
                     let new_filter = LogicalPlan::Filter {
                         input: Box::new(predicate_pushdown(*child)),
@@ -57,12 +58,20 @@ pub fn predicate_pushdown(plan: LogicalPlan) -> LogicalPlan {
             input: Box::new(predicate_pushdown(*input)),
             exprs,
         },
-        LogicalPlan::Join { left, right, condition } => LogicalPlan::Join {
+        LogicalPlan::Join {
+            left,
+            right,
+            condition,
+        } => LogicalPlan::Join {
             left: Box::new(predicate_pushdown(*left)),
             right: Box::new(predicate_pushdown(*right)),
             condition,
         },
-        LogicalPlan::Aggregate { input, group_by, aggregates } => LogicalPlan::Aggregate {
+        LogicalPlan::Aggregate {
+            input,
+            group_by,
+            aggregates,
+        } => LogicalPlan::Aggregate {
             input: Box::new(predicate_pushdown(*input)),
             group_by,
             aggregates,
@@ -100,24 +109,25 @@ pub fn predicate_pushdown(plan: LogicalPlan) -> LogicalPlan {
 /// before it can choose the top-N correctly.
 pub fn limit_pushdown(plan: LogicalPlan) -> LogicalPlan {
     match plan {
-        LogicalPlan::Limit { input, n } => {
-            match *input {
-                LogicalPlan::Project { input: child, exprs } => {
-                    let new_limit = LogicalPlan::Limit {
-                        input: Box::new(limit_pushdown(*child)),
-                        n,
-                    };
-                    LogicalPlan::Project {
-                        input: Box::new(new_limit),
-                        exprs,
-                    }
-                }
-                other => LogicalPlan::Limit {
-                    input: Box::new(limit_pushdown(other)),
+        LogicalPlan::Limit { input, n } => match *input {
+            LogicalPlan::Project {
+                input: child,
+                exprs,
+            } => {
+                let new_limit = LogicalPlan::Limit {
+                    input: Box::new(limit_pushdown(*child)),
                     n,
-                },
+                };
+                LogicalPlan::Project {
+                    input: Box::new(new_limit),
+                    exprs,
+                }
             }
-        }
+            other => LogicalPlan::Limit {
+                input: Box::new(limit_pushdown(other)),
+                n,
+            },
+        },
 
         // Recurse into all other node types.
         LogicalPlan::Filter { input, predicate } => LogicalPlan::Filter {
@@ -128,12 +138,20 @@ pub fn limit_pushdown(plan: LogicalPlan) -> LogicalPlan {
             input: Box::new(limit_pushdown(*input)),
             exprs,
         },
-        LogicalPlan::Join { left, right, condition } => LogicalPlan::Join {
+        LogicalPlan::Join {
+            left,
+            right,
+            condition,
+        } => LogicalPlan::Join {
             left: Box::new(limit_pushdown(*left)),
             right: Box::new(limit_pushdown(*right)),
             condition,
         },
-        LogicalPlan::Aggregate { input, group_by, aggregates } => LogicalPlan::Aggregate {
+        LogicalPlan::Aggregate {
+            input,
+            group_by,
+            aggregates,
+        } => LogicalPlan::Aggregate {
             input: Box::new(limit_pushdown(*input)),
             group_by,
             aggregates,
@@ -181,12 +199,20 @@ pub fn eliminate_redundant_project(plan: LogicalPlan) -> LogicalPlan {
             input: Box::new(eliminate_redundant_project(*input)),
             predicate,
         },
-        LogicalPlan::Join { left, right, condition } => LogicalPlan::Join {
+        LogicalPlan::Join {
+            left,
+            right,
+            condition,
+        } => LogicalPlan::Join {
             left: Box::new(eliminate_redundant_project(*left)),
             right: Box::new(eliminate_redundant_project(*right)),
             condition,
         },
-        LogicalPlan::Aggregate { input, group_by, aggregates } => LogicalPlan::Aggregate {
+        LogicalPlan::Aggregate {
+            input,
+            group_by,
+            aggregates,
+        } => LogicalPlan::Aggregate {
             input: Box::new(eliminate_redundant_project(*input)),
             group_by,
             aggregates,
@@ -286,12 +312,20 @@ pub fn constant_fold(plan: LogicalPlan) -> LogicalPlan {
             input: Box::new(constant_fold(*input)),
             exprs: exprs.into_iter().map(fold_expr).collect(),
         },
-        LogicalPlan::Join { left, right, condition } => LogicalPlan::Join {
+        LogicalPlan::Join {
+            left,
+            right,
+            condition,
+        } => LogicalPlan::Join {
             left: Box::new(constant_fold(*left)),
             right: Box::new(constant_fold(*right)),
             condition: fold_expr(condition),
         },
-        LogicalPlan::Aggregate { input, group_by, aggregates } => LogicalPlan::Aggregate {
+        LogicalPlan::Aggregate {
+            input,
+            group_by,
+            aggregates,
+        } => LogicalPlan::Aggregate {
             input: Box::new(constant_fold(*input)),
             group_by: group_by.into_iter().map(fold_expr).collect(),
             aggregates: aggregates
@@ -321,7 +355,11 @@ pub fn constant_fold(plan: LogicalPlan) -> LogicalPlan {
             input: Box::new(constant_fold(*input)),
             options,
         },
-        LogicalPlan::Scan { collection, predicate, projections } => LogicalPlan::Scan {
+        LogicalPlan::Scan {
+            collection,
+            predicate,
+            projections,
+        } => LogicalPlan::Scan {
             collection,
             predicate: predicate.map(fold_expr),
             projections: projections.into_iter().map(fold_expr).collect(),
@@ -376,12 +414,20 @@ pub fn vector_scan_elide_filter(plan: LogicalPlan) -> LogicalPlan {
             input: Box::new(vector_scan_elide_filter(*input)),
             exprs,
         },
-        LogicalPlan::Join { left, right, condition } => LogicalPlan::Join {
+        LogicalPlan::Join {
+            left,
+            right,
+            condition,
+        } => LogicalPlan::Join {
             left: Box::new(vector_scan_elide_filter(*left)),
             right: Box::new(vector_scan_elide_filter(*right)),
             condition,
         },
-        LogicalPlan::Aggregate { input, group_by, aggregates } => LogicalPlan::Aggregate {
+        LogicalPlan::Aggregate {
+            input,
+            group_by,
+            aggregates,
+        } => LogicalPlan::Aggregate {
             input: Box::new(vector_scan_elide_filter(*input)),
             group_by,
             aggregates,
@@ -423,7 +469,10 @@ mod tests {
     fn project(plan: LogicalPlan, cols: Vec<&str>) -> LogicalPlan {
         LogicalPlan::Project {
             input: Box::new(plan),
-            exprs: cols.into_iter().map(|c| Expr::Column(c.to_string())).collect(),
+            exprs: cols
+                .into_iter()
+                .map(|c| Expr::Column(c.to_string()))
+                .collect(),
         }
     }
 
@@ -551,7 +600,9 @@ mod tests {
             LogicalPlan::Filter { predicate, .. } => {
                 // After folding, should be BinaryOp { Gt, age, 25 } — NOT an And.
                 match predicate {
-                    Expr::BinaryOp { op: BinaryOp::Gt, .. } => { /* correct */ }
+                    Expr::BinaryOp {
+                        op: BinaryOp::Gt, ..
+                    } => { /* correct */ }
                     other => panic!("expected Gt after fold, got {:?}", other),
                 }
             }
@@ -575,7 +626,9 @@ mod tests {
             op: BinaryOp::Lt,
             left: Box::new(Expr::BinaryOp {
                 op: BinaryOp::VectorDist,
-                left: Box::new(Expr::VectorRef { field: "embedding".to_string() }),
+                left: Box::new(Expr::VectorRef {
+                    field: "embedding".to_string(),
+                }),
                 right: Box::new(Expr::Literal(Literal::Vector(vec![0.1, 0.2, 0.3]))),
             }),
             right: Box::new(Expr::Literal(Literal::Float(0.5))),

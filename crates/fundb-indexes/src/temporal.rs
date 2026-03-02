@@ -6,9 +6,9 @@
 // supporting ML dataset reproducibility by reconstructing which records were
 // "true" during any given time window.
 
-use uuid::Uuid;
-use fundb_core::Timestamp;
 use anyhow::Result;
+use fundb_core::Timestamp;
+use uuid::Uuid;
 
 // ---------------------------------------------------------------------------
 // Internal representation
@@ -16,9 +16,9 @@ use anyhow::Result;
 
 #[derive(Debug, Clone)]
 struct Interval {
-    id:         Uuid,
+    id: Uuid,
     valid_from: Timestamp,
-    valid_to:   Timestamp,
+    valid_to: Timestamp,
 }
 
 // ---------------------------------------------------------------------------
@@ -45,7 +45,11 @@ impl TemporalIndex {
     ///
     /// `valid_to = i64::MAX` represents an open-ended ("currently valid") record.
     pub fn insert(&mut self, id: Uuid, valid_from: Timestamp, valid_to: Timestamp) -> Result<()> {
-        self.intervals.push(Interval { id, valid_from, valid_to });
+        self.intervals.push(Interval {
+            id,
+            valid_from,
+            valid_to,
+        });
         Ok(())
     }
 
@@ -89,6 +93,11 @@ impl TemporalIndex {
     pub fn len(&self) -> usize {
         self.intervals.len()
     }
+
+    /// Returns `true` if the index contains no intervals.
+    pub fn is_empty(&self) -> bool {
+        self.intervals.is_empty()
+    }
 }
 
 impl Default for TemporalIndex {
@@ -120,7 +129,7 @@ mod tests {
         let mut idx = TemporalIndex::new();
         idx.insert(id_a, 100, 200).unwrap(); // [100, 200)
         idx.insert(id_b, 150, 300).unwrap(); // [150, 300)
-        idx.insert(id_c,  50, 100).unwrap(); // [50,  100)
+        idx.insert(id_c, 50, 100).unwrap(); // [50,  100)
 
         // point_query(150) -> A and B (150 is in [100,200) and [150,300))
         let mut result = idx.point_query(150);
@@ -146,8 +155,8 @@ mod tests {
         let id_c = uid(12);
 
         let mut idx = TemporalIndex::new();
-        idx.insert(id_a,   0, 100).unwrap(); // [0,   100)
-        idx.insert(id_b,  50, 150).unwrap(); // [50,  150)
+        idx.insert(id_a, 0, 100).unwrap(); // [0,   100)
+        idx.insert(id_b, 50, 150).unwrap(); // [50,  150)
         idx.insert(id_c, 200, 300).unwrap(); // [200, 300)
 
         // range_query(80, 210) should overlap all three:
@@ -158,7 +167,10 @@ mod tests {
         result.sort();
         let mut expected = vec![id_a, id_b, id_c];
         expected.sort();
-        assert_eq!(result, expected, "range_query(80, 210) should return A, B, and C");
+        assert_eq!(
+            result, expected,
+            "range_query(80, 210) should return A, B, and C"
+        );
     }
 
     /// 3. Open-ended interval (valid_to = i64::MAX) represents a currently-active record.
@@ -171,11 +183,17 @@ mod tests {
 
         // Any point >= 100 should be included.
         let result = idx.point_query(999_999_999);
-        assert!(result.contains(&id_a), "open-ended interval should include far-future point");
+        assert!(
+            result.contains(&id_a),
+            "open-ended interval should include far-future point"
+        );
 
         // A point before valid_from should not be included.
         let result = idx.point_query(99);
-        assert!(!result.contains(&id_a), "open-ended interval should not include point before valid_from");
+        assert!(
+            !result.contains(&id_a),
+            "open-ended interval should not include point before valid_from"
+        );
     }
 
     /// 4. Delete removes the interval so it no longer appears in queries.
@@ -194,11 +212,18 @@ mod tests {
 
         idx.delete(id_b).unwrap();
 
-        assert_eq!(idx.len(), 2, "len() should be 2 after deleting one interval");
+        assert_eq!(
+            idx.len(),
+            2,
+            "len() should be 2 after deleting one interval"
+        );
 
         // point_query at a time covered by all three original intervals
         let result = idx.point_query(250);
-        assert!(!result.contains(&id_b), "deleted id should not appear in point_query");
+        assert!(
+            !result.contains(&id_b),
+            "deleted id should not appear in point_query"
+        );
         assert!(result.contains(&id_a), "remaining id A should still appear");
         assert!(result.contains(&id_c), "remaining id C should still appear");
     }
@@ -214,6 +239,9 @@ mod tests {
         // range_query(100, 200): A requires valid_from < 200 (0 < 200 ✓)
         // AND valid_to > 100 (100 > 100 ✗) -> no overlap.
         let result = idx.range_query(100, 200);
-        assert!(result.is_empty(), "range_query(100, 200) should return empty for interval [0, 100)");
+        assert!(
+            result.is_empty(),
+            "range_query(100, 200) should return empty for interval [0, 100)"
+        );
     }
 }

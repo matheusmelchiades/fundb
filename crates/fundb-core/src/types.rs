@@ -6,7 +6,7 @@ pub type Timestamp = i64;
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
 pub struct RecordKey {
     pub collection: String,
-    pub id:         [u8; 16],   // UUID bytes — UUID v7 keeps time-ordered sort
+    pub id: [u8; 16], // UUID bytes — UUID v7 keeps time-ordered sort
 }
 
 // ---------------------------------------------------------------------------
@@ -43,7 +43,7 @@ pub enum CausalOrigin {
         /// p-value from the Granger F-test (lower is more significant).
         p_value: f64,
         /// Optimal lag in time steps that produced the lowest p-value.
-        lag:     u32,
+        lag: u32,
     },
 
     /// Edge inferred purely from temporal ordering and correlation.
@@ -55,9 +55,9 @@ pub enum CausalOrigin {
     /// Edge proposed by an LLM and passed the Three-Layer Shield (Decision 2).
     LlmValidated {
         /// Model identifier, e.g. "gpt-4o", "claude-3-opus".
-        model:            String,
+        model: String,
         /// Counterfactual coherence score returned by the coherence check (0.0–1.0).
-        coherence_score:  f32,
+        coherence_score: f32,
     },
 }
 

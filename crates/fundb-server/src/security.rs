@@ -363,11 +363,7 @@ pub fn build_tls_acceptor_config(config: &TlsConfig) -> Result<TlsAcceptorStub, 
 
     let description = format!(
         "TlsAcceptor {{ cert={}, key={}, ca={:?}, min_version={}, client_auth={} }}",
-        config.cert_path,
-        config.key_path,
-        config.ca_cert_path,
-        min_ver,
-        config.require_client_cert,
+        config.cert_path, config.key_path, config.ca_cert_path, min_ver, config.require_client_cert,
     );
 
     Ok(TlsAcceptorStub {
@@ -400,10 +396,14 @@ pub enum SecurityError {
     #[error("invalid query: {0}")]
     InvalidQuery(String),
 
-    #[error("TLS configuration error: {0}. Check that certificate and key files exist and are readable")]
+    #[error(
+        "TLS configuration error: {0}. Check that certificate and key files exist and are readable"
+    )]
     TlsConfig(String),
 
-    #[error("authentication required. Connect with valid credentials using -u <user> -W <password>")]
+    #[error(
+        "authentication required. Connect with valid credentials using -u <user> -W <password>"
+    )]
     Unauthenticated,
 }
 
@@ -536,10 +536,7 @@ mod tests {
     #[test]
     fn test_scope_query_existing_tenant_id_match() {
         let ctx = make_ctx(vec![Role::ReadOnly]);
-        let query = format!(
-            "SELECT * FROM orders WHERE tenant_id = '{}'",
-            ctx.tenant_id
-        );
+        let query = format!("SELECT * FROM orders WHERE tenant_id = '{}'", ctx.tenant_id);
 
         let result = scope_query(&query, &ctx).expect("should return Ok for matching tenant");
         assert_eq!(result, query);

@@ -8,7 +8,7 @@
 // REQ-PERF-005: cognitive confidence propagation <= 0.1ms per chain link
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use fundb_core::{FunRecord, FunRecordBuilder, RecordKey};
+use fundb_core::{FunRecordBuilder, RecordKey};
 use fundb_storage::MemTable;
 
 // ---------------------------------------------------------------------------
@@ -38,7 +38,11 @@ fn propagate_confidence_ds(chain: &[f32]) -> f32 {
     chain.iter().skip(1).fold(chain[0], |acc, &c| {
         let num = acc * c;
         let denom = num + (1.0 - acc) * (1.0 - c);
-        if denom == 0.0 { 0.0 } else { num / denom }
+        if denom == 0.0 {
+            0.0
+        } else {
+            num / denom
+        }
     })
 }
 
@@ -63,9 +67,7 @@ fn make_key(collection: &str, idx: usize) -> RecordKey {
 /// REQ-PERF-001 (partial): Measures the overhead of constructing a single FunRecord.
 fn bench_record_build(c: &mut Criterion) {
     c.bench_function("record_build", |b| {
-        b.iter(|| {
-            black_box(FunRecordBuilder::new("events").confidence(0.9).build())
-        })
+        b.iter(|| black_box(FunRecordBuilder::new("events").confidence(0.9).build()))
     });
 }
 
@@ -105,8 +107,14 @@ fn bench_memtable_scan(c: &mut Criterion) {
     }
 
     // Build the range bounds that span the entire "events" collection.
-    let from_key = RecordKey { collection: "events".to_string(), id: [0u8; 16] };
-    let to_key   = RecordKey { collection: "events".to_string(), id: [255u8; 16] };
+    let from_key = RecordKey {
+        collection: "events".to_string(),
+        id: [0u8; 16],
+    };
+    let to_key = RecordKey {
+        collection: "events".to_string(),
+        id: [255u8; 16],
+    };
 
     let mut group = c.benchmark_group("query");
     group.throughput(Throughput::Elements(n as u64));
@@ -127,12 +135,7 @@ fn bench_vector_cosine_similarity(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("query");
     group.bench_function("cosine_similarity_384d", |b| {
-        b.iter(|| {
-            black_box(cosine_similarity(
-                black_box(&vec_a),
-                black_box(&vec_b),
-            ))
-        })
+        b.iter(|| black_box(cosine_similarity(black_box(&vec_a), black_box(&vec_b))))
     });
     group.finish();
 }
@@ -141,9 +144,7 @@ fn bench_vector_cosine_similarity(c: &mut Criterion) {
 /// Two propagation strategies are benchmarked: multiplicative and Dempster-Shafer.
 fn bench_confidence_propagation(c: &mut Criterion) {
     // Build a 100-element chain with confidence values in [0.7, 1.0].
-    let chain: Vec<f32> = (0..100)
-        .map(|i| 0.7_f32 + 0.003 * (i as f32))
-        .collect();
+    let chain: Vec<f32> = (0..100).map(|i| 0.7_f32 + 0.003 * (i as f32)).collect();
 
     let mut group = c.benchmark_group("query");
 

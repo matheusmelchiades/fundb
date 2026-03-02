@@ -1,7 +1,7 @@
-use bytes::{Bytes, BytesMut, BufMut};
-use anyhow::Result;
+use crate::codec::Encode;
 use crate::record::FunRecord;
-use crate::codec::{Encode, Decode};
+use anyhow::Result;
+use bytes::{BufMut, Bytes, BytesMut};
 
 // ---------------------------------------------------------------------------
 // BloomFilter
@@ -36,9 +36,7 @@ impl BloomFilter {
         let words = m_rounded / 64;
 
         // Optimal k: (m/n) * ln(2), minimum 1.
-        let k = ((m_rounded as f64 / n) * 2_f64.ln())
-            .round()
-            .max(1.0) as u8;
+        let k = ((m_rounded as f64 / n) * 2_f64.ln()).round().max(1.0) as u8;
 
         Self {
             bits: vec![0u64; words],
@@ -220,7 +218,7 @@ impl PageDecoder {
         // Read framing.
         // ----------------------------------------------------------------
         let record_count = u32::from_le_bytes(data[0..4].try_into().unwrap()) as usize;
-        let msgpack_len  = u32::from_le_bytes(data[4..8].try_into().unwrap()) as usize;
+        let msgpack_len = u32::from_le_bytes(data[4..8].try_into().unwrap()) as usize;
 
         // Validate lengths.
         let expected_min = 8 + msgpack_len + record_count * 4;
@@ -241,7 +239,7 @@ impl PageDecoder {
         }
 
         let msgpack_section = &data[8..8 + msgpack_len];
-        let conf_section    = &data[8 + msgpack_len..8 + msgpack_len + record_count * 4];
+        let conf_section = &data[8 + msgpack_len..8 + msgpack_len + record_count * 4];
 
         // ----------------------------------------------------------------
         // Decode confidence values.
@@ -374,8 +372,12 @@ mod tests {
             assert_eq!(orig._id, dec._id, "record ID mismatch");
             assert_eq!(orig._collection, dec._collection);
             // Confidence is reattached from the column.
-            assert!((orig._confidence - dec._confidence).abs() < 1e-6,
-                "confidence mismatch: orig={} dec={}", orig._confidence, dec._confidence);
+            assert!(
+                (orig._confidence - dec._confidence).abs() < 1e-6,
+                "confidence mismatch: orig={} dec={}",
+                orig._confidence,
+                dec._confidence
+            );
         }
     }
 
@@ -442,11 +444,9 @@ mod tests {
 
         for bucket in 0..100 {
             assert_eq!(
-                header.confidence_histogram[bucket],
-                1,
+                header.confidence_histogram[bucket], 1,
                 "bucket {} must contain exactly 1 record, got {}",
-                bucket,
-                header.confidence_histogram[bucket]
+                bucket, header.confidence_histogram[bucket]
             );
         }
     }
@@ -458,7 +458,11 @@ mod tests {
         let (header, _page) = PageEncoder::encode(&records).expect("encode");
         assert_eq!(header.confidence_histogram[99], 10);
         for bucket in 0..99 {
-            assert_eq!(header.confidence_histogram[bucket], 0, "bucket {} should be 0", bucket);
+            assert_eq!(
+                header.confidence_histogram[bucket], 0,
+                "bucket {} should be 0",
+                bucket
+            );
         }
     }
 

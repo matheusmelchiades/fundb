@@ -29,15 +29,15 @@ use crate::{Lsn, Transaction};
 /// One immutable version of a record within the MVCC version chain.
 struct VersionedRecord {
     /// System time: when this version was written (Unix nanoseconds).
-    sys_from:   Timestamp,
+    sys_from: Timestamp,
     /// System time: when this version was superseded. `i64::MAX` = current version.
-    sys_to:     Timestamp,
+    sys_to: Timestamp,
     /// Valid time: earliest application-layer validity (Unix nanoseconds).
     valid_from: Timestamp,
     /// Valid time: end of application-layer validity (Unix nanoseconds).
-    valid_to:   Timestamp,
+    valid_to: Timestamp,
     /// The immutable record payload for this version.
-    record:     FunRecord,
+    record: FunRecord,
 }
 
 // ---------------------------------------------------------------------------
@@ -50,7 +50,7 @@ struct VersionedRecord {
 /// ascending by `sys_from`.  The current (live) version always has
 /// `sys_to == i64::MAX`.
 pub struct MvccStore {
-    inner:    RwLock<BTreeMap<RecordKey, Vec<VersionedRecord>>>,
+    inner: RwLock<BTreeMap<RecordKey, Vec<VersionedRecord>>>,
     next_txn: AtomicU64,
 }
 
@@ -74,7 +74,7 @@ impl MvccStore {
     /// Create a new, empty `MvccStore`.
     pub fn new() -> Self {
         Self {
-            inner:    RwLock::new(BTreeMap::new()),
+            inner: RwLock::new(BTreeMap::new()),
             next_txn: AtomicU64::new(1),
         }
     }
@@ -101,14 +101,14 @@ impl MvccStore {
     pub fn write(&self, txn: &Transaction, record: FunRecord) -> Result<()> {
         let key = RecordKey {
             collection: record._collection.clone(),
-            id:         *record._id.as_bytes(),
+            id: *record._id.as_bytes(),
         };
 
         let versioned = VersionedRecord {
-            sys_from:   txn.snapshot_ts,
-            sys_to:     i64::MAX,
+            sys_from: txn.snapshot_ts,
+            sys_to: i64::MAX,
             valid_from: record._valid_from,
-            valid_to:   record._valid_to,
+            valid_to: record._valid_to,
             record,
         };
 
@@ -246,7 +246,7 @@ mod tests {
     fn key_of(record: &FunRecord) -> RecordKey {
         RecordKey {
             collection: record._collection.clone(),
-            id:         *record._id.as_bytes(),
+            id: *record._id.as_bytes(),
         }
     }
 
@@ -449,13 +449,13 @@ mod tests {
         // We had 5 versions; the first 4 had sys_to == some finite timestamp.
         // GC retains versions where sys_to >= gc_threshold.
         // Only the current version (sys_to == i64::MAX) satisfies that.
-        assert!(deleted > 0, "GC must delete at least one historical version");
+        assert!(
+            deleted > 0,
+            "GC must delete at least one historical version"
+        );
 
         // The current version must still be readable.
         let result = store.read_as_of_system(&key, current_nanos()).unwrap();
-        assert!(
-            result.is_some(),
-            "current version must survive GC"
-        );
+        assert!(result.is_some(), "current version must survive GC");
     }
 }

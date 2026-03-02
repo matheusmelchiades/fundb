@@ -1,9 +1,7 @@
 //! Integration-style tests for the PostgreSQL wire protocol encoding / decoding.
 
 use bytes::{Bytes, BytesMut};
-use fundb_protocol::pg_wire::{
-    parse_startup_params, BackendMessage, FieldDescription,
-};
+use fundb_protocol::pg_wire::{parse_startup_params, BackendMessage, FieldDescription};
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Startup message parsing
@@ -174,9 +172,7 @@ fn test_data_row_encode_with_value() {
 
 #[test]
 fn test_data_row_encode_null_value() {
-    let b = encode(BackendMessage::DataRow {
-        values: vec![None],
-    });
+    let b = encode(BackendMessage::DataRow { values: vec![None] });
     assert_eq!(b[0], b'D');
     let field_count = i16::from_be_bytes(b[5..7].try_into().unwrap());
     assert_eq!(field_count, 1);
@@ -230,6 +226,6 @@ fn test_select_one_sequence_encodes() {
     // Validate the sequence starts with the correct message type bytes.
     let bytes = buf.freeze();
     assert_eq!(bytes[0], b'R'); // AuthenticationOk
-    // Scan for 'Z' (ReadyForQuery) after the first ReadyForQuery.
-    assert!(bytes.iter().any(|&b| b == b'Z'));
+                                // Scan for 'Z' (ReadyForQuery) after the first ReadyForQuery.
+    assert!(bytes.contains(&b'Z'));
 }

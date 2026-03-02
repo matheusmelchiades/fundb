@@ -30,18 +30,16 @@ use crate::Lsn;
 
 /// A single operation recorded in the WAL.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[allow(clippy::large_enum_variant)]
 pub enum WalEntry {
     /// A record was written (inserted or updated) within a transaction.
     Write {
         txn_id: u64,
-        key:    RecordKey,
+        key: RecordKey,
         record: FunRecord,
     },
     /// A record was deleted within a transaction.
-    Delete {
-        txn_id: u64,
-        key:    RecordKey,
-    },
+    Delete { txn_id: u64, key: RecordKey },
     /// The transaction with the given ID committed successfully.
     TxnCommit(u64),
     /// The transaction with the given ID was aborted.
@@ -61,9 +59,9 @@ pub enum WalEntry {
 /// call, so the first entry returns LSN 1.
 pub struct Wal {
     /// Path to the WAL file on disk.
-    path:        std::path::PathBuf,
+    _path: std::path::PathBuf,
     /// Append-only file handle.
-    file:        File,
+    file: File,
     /// LSN of the most recently written entry (0 = empty log).
     current_lsn: Lsn,
 }
@@ -86,7 +84,7 @@ impl Wal {
             .with_context(|| format!("failed to open WAL at {}", path.display()))?;
 
         Ok(Self {
-            path: path.to_path_buf(),
+            _path: path.to_path_buf(),
             file,
             current_lsn,
         })
@@ -100,8 +98,8 @@ impl Wal {
         let is_commit = matches!(entry, WalEntry::TxnCommit(_));
 
         // Serialize to MessagePack.
-        let body = rmp_serde::to_vec(&entry)
-            .context("failed to serialize WalEntry to MessagePack")?;
+        let body =
+            rmp_serde::to_vec(&entry).context("failed to serialize WalEntry to MessagePack")?;
 
         // Compute checksum over the serialized body.
         let checksum = xxh3_64(&body) as u32;
@@ -120,7 +118,9 @@ impl Wal {
 
         // Only fsync on commit for durability; other entries are buffered.
         if is_commit {
-            self.file.sync_data().context("WAL fsync failed on TxnCommit")?;
+            self.file
+                .sync_data()
+                .context("WAL fsync failed on TxnCommit")?;
         }
 
         self.current_lsn += 1;
@@ -175,8 +175,8 @@ impl Wal {
         loop {
             match read_frame(&mut reader) {
                 Ok(Some(_)) => count += 1,
-                Ok(None) => break,      // clean EOF
-                Err(_) => break,        // corruption — stop counting
+                Ok(None) => break, // clean EOF
+                Err(_) => break,   // corruption — stop counting
             }
         }
 
@@ -210,9 +210,12 @@ fn read_frame<R: IoRead>(reader: &mut R) -> Result<Option<WalEntry>> {
 
     // --- Read the body ---
     let mut body = vec![0u8; entry_len];
-    reader
-        .read_exact(&mut body)
-        .map_err(|_| anyhow::anyhow!("WAL: short read on frame body (expected {} bytes)", entry_len))?;
+    reader.read_exact(&mut body).map_err(|_| {
+        anyhow::anyhow!(
+            "WAL: short read on frame body (expected {} bytes)",
+            entry_len
+        )
+    })?;
 
     // --- Read the 4-byte CRC ---
     let mut crc_buf = [0u8; 4];
@@ -245,12 +248,15 @@ fn read_frame<R: IoRead>(reader: &mut R) -> Result<Option<WalEntry>> {
 /// Lazy frame-by-frame iterator over a WAL file.
 struct WalRecoveryIter<R: IoRead> {
     reader: R,
-    done:   bool,
+    done: bool,
 }
 
 impl<R: IoRead> WalRecoveryIter<R> {
     fn new(reader: R) -> Self {
-        Self { reader, done: false }
+        Self {
+            reader,
+            done: false,
+        }
     }
 }
 
@@ -293,7 +299,7 @@ mod tests {
     fn make_key(collection: &str) -> RecordKey {
         RecordKey {
             collection: collection.to_string(),
-            id:         [0u8; 16],
+            id: [0u8; 16],
         }
     }
 
@@ -304,7 +310,7 @@ mod tests {
     fn make_write_entry(txn_id: u64, collection: &str) -> WalEntry {
         WalEntry::Write {
             txn_id,
-            key:    make_key(collection),
+            key: make_key(collection),
             record: make_record(collection),
         }
     }
@@ -322,7 +328,8 @@ mod tests {
         {
             let mut wal = Wal::open(&wal_path).unwrap();
             for i in 0..5 {
-                wal.append(make_write_entry(1, &format!("col_{}", i))).unwrap();
+                wal.append(make_write_entry(1, &format!("col_{}", i)))
+                    .unwrap();
             }
             wal.append(WalEntry::TxnCommit(1)).unwrap();
         }
@@ -366,16 +373,14 @@ mod tests {
         {
             let mut wal = Wal::open(&wal_path).unwrap();
             for i in 0..3 {
-                wal.append(make_write_entry(2, &format!("col_{}", i))).unwrap();
+                wal.append(make_write_entry(2, &format!("col_{}", i)))
+                    .unwrap();
             }
         }
 
         // Corrupt the tail of the file by appending 3 garbage bytes.
         {
-            let mut f = OpenOptions::new()
-                .append(true)
-                .open(&wal_path)
-                .unwrap();
+            let mut f = OpenOptions::new().append(true).open(&wal_path).unwrap();
             f.write_all(&[0xDE, 0xAD, 0xBE]).unwrap();
         }
 
@@ -405,7 +410,10 @@ mod tests {
 
         let mut wal = Wal::open(&wal_path).unwrap();
         let lsns: Vec<Lsn> = (0..10)
-            .map(|i| wal.append(make_write_entry(3, &format!("col_{}", i))).unwrap())
+            .map(|i| {
+                wal.append(make_write_entry(3, &format!("col_{}", i)))
+                    .unwrap()
+            })
             .collect();
 
         assert_eq!(
@@ -458,7 +466,7 @@ mod tests {
         let txn_id = 99u64;
         let key = RecordKey {
             collection: "docs".to_string(),
-            id:         [7u8; 16],
+            id: [7u8; 16],
         };
 
         {
@@ -477,10 +485,7 @@ mod tests {
 
         assert_eq!(recovered.len(), 1);
         match &recovered[0] {
-            WalEntry::Delete {
-                txn_id: t,
-                key: k,
-            } => {
+            WalEntry::Delete { txn_id: t, key: k } => {
                 assert_eq!(*t, txn_id);
                 assert_eq!(k.collection, "docs");
                 assert_eq!(k.id, [7u8; 16]);

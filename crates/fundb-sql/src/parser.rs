@@ -12,7 +12,11 @@ pub struct ParseError {
 
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ParseError at {}:{}: {}", self.line, self.col, self.message)
+        write!(
+            f,
+            "ParseError at {}:{}: {}",
+            self.line, self.col, self.message
+        )
     }
 }
 
@@ -57,11 +61,7 @@ impl Parser {
             self.advance();
             Ok(())
         } else {
-            Err(self.error(format!(
-                "expected {:?}, found {:?}",
-                expected,
-                self.peek()
-            )))
+            Err(self.error(format!("expected {:?}, found {:?}", expected, self.peek())))
         }
     }
 
@@ -116,6 +116,7 @@ impl Parser {
         }
     }
 
+    #[allow(dead_code)]
     fn is_at_end(&self) -> bool {
         matches!(self.peek(), Token::Eof)
     }
@@ -126,17 +127,17 @@ impl Parser {
         while self.eat(&Token::Semicolon) {}
 
         let stmt = match self.peek().clone() {
-            Token::Select   => self.parse_select_stmt()?,
-            Token::Insert   => Statement::Insert(self.parse_insert()?),
-            Token::Update   => Statement::Update(self.parse_update()?),
-            Token::Delete   => Statement::Delete(self.parse_delete()?),
-            Token::Create   => self.parse_create()?,
+            Token::Select => self.parse_select_stmt()?,
+            Token::Insert => Statement::Insert(self.parse_insert()?),
+            Token::Update => Statement::Update(self.parse_update()?),
+            Token::Delete => Statement::Delete(self.parse_delete()?),
+            Token::Create => self.parse_create()?,
             Token::Understand => Statement::Understand(self.parse_understand()?),
             Token::Remember => Statement::Remember(self.parse_remember()?),
-            Token::Recall   => Statement::RecallBy(self.parse_recall_by()?),
-            Token::Forget   => Statement::Forget(self.parse_forget()?),
+            Token::Recall => Statement::RecallBy(self.parse_recall_by()?),
+            Token::Forget => Statement::Forget(self.parse_forget()?),
             Token::Discover => Statement::DiscoverCausal(self.parse_discover_causal()?),
-            Token::Trace    => Statement::TraceCausality(self.parse_trace_causality_top()?),
+            Token::Trace => Statement::TraceCausality(self.parse_trace_causality_top()?),
             Token::Intervene => Statement::EstimateEffect(self.parse_intervene()?),
             Token::Counterfactual => self.parse_counterfactual_dispatch()?,
             Token::Traverse => Statement::Select(self.parse_traverse_stmt()?),
@@ -202,15 +203,19 @@ impl Parser {
             }
             // regular FROM
             let from = Some(self.parse_table_ref()?);
-            return Ok(Statement::Select(
-                self.finish_select(distinct, projections, from)?,
-            ));
+            return Ok(Statement::Select(self.finish_select(
+                distinct,
+                projections,
+                from,
+            )?));
         }
 
         // SELECT without FROM
-        Ok(Statement::Select(
-            self.finish_select(distinct, projections, None)?,
-        ))
+        Ok(Statement::Select(self.finish_select(
+            distinct,
+            projections,
+            None,
+        )?))
     }
 
     fn finish_select(
@@ -235,7 +240,12 @@ impl Parser {
 
         loop {
             match self.peek().clone() {
-                Token::Join | Token::Inner | Token::Left | Token::Right | Token::Cross | Token::Outer => {
+                Token::Join
+                | Token::Inner
+                | Token::Left
+                | Token::Right
+                | Token::Cross
+                | Token::Outer => {
                     joins.push(self.parse_join()?);
                 }
                 Token::Traverse => {
@@ -282,7 +292,8 @@ impl Parser {
                 }
                 Token::As => {
                     // AS OF … — "OF" would be an Ident
-                    if matches!(self.peek2(), Some(Token::Ident(s)) if s.eq_ignore_ascii_case("of")) {
+                    if matches!(self.peek2(), Some(Token::Ident(s)) if s.eq_ignore_ascii_case("of"))
+                    {
                         self.advance(); // AS
                         self.advance(); // OF (ident)
                         as_of = Some(self.parse_as_of_body()?);
@@ -355,9 +366,9 @@ impl Parser {
             return Ok(SelectItem::Wildcard);
         }
         let expr = self.parse_expr()?;
-        let alias = if self.eat(&Token::As) {
-            Some(self.expect_ident()?)
-        } else if matches!(self.peek(), Token::Ident(_)) && !self.is_clause_keyword(self.peek()) {
+        let alias = if self.eat(&Token::As)
+            || (matches!(self.peek(), Token::Ident(_)) && !self.is_clause_keyword(self.peek()))
+        {
             Some(self.expect_ident()?)
         } else {
             None
@@ -382,9 +393,9 @@ impl Parser {
             // parse the inner select, discarding the result (we just need to not error)
             let _sub = self.parse_select_inner()?;
             self.expect(&Token::RParen)?;
-            let alias = if self.eat(&Token::As) {
-                Some(self.expect_ident()?)
-            } else if matches!(self.peek(), Token::Ident(_)) && !self.is_clause_keyword(self.peek()) {
+            let alias = if self.eat(&Token::As)
+                || (matches!(self.peek(), Token::Ident(_)) && !self.is_clause_keyword(self.peek()))
+            {
                 Some(self.expect_ident()?)
             } else {
                 None
@@ -409,7 +420,11 @@ impl Parser {
         } else {
             None
         };
-        Ok(TableRef { name, alias, is_agent_memory: false })
+        Ok(TableRef {
+            name,
+            alias,
+            is_agent_memory: false,
+        })
     }
 
     fn parse_qualified_name(&mut self) -> Result<String, ParseError> {
@@ -425,13 +440,26 @@ impl Parser {
         matches!(
             tok,
             Token::Where
-                | Token::Join | Token::Inner | Token::Left | Token::Right | Token::Cross | Token::Outer
-                | Token::Order | Token::Group | Token::Having
-                | Token::Limit | Token::Offset
-                | Token::Within | Token::AsOf | Token::As
-                | Token::Traverse | Token::Trace | Token::Return
+                | Token::Join
+                | Token::Inner
+                | Token::Left
+                | Token::Right
+                | Token::Cross
+                | Token::Outer
+                | Token::Order
+                | Token::Group
+                | Token::Having
+                | Token::Limit
+                | Token::Offset
+                | Token::Within
+                | Token::AsOf
+                | Token::As
+                | Token::Traverse
+                | Token::Trace
+                | Token::Return
                 | Token::Recall
-                | Token::Eof | Token::Semicolon
+                | Token::Eof
+                | Token::Semicolon
         )
     }
 
@@ -478,7 +506,11 @@ impl Parser {
         } else {
             None
         };
-        Ok(JoinClause { join_type, table, on })
+        Ok(JoinClause {
+            join_type,
+            table,
+            on,
+        })
     }
 
     // ── TRAVERSE ────────────────────────────────────────────────────────────
@@ -566,10 +598,9 @@ impl Parser {
 
         if self.eat(&Token::LParen) {
             // optional "depth:" prefix
-            if matches!(self.peek(), Token::Depth) {
-                self.advance();
-                self.eat(&Token::Colon);
-            } else if matches!(self.peek(), Token::Ident(s) if s.eq_ignore_ascii_case("depth")) {
+            if matches!(self.peek(), Token::Depth)
+                || matches!(self.peek(), Token::Ident(s) if s.eq_ignore_ascii_case("depth"))
+            {
                 self.advance();
                 self.eat(&Token::Colon);
             }
@@ -592,7 +623,13 @@ impl Parser {
 
         let target_alias = None;
 
-        Ok(TraverseClause { relation, chain, depth_min, depth_max, target_alias })
+        Ok(TraverseClause {
+            relation,
+            chain,
+            depth_min,
+            depth_max,
+            target_alias,
+        })
     }
 
     // ── TRACE CAUSALITY clause (inside SELECT) ───────────────────────────────
@@ -633,7 +670,13 @@ impl Parser {
             }
         }
 
-        Ok(TraceCausalityClause { from, to, max_depth, min_strength, min_stability })
+        Ok(TraceCausalityClause {
+            from,
+            to,
+            max_depth,
+            min_strength,
+            min_stability,
+        })
     }
 
     // ── TRACE CAUSALITY (top-level) ──────────────────────────────────────────
@@ -749,11 +792,18 @@ impl Parser {
                 }
                 "include_contradictions" => {
                     include_contradictions = Some(match self.peek().clone() {
-                        Token::True => { self.advance(); true }
-                        Token::False => { self.advance(); false }
+                        Token::True => {
+                            self.advance();
+                            true
+                        }
+                        Token::False => {
+                            self.advance();
+                            false
+                        }
                         other => {
                             return Err(self.error(format!(
-                                "expected true/false for include_contradictions, found {:?}", other
+                                "expected true/false for include_contradictions, found {:?}",
+                                other
                             )));
                         }
                     });
@@ -775,7 +825,13 @@ impl Parser {
 
         self.expect(&Token::RParen)?;
 
-        Ok(ContextOptions { max_tokens, coherence, diversity, include_contradictions, priority })
+        Ok(ContextOptions {
+            max_tokens,
+            coherence,
+            diversity,
+            include_contradictions,
+            priority,
+        })
     }
 
     // ── AS OF ────────────────────────────────────────────────────────────────
@@ -826,7 +882,8 @@ impl Parser {
                 }
             }
             other => Err(self.error(format!(
-                "expected SYSTEM TIME or VALID TIME after AS OF, found {:?}", other
+                "expected SYSTEM TIME or VALID TIME after AS OF, found {:?}",
+                other
             ))),
         }
     }
@@ -859,7 +916,15 @@ impl Parser {
         let model = if self.eat(&Token::From) {
             let table = self.parse_table_ref()?;
             // Consume optional JOINs
-            while matches!(self.peek(), Token::Join | Token::Inner | Token::Left | Token::Right | Token::Cross | Token::Outer) {
+            while matches!(
+                self.peek(),
+                Token::Join
+                    | Token::Inner
+                    | Token::Left
+                    | Token::Right
+                    | Token::Cross
+                    | Token::Outer
+            ) {
                 let _join = self.parse_join()?;
             }
             // Consume optional WHERE
@@ -908,7 +973,13 @@ impl Parser {
         let set_vars = self.parse_assignment_list()?;
         self.expect(&Token::Predict)?;
         let predict = self.expect_ident()?;
-        Ok(EstimateEffectStmt { projections, model, set_vars, predict, given: None })
+        Ok(EstimateEffectStmt {
+            projections,
+            model,
+            set_vars,
+            predict,
+            given: None,
+        })
     }
 
     // ── COUNTERFACTUAL ────────────────────────────────────────────────────────
@@ -917,7 +988,9 @@ impl Parser {
     fn parse_counterfactual_dispatch(&mut self) -> Result<Statement, ParseError> {
         // Peek past COUNTERFACTUAL to see what follows
         if matches!(self.peek2(), Some(Token::Select)) {
-            Ok(Statement::Counterfactual(self.parse_counterfactual_with_select()?))
+            Ok(Statement::Counterfactual(
+                self.parse_counterfactual_with_select()?,
+            ))
         } else {
             Ok(Statement::Counterfactual(self.parse_counterfactual()?))
         }
@@ -939,7 +1012,9 @@ impl Parser {
         Ok(CounterfactualStmt {
             projections,
             model: String::new(),
-            given: Some(CounterfactualGiven::Subquery(Box::new(Statement::Select(sub)))),
+            given: Some(CounterfactualGiven::Subquery(Box::new(Statement::Select(
+                sub,
+            )))),
             had,
             predict: String::new(),
         })
@@ -978,9 +1053,9 @@ impl Parser {
                     if self.eat(&Token::LParen) {
                         let sub = self.parse_select_inner()?;
                         self.expect(&Token::RParen)?;
-                        given = Some(CounterfactualGiven::Subquery(Box::new(
-                            Statement::Select(sub),
-                        )));
+                        given = Some(CounterfactualGiven::Subquery(Box::new(Statement::Select(
+                            sub,
+                        ))));
                     } else {
                         let val = self.parse_expr()?;
                         let mut pairs = vec![(key, val)];
@@ -1017,7 +1092,13 @@ impl Parser {
             }
         }
 
-        Ok(CounterfactualStmt { projections, model, given, had, predict })
+        Ok(CounterfactualStmt {
+            projections,
+            model,
+            given,
+            had,
+            predict,
+        })
     }
 
     // ── DISCOVER CAUSAL ───────────────────────────────────────────────────────
@@ -1051,7 +1132,15 @@ impl Parser {
         } else if self.eat(&Token::From) {
             let table = self.parse_table_ref()?;
             // Consume optional JOINs
-            while matches!(self.peek(), Token::Join | Token::Inner | Token::Left | Token::Right | Token::Cross | Token::Outer) {
+            while matches!(
+                self.peek(),
+                Token::Join
+                    | Token::Inner
+                    | Token::Left
+                    | Token::Right
+                    | Token::Cross
+                    | Token::Outer
+            ) {
                 let _join = self.parse_join()?;
             }
             table.name
@@ -1116,7 +1205,13 @@ impl Parser {
             }
         }
 
-        Ok(DiscoverCausalStmt { collection, algorithm, min_confidence, store_as, variables })
+        Ok(DiscoverCausalStmt {
+            collection,
+            algorithm,
+            min_confidence,
+            store_as,
+            variables,
+        })
     }
 
     fn expect_string_or_ident(&mut self) -> Result<String, ParseError> {
@@ -1141,7 +1236,8 @@ impl Parser {
             }
             other => {
                 return Err(self.error(format!(
-                    "UNDERSTAND expects a string literal, found {:?}", other
+                    "UNDERSTAND expects a string literal, found {:?}",
+                    other
                 )));
             }
         };
@@ -1159,7 +1255,8 @@ impl Parser {
                         Token::MinConfidence => "min_confidence".to_string(),
                         other => {
                             return Err(self.error(format!(
-                                "expected option name after WITH in UNDERSTAND, found {:?}", other
+                                "expected option name after WITH in UNDERSTAND, found {:?}",
+                                other
                             )));
                         }
                     };
@@ -1175,9 +1272,9 @@ impl Parser {
                             options.push(UnderstandOption::MinSimilarity(expr));
                         }
                         other => {
-                            return Err(self.error(format!(
-                                "unknown UNDERSTAND WITH option: {}", other
-                            )));
+                            return Err(
+                                self.error(format!("unknown UNDERSTAND WITH option: {}", other))
+                            );
                         }
                     }
                 }
@@ -1186,10 +1283,23 @@ impl Parser {
                     let mut parts = Vec::new();
                     loop {
                         match self.peek().clone() {
-                            Token::Depth | Token::In | Token::With | Token::Semicolon | Token::Eof => break,
-                            Token::Ident(s) => { parts.push(s); self.advance(); }
-                            Token::IntLiteral(n) => { parts.push(n.to_string()); self.advance(); }
-                            Token::StringLiteral(s) => { parts.push(s); self.advance(); }
+                            Token::Depth
+                            | Token::In
+                            | Token::With
+                            | Token::Semicolon
+                            | Token::Eof => break,
+                            Token::Ident(s) => {
+                                parts.push(s);
+                                self.advance();
+                            }
+                            Token::IntLiteral(n) => {
+                                parts.push(n.to_string());
+                                self.advance();
+                            }
+                            Token::StringLiteral(s) => {
+                                parts.push(s);
+                                self.advance();
+                            }
                             _ => break,
                         }
                     }
@@ -1235,10 +1345,14 @@ impl Parser {
         self.expect(&Token::Remember)?;
 
         let content = match self.peek().clone() {
-            Token::StringLiteral(s) => { self.advance(); s }
+            Token::StringLiteral(s) => {
+                self.advance();
+                s
+            }
             other => {
                 return Err(self.error(format!(
-                    "REMEMBER expects a string literal, found {:?}", other
+                    "REMEMBER expects a string literal, found {:?}",
+                    other
                 )));
             }
         };
@@ -1273,9 +1387,9 @@ impl Parser {
                             importance = Some(self.parse_primary_expr()?);
                         }
                         other => {
-                            return Err(self.error(format!(
-                                "unknown REMEMBER WITH option: {}", other
-                            )));
+                            return Err(
+                                self.error(format!("unknown REMEMBER WITH option: {}", other))
+                            );
                         }
                     }
                 }
@@ -1292,7 +1406,12 @@ impl Parser {
             }
         }
 
-        Ok(RememberStmt { content, agent_id, importance, memory_type })
+        Ok(RememberStmt {
+            content,
+            agent_id,
+            importance,
+            memory_type,
+        })
     }
 
     // ── RECALL BY (top-level) ────────────────────────────────────────────────
@@ -1304,7 +1423,10 @@ impl Parser {
         // String shorthand: RECALL BY 'query string' ...
         let weights = if matches!(self.peek(), Token::StringLiteral(_)) {
             let query = self.parse_primary_expr()?;
-            vec![RecallWeight::SemanticSimilarity { query, weight: None }]
+            vec![RecallWeight::SemanticSimilarity {
+                query,
+                weight: None,
+            }]
         } else {
             self.parse_recall_weights()?
         };
@@ -1343,7 +1465,11 @@ impl Parser {
             }
         }
 
-        Ok(RecallByStmt { weights, agent_id, limit })
+        Ok(RecallByStmt {
+            weights,
+            agent_id,
+            limit,
+        })
     }
 
     fn parse_recall_weights(&mut self) -> Result<Vec<RecallWeight>, ParseError> {
@@ -1389,12 +1515,18 @@ impl Parser {
                         "weight" => {
                             w = Some(self.parse_primary_expr()?);
                         }
-                        _ => { self.parse_primary_expr()?; }
+                        _ => {
+                            self.parse_primary_expr()?;
+                        }
                     }
                     self.eat(&Token::Comma);
                 }
                 self.expect(&Token::RParen)?;
-                Ok(RecallWeight::Recency { decay, half_life, weight: w })
+                Ok(RecallWeight::Recency {
+                    decay,
+                    half_life,
+                    weight: w,
+                })
             }
             "importance" => {
                 let mut w = None;
@@ -1468,7 +1600,11 @@ impl Parser {
             }
         }
 
-        Ok(InsertStmt { table, columns, values: all_values })
+        Ok(InsertStmt {
+            table,
+            columns,
+            values: all_values,
+        })
     }
 
     // ── UPDATE ────────────────────────────────────────────────────────────────
@@ -1488,7 +1624,12 @@ impl Parser {
         } else {
             None
         };
-        Ok(UpdateStmt { table, alias, assignments, where_clause })
+        Ok(UpdateStmt {
+            table,
+            alias,
+            assignments,
+            where_clause,
+        })
     }
 
     fn parse_assignment_list(&mut self) -> Result<Vec<(String, Expr)>, ParseError> {
@@ -1519,7 +1660,10 @@ impl Parser {
         } else {
             None
         };
-        Ok(DeleteStmt { table, where_clause })
+        Ok(DeleteStmt {
+            table,
+            where_clause,
+        })
     }
 
     // ── CREATE ────────────────────────────────────────────────────────────────
@@ -1546,7 +1690,9 @@ impl Parser {
                 if matches!(self.peek(), Token::Ident(t) if t.eq_ignore_ascii_case("model")) {
                     self.advance();
                 }
-                Ok(Statement::CreateCausalModel(self.parse_create_causal_model_body()?))
+                Ok(Statement::CreateCausalModel(
+                    self.parse_create_causal_model_body()?,
+                ))
             }
             other => Err(self.error(format!("unexpected CREATE target: {:?}", other))),
         }
@@ -1566,12 +1712,20 @@ impl Parser {
                 } else {
                     true
                 };
-                columns.push(ColumnDef { name: col_name, ty, nullable });
+                columns.push(ColumnDef {
+                    name: col_name,
+                    ty,
+                    nullable,
+                });
                 self.eat(&Token::Comma);
             }
             self.expect(&Token::RParen)?;
         }
-        Ok(CreateCollectionStmt { name, if_not_exists: false, columns })
+        Ok(CreateCollectionStmt {
+            name,
+            if_not_exists: false,
+            columns,
+        })
     }
 
     fn parse_create_index_body(&mut self) -> Result<CreateIndexStmt, ParseError> {
@@ -1584,7 +1738,12 @@ impl Parser {
             cols.push(self.expect_ident()?);
         }
         self.expect(&Token::RParen)?;
-        Ok(CreateIndexStmt { name, table, columns: cols, unique: false })
+        Ok(CreateIndexStmt {
+            name,
+            table,
+            columns: cols,
+            unique: false,
+        })
     }
 
     fn parse_create_causal_model_body(&mut self) -> Result<CreateCausalModelStmt, ParseError> {
@@ -1605,17 +1764,29 @@ impl Parser {
 
         while !matches!(self.peek(), Token::RParen | Token::Eof) {
             let section = match self.peek().clone() {
-                Token::Variables => { self.advance(); "variables" }
-                Token::Structure => { self.advance(); "structure" }
-                Token::Equations => { self.advance(); "equations" }
+                Token::Variables => {
+                    self.advance();
+                    "variables"
+                }
+                Token::Structure => {
+                    self.advance();
+                    "structure"
+                }
+                Token::Equations => {
+                    self.advance();
+                    "equations"
+                }
                 Token::Ident(s) if s.eq_ignore_ascii_case("variables") => {
-                    self.advance(); "variables"
+                    self.advance();
+                    "variables"
                 }
                 Token::Ident(s) if s.eq_ignore_ascii_case("structure") => {
-                    self.advance(); "structure"
+                    self.advance();
+                    "structure"
                 }
                 Token::Ident(s) if s.eq_ignore_ascii_case("equations") => {
-                    self.advance(); "equations"
+                    self.advance();
+                    "equations"
                 }
                 _ => {
                     // Skip unknown tokens gracefully
@@ -1630,7 +1801,10 @@ impl Parser {
                     while !self.is_next_section_or_end() {
                         let vname = self.expect_ident()?;
                         let vty = self.expect_ident()?;
-                        variables.push(CausalVariable { name: vname, ty: vty });
+                        variables.push(CausalVariable {
+                            name: vname,
+                            ty: vty,
+                        });
                         self.eat(&Token::Comma);
                     }
                 }
@@ -1652,18 +1826,23 @@ impl Parser {
                         self.eat(&Token::Assign);
                         self.eat(&Token::Eq);
                         let rhs = self.parse_primary_expr()?;
-                        let learn_from = if matches!(self.peek(), Token::Ident(s) if s.eq_ignore_ascii_case("learn")) {
+                        let learn_from = if matches!(self.peek(), Token::Ident(s) if s.eq_ignore_ascii_case("learn"))
+                        {
                             self.advance();
-                            if matches!(self.peek(), Token::From) {
-                                self.advance();
-                            } else if matches!(self.peek(), Token::Ident(s) if s.eq_ignore_ascii_case("from")) {
+                            if matches!(self.peek(), Token::From)
+                                || matches!(self.peek(), Token::Ident(s) if s.eq_ignore_ascii_case("from"))
+                            {
                                 self.advance();
                             }
                             Some(self.expect_ident()?)
                         } else {
                             None
                         };
-                        equations.push(CausalEquation { variable: vname, rhs, learn_from });
+                        equations.push(CausalEquation {
+                            variable: vname,
+                            rhs,
+                            learn_from,
+                        });
                         self.eat(&Token::Comma);
                     }
                 }
@@ -1673,7 +1852,13 @@ impl Parser {
 
         self.expect(&Token::RParen)?;
 
-        Ok(CreateCausalModelStmt { name, mode, variables, structure, equations })
+        Ok(CreateCausalModelStmt {
+            name,
+            mode,
+            variables,
+            structure,
+            equations,
+        })
     }
 
     fn is_next_section_or_end(&self) -> bool {
@@ -1782,19 +1967,40 @@ impl Parser {
                 self.advance();
                 BinaryOp::Eq
             }
-            Token::NotEq => { self.advance(); BinaryOp::NotEq }
-            Token::Lt => { self.advance(); BinaryOp::Lt }
-            Token::LtEq => { self.advance(); BinaryOp::LtEq }
-            Token::Gt => { self.advance(); BinaryOp::Gt }
-            Token::GtEq => { self.advance(); BinaryOp::GtEq }
-            Token::Like => { self.advance(); BinaryOp::Like }
+            Token::NotEq => {
+                self.advance();
+                BinaryOp::NotEq
+            }
+            Token::Lt => {
+                self.advance();
+                BinaryOp::Lt
+            }
+            Token::LtEq => {
+                self.advance();
+                BinaryOp::LtEq
+            }
+            Token::Gt => {
+                self.advance();
+                BinaryOp::Gt
+            }
+            Token::GtEq => {
+                self.advance();
+                BinaryOp::GtEq
+            }
+            Token::Like => {
+                self.advance();
+                BinaryOp::Like
+            }
             Token::Not => {
                 self.advance();
                 if self.eat(&Token::Like) {
                     BinaryOp::NotLike
                 } else if self.eat(&Token::In) {
                     let list = self.parse_in_list()?;
-                    return Ok(Expr::InList { expr: Box::new(left), list });
+                    return Ok(Expr::InList {
+                        expr: Box::new(left),
+                        list,
+                    });
                 } else {
                     return Err(self.error("expected LIKE or IN after NOT"));
                 }
@@ -1812,7 +2018,10 @@ impl Parser {
             Token::In => {
                 self.advance();
                 let list = self.parse_in_list()?;
-                return Ok(Expr::InList { expr: Box::new(left), list });
+                return Ok(Expr::InList {
+                    expr: Box::new(left),
+                    list,
+                });
             }
             Token::Between => {
                 self.advance();
@@ -1846,7 +2055,11 @@ impl Parser {
             };
             self.advance();
             let right = self.parse_multiplicative_expr()?;
-            left = Expr::BinaryOp { op, left: Box::new(left), right: Box::new(right) };
+            left = Expr::BinaryOp {
+                op,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
         }
         Ok(left)
     }
@@ -1862,7 +2075,11 @@ impl Parser {
             };
             self.advance();
             let right = self.parse_vector_dist_expr()?;
-            left = Expr::BinaryOp { op, left: Box::new(left), right: Box::new(right) };
+            left = Expr::BinaryOp {
+                op,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
         }
         Ok(left)
     }
@@ -1883,7 +2100,10 @@ impl Parser {
     fn parse_unary_expr(&mut self) -> Result<Expr, ParseError> {
         if self.eat(&Token::Minus) {
             let expr = self.parse_primary_expr()?;
-            return Ok(Expr::UnaryOp { op: UnaryOp::Neg, expr: Box::new(expr) });
+            return Ok(Expr::UnaryOp {
+                op: UnaryOp::Neg,
+                expr: Box::new(expr),
+            });
         }
         self.parse_primary_expr()
     }
@@ -1940,7 +2160,10 @@ impl Parser {
                 self.expect(&Token::RParen)?;
                 if self.eat(&Token::VectorDist) {
                     let value = self.parse_primary_expr()?;
-                    return Ok(Expr::VectorDist { field, value: Box::new(value) });
+                    return Ok(Expr::VectorDist {
+                        field,
+                        value: Box::new(value),
+                    });
                 }
                 Ok(Expr::FunctionCall {
                     name: "_vector".to_string(),
@@ -2018,7 +2241,9 @@ impl Parser {
                                     break;
                                 }
                                 // handle named args like `key: value`
-                                if matches!(self.peek(), Token::Ident(_)) && matches!(self.peek2(), Some(Token::Colon)) {
+                                if matches!(self.peek(), Token::Ident(_))
+                                    && matches!(self.peek2(), Some(Token::Colon))
+                                {
                                     // key: value pair — consume both as an expression pair
                                     let _key = self.expect_ident()?;
                                     self.expect(&Token::Colon)?;
@@ -2036,12 +2261,15 @@ impl Parser {
                         // table.* — qualified wildcard
                         if self.peek() == &Token::Star {
                             self.advance();
-                            return Ok(Expr::Qualified { table: name, field: "*".to_string() });
+                            return Ok(Expr::Qualified {
+                                table: name,
+                                field: "*".to_string(),
+                            });
                         }
                         // Check if next is _vector keyword
                         if self.peek() == &Token::Vector {
                             self.advance(); // consume _vector
-                            // Bare table._vector <-> [...] syntax
+                                            // Bare table._vector <-> [...] syntax
                             if self.peek() == &Token::VectorDist {
                                 self.advance();
                                 let value = self.parse_primary_expr()?;
@@ -2073,7 +2301,9 @@ impl Parser {
                             if !matches!(self.peek(), Token::RParen) {
                                 args.push(self.parse_expr()?);
                                 while self.eat(&Token::Comma) {
-                                    if matches!(self.peek(), Token::RParen) { break; }
+                                    if matches!(self.peek(), Token::RParen) {
+                                        break;
+                                    }
                                     args.push(self.parse_expr()?);
                                 }
                             }
@@ -2113,7 +2343,11 @@ impl Parser {
             None
         };
         self.expect(&Token::End)?;
-        Ok(Expr::Case { operand, when_clauses, else_clause })
+        Ok(Expr::Case {
+            operand,
+            when_clauses,
+            else_clause,
+        })
     }
 
     fn parse_in_list(&mut self) -> Result<Vec<Expr>, ParseError> {
@@ -2133,43 +2367,43 @@ impl Parser {
 fn keyword_as_ident(tok: &Token) -> Option<String> {
     match tok {
         Token::Ident(s) => Some(s.clone()),
-        Token::Algorithm   => Some("algorithm".into()),
-        Token::Structure   => Some("structure".into()),
-        Token::Equations   => Some("equations".into()),
-        Token::Variables   => Some("variables".into()),
-        Token::Confidence  => Some("confidence".into()),
-        Token::Depth       => Some("depth".into()),
-        Token::Path        => Some("path".into()),
-        Token::Causality   => Some("causality".into()),
-        Token::Recency     => Some("recency".into()),
-        Token::Importance  => Some("importance".into()),
-        Token::Memory      => Some("memory".into()),
-        Token::Agent       => Some("agent".into()),
-        Token::Priority    => Some("priority".into()),
-        Token::Coherence   => Some("coherence".into()),
-        Token::Diversity   => Some("diversity".into()),
-        Token::Context     => Some("context".into()),
-        Token::Collection  => Some("collection".into()),
-        Token::Start       => Some("start".into()),
-        Token::Return      => Some("return".into()),
-        Token::Predict     => Some("predict".into()),
-        Token::Now         => Some("now".into()),
-        Token::Interval    => Some("interval".into()),
-        Token::Explain     => Some("explain".into()),
-        Token::Set         => Some("set".into()),
-        Token::Value       => Some("value".into()),
+        Token::Algorithm => Some("algorithm".into()),
+        Token::Structure => Some("structure".into()),
+        Token::Equations => Some("equations".into()),
+        Token::Variables => Some("variables".into()),
+        Token::Confidence => Some("confidence".into()),
+        Token::Depth => Some("depth".into()),
+        Token::Path => Some("path".into()),
+        Token::Causality => Some("causality".into()),
+        Token::Recency => Some("recency".into()),
+        Token::Importance => Some("importance".into()),
+        Token::Memory => Some("memory".into()),
+        Token::Agent => Some("agent".into()),
+        Token::Priority => Some("priority".into()),
+        Token::Coherence => Some("coherence".into()),
+        Token::Diversity => Some("diversity".into()),
+        Token::Context => Some("context".into()),
+        Token::Collection => Some("collection".into()),
+        Token::Start => Some("start".into()),
+        Token::Return => Some("return".into()),
+        Token::Predict => Some("predict".into()),
+        Token::Now => Some("now".into()),
+        Token::Interval => Some("interval".into()),
+        Token::Explain => Some("explain".into()),
+        Token::Set => Some("set".into()),
+        Token::Value => Some("value".into()),
         Token::MinConfidence => Some("min_confidence".into()),
-        Token::Store       => Some("store".into()),
-        Token::Decay       => Some("decay".into()),
+        Token::Store => Some("store".into()),
+        Token::Decay => Some("decay".into()),
         Token::SemanticSimilarity => Some("semantic_similarity".into()),
         Token::Consolidate => Some("consolidate".into()),
-        Token::Infer       => Some("infer".into()),
-        Token::StoreAs     => Some("store_as".into()),
-        Token::Vector      => Some("_vector".into()),
-        Token::Traverse    => Some("traverse".into()),
-        Token::Trace       => Some("trace".into()),
-        Token::With        => Some("with".into()),
-        Token::MaxTokens   => Some("max_tokens".into()),
+        Token::Infer => Some("infer".into()),
+        Token::StoreAs => Some("store_as".into()),
+        Token::Vector => Some("_vector".into()),
+        Token::Traverse => Some("traverse".into()),
+        Token::Trace => Some("trace".into()),
+        Token::With => Some("with".into()),
+        Token::MaxTokens => Some("max_tokens".into()),
         Token::IncludeContradictions => Some("include_contradictions".into()),
         _ => None,
     }

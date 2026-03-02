@@ -1,18 +1,18 @@
-pub mod token;
-pub mod lexer;
 pub mod ast;
-pub mod parser;
-pub mod logical_plan;
 pub mod binder;
+pub mod lexer;
+pub mod logical_plan;
+pub mod parser;
+pub mod token;
 
 pub use ast::Statement;
 pub use parser::ParseError;
 
-pub use logical_plan::{
-    AggExpr, AggFunc, BinaryOp, ContextOptions, Expr, Literal, LogicalPlan, SortExpr,
-    UnaryOp, UnderstandOptions,
-};
 pub use binder::{bind, BindError, Catalog};
+pub use logical_plan::{
+    AggExpr, AggFunc, BinaryOp, ContextOptions, Expr, Literal, LogicalPlan, SortExpr, UnaryOp,
+    UnderstandOptions,
+};
 
 /// Parse a FunQL query string into a typed AST.
 ///
@@ -30,8 +30,8 @@ pub fn parse(input: &str) -> Result<Statement, ParseError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse, ParseError, bind, BindError, Catalog, LogicalPlan, Statement};
-    use crate::ast::{self, AsOfClause, Expr, Statement as AstStatement, UnderstandOption};
+    use super::{parse, Statement};
+    use crate::ast::{AsOfClause, Expr, UnderstandOption};
     use crate::lexer::Lexer;
     use crate::token::Token;
 
@@ -64,8 +64,16 @@ mod tests {
             "expected VectorDist token in {:?}",
             toks
         );
-        let non_eof: Vec<_> = toks.into_iter().filter(|t| !matches!(t, Token::Eof)).collect();
-        assert_eq!(non_eof.len(), 3, "expected [Ident, VectorDist, Ident], got {:?}", non_eof);
+        let non_eof: Vec<_> = toks
+            .into_iter()
+            .filter(|t| !matches!(t, Token::Eof))
+            .collect();
+        assert_eq!(
+            non_eof.len(),
+            3,
+            "expected [Ident, VectorDist, Ident], got {:?}",
+            non_eof
+        );
     }
 
     #[test]
@@ -98,7 +106,9 @@ mod tests {
     #[test]
     fn test_lexer_float_literal() {
         let toks = tokens_no_eof("3.14");
-        assert_eq!(toks[0], Token::FloatLiteral(3.14));
+        #[allow(clippy::approx_constant)]
+        let expected = 3.14;
+        assert_eq!(toks[0], Token::FloatLiteral(expected));
     }
 
     #[test]
@@ -248,7 +258,10 @@ mod tests {
         let stmt = parse(sql).unwrap();
         match stmt {
             Statement::Select(s) => {
-                assert!(s.trace_causality.is_some(), "expected TRACE CAUSALITY clause");
+                assert!(
+                    s.trace_causality.is_some(),
+                    "expected TRACE CAUSALITY clause"
+                );
                 let tc = s.trace_causality.unwrap();
                 assert!(tc.from.is_some());
                 assert!(tc.to.is_some());
@@ -311,12 +324,14 @@ mod tests {
         match stmt {
             Statement::Understand(u) => {
                 assert_eq!(u.intent, "users who behave similarly to user-42");
-                let has_collection = u.options.iter().any(|o| {
-                    matches!(o, UnderstandOption::InCollection(_))
-                });
-                let has_vector = u.options.iter().any(|o| {
-                    matches!(o, UnderstandOption::UsingVector(_))
-                });
+                let has_collection = u
+                    .options
+                    .iter()
+                    .any(|o| matches!(o, UnderstandOption::InCollection(_)));
+                let has_vector = u
+                    .options
+                    .iter()
+                    .any(|o| matches!(o, UnderstandOption::UsingVector(_)));
                 assert!(has_collection, "expected InCollection option");
                 assert!(has_vector, "expected UsingVector option");
             }

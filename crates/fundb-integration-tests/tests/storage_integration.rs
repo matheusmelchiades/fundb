@@ -70,7 +70,10 @@ async fn test_delete_survives_flush() {
     lsm.flush_memtable().await.unwrap();
 
     let result = lsm.get(&key).await.unwrap();
-    assert!(result.is_none(), "deleted record should not be readable after flush");
+    assert!(
+        result.is_none(),
+        "deleted record should not be readable after flush"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -168,7 +171,12 @@ async fn test_concurrent_writers_8_tasks() {
         id: [0xFF; 16],
     };
     let results = lsm.scan("concurrent", &from, &to).await.unwrap();
-    assert_eq!(results.len(), 400, "expected 400 records, got {}", results.len());
+    assert_eq!(
+        results.len(),
+        400,
+        "expected 400 records, got {}",
+        results.len()
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -319,7 +327,10 @@ async fn test_tombstone_removed_by_compaction() {
     lsm.trigger_compaction().await.unwrap();
 
     let result = lsm.get(&key).await.unwrap();
-    assert!(result.is_none(), "tombstone should be eliminated by compaction");
+    assert!(
+        result.is_none(),
+        "tombstone should be eliminated by compaction"
+    );
 }
 
 // ---------------------------------------------------------------------------

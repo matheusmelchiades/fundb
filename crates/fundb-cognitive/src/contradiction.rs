@@ -15,7 +15,6 @@
 ///   or is the explicit negation `"not_<tag>"`), OR similarity > 0.7 and confidence
 ///   difference > 0.5.
 /// - **Corroborating**: everything else that passes the similarity threshold (> 0.3).
-
 use fundb_core::{FunRecord, Source, SourceMethod};
 use uuid::Uuid;
 
@@ -83,10 +82,7 @@ impl ContradictionDetector {
     /// 5. Include the candidate if combined similarity > 0.3.
     ///
     /// Results are sorted by similarity descending.
-    pub fn check_insert(
-        new: &FunRecord,
-        candidates: &[FunRecord],
-    ) -> Vec<ContradictionCandidate> {
+    pub fn check_insert(new: &FunRecord, candidates: &[FunRecord]) -> Vec<ContradictionCandidate> {
         let new_tags = tags_of(new);
 
         let mut results: Vec<ContradictionCandidate> = candidates
@@ -265,13 +261,7 @@ impl ContradictionDetector {
     fn polarity_with_sim(a: &FunRecord, b: &FunRecord, similarity: f32) -> Polarity {
         let a_tags = tags_of(a);
         let b_tags = tags_of(b);
-        polarity_with_sim_internal(
-            &a_tags,
-            &b_tags,
-            a._confidence,
-            b._confidence,
-            similarity,
-        )
+        polarity_with_sim_internal(&a_tags, &b_tags, a._confidence, b._confidence, similarity)
     }
 }
 
@@ -490,11 +480,13 @@ mod tests {
 
         assert!(
             a._sources.iter().any(|s| s.origin == tag_in_a),
-            "record_a must contain a source with origin '{}'", tag_in_a
+            "record_a must contain a source with origin '{}'",
+            tag_in_a
         );
         assert!(
             b._sources.iter().any(|s| s.origin == tag_in_b),
-            "record_b must contain a source with origin '{}'", tag_in_b
+            "record_b must contain a source with origin '{}'",
+            tag_in_b
         );
     }
 
@@ -581,10 +573,13 @@ mod tests {
         // candidate_2 shares 2/3 tags → sim = 2/3 ≈ 0.667
         let candidate_2 = record_with_tags(&["a", "b", "x"]);
 
-        let results =
-            ContradictionDetector::check_insert(&new, &[candidate_2, candidate_1]);
+        let results = ContradictionDetector::check_insert(&new, &[candidate_2, candidate_1]);
 
-        assert_eq!(results.len(), 2, "both candidates should pass the threshold");
+        assert_eq!(
+            results.len(),
+            2,
+            "both candidates should pass the threshold"
+        );
         assert!(
             results[0].similarity >= results[1].similarity,
             "results must be sorted by similarity descending"

@@ -7,6 +7,7 @@ use async_trait::async_trait;
 use fundb_protocol::{ConnContext, FieldDescription, QueryError, QueryHandler, QueryResult};
 
 /// A minimal handler that answers a handful of well-known queries.
+#[allow(dead_code)]
 pub struct StubHandler;
 
 #[async_trait]

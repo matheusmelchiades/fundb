@@ -1,10 +1,10 @@
+pub mod cost;
 /// FunDB query optimizer.
 ///
 /// Applies a chain of algebraic rewriting rules to a `LogicalPlan` tree until
 /// the plan reaches a fixed point (no further rule fires), or until the maximum
 /// iteration limit is reached.
 pub mod rules;
-pub mod cost;
 
 use fundb_sql::LogicalPlan;
 
@@ -31,8 +31,7 @@ fn apply_all_rules(plan: LogicalPlan) -> LogicalPlan {
     let plan = limit_pushdown(plan);
     let plan = eliminate_redundant_project(plan);
     let plan = constant_fold(plan);
-    let plan = vector_scan_elide_filter(plan);
-    plan
+    vector_scan_elide_filter(plan)
 }
 
 /// Structural equality check used to detect fixed-point convergence.

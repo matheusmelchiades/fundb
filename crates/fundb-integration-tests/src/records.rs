@@ -15,9 +15,7 @@ pub fn make_record_with_confidence(collection: &str, confidence: f32) -> FunReco
 
 /// Build a FunRecord with a named vector embedding.
 pub fn make_record_with_vector(collection: &str, name: &str, vec: Vec<f32>) -> FunRecord {
-    FunRecordBuilder::new(collection)
-        .vector(name, vec)
-        .build()
+    FunRecordBuilder::new(collection).vector(name, vec).build()
 }
 
 /// Build a FunRecord with confidence and a vector.
@@ -39,11 +37,7 @@ pub fn make_record_with_data(collection: &str, data: Vec<u8>) -> FunRecord {
 }
 
 /// Build a FunRecord with specific valid-time range.
-pub fn make_record_with_valid_time(
-    collection: &str,
-    valid_from: i64,
-    valid_to: i64,
-) -> FunRecord {
+pub fn make_record_with_valid_time(collection: &str, valid_from: i64, valid_to: i64) -> FunRecord {
     FunRecordBuilder::new(collection)
         .valid_time(valid_from, valid_to)
         .build()

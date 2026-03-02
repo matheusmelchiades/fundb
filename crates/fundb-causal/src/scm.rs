@@ -22,7 +22,9 @@ pub enum ScmError {
     UnknownVariable(String),
     #[error("dimension mismatch: expected {expected} variables, got {got}")]
     DimensionMismatch { expected: usize, got: usize },
-    #[error("no causal path from '{from}' to '{to}'. These variables may be independent in the model")]
+    #[error(
+        "no causal path from '{from}' to '{to}'. These variables may be independent in the model"
+    )]
     NoPath { from: String, to: String },
     #[error("causal model did not converge: {0}. Try increasing max iterations or check for numerical instability")]
     NonConvergence(String),
@@ -352,6 +354,7 @@ impl PcDiscovery {
     /// `variables`: ordered variable names
     /// `correlations`: N×N correlation matrix (flattened row-major)
     /// `alpha`: significance level for independence tests (e.g. 0.05)
+    #[allow(clippy::needless_range_loop)]
     pub fn discover(variables: &[String], correlations: &[f64], alpha: f64) -> Vec<PcEdge> {
         let n = variables.len();
         if n < 2 || correlations.len() != n * n {
@@ -366,8 +369,8 @@ impl PcDiscovery {
         // Step 1: Start with complete undirected graph — track adjacency as a set of edges
         let mut adjacency: Vec<Vec<bool>> = vec![vec![true; n]; n];
         // Remove self-loops
-        for i in 0..n {
-            adjacency[i][i] = false;
+        for (i, row) in adjacency.iter_mut().enumerate() {
+            row[i] = false;
         }
 
         // Step 2: Test unconditional independence (conditioning set = ∅)
@@ -395,8 +398,7 @@ impl PcDiscovery {
                     if k == i || k == j {
                         continue;
                     }
-                    let partial_r =
-                        Self::partial_correlation(correlations, n, i, j, &[k]);
+                    let partial_r = Self::partial_correlation(correlations, n, i, j, &[k]);
                     let p = Self::fisher_z_test(partial_r, n_samples, 1);
                     if p > alpha {
                         remove = true;
@@ -558,8 +560,8 @@ fn p_value_from_z(z_abs: f64) -> f64 {
     // Use a rational approximation for the complementary normal CDF
     // Abramowitz & Stegun approximation for erfc
     let x = z_abs / std::f64::consts::SQRT_2;
-    let erfc_val = erfc_approx(x);
-    erfc_val // This is already 2 * (1 - Phi(z_abs)) = 2-tailed p-value
+    // This is already 2 * (1 - Phi(z_abs)) = 2-tailed p-value
+    erfc_approx(x)
 }
 
 /// Approximate erfc(x) = 2 * (1 - Phi(x * sqrt(2)))
@@ -698,11 +700,7 @@ impl EnsembleDiscovery {
         }
 
         // Sort for deterministic output
-        result.sort_by(|a, b| {
-            a.from
-                .cmp(&b.from)
-                .then(a.to.cmp(&b.to))
-        });
+        result.sort_by(|a, b| a.from.cmp(&b.from).then(a.to.cmp(&b.to)));
 
         result
     }
@@ -737,7 +735,12 @@ mod tests {
     use super::*;
 
     // Helper to make a simple equation
-    fn eq(variable: &str, parents: Vec<&str>, coefficients: Vec<f64>, intercept: f64) -> StructuralEquation {
+    fn eq(
+        variable: &str,
+        parents: Vec<&str>,
+        coefficients: Vec<f64>,
+        intercept: f64,
+    ) -> StructuralEquation {
         StructuralEquation {
             variable: variable.to_string(),
             parents: parents.into_iter().map(|s| s.to_string()).collect(),
@@ -798,8 +801,8 @@ mod tests {
     fn test_scm_evaluate_chain() {
         let equations = vec![
             eq("X", vec![], vec![], 0.0),
-            eq("Y", vec!["X"], vec![2.0], 1.0),  // Y = 2X + 1
-            eq("Z", vec!["Y"], vec![3.0], 0.0),  // Z = 3Y
+            eq("Y", vec!["X"], vec![2.0], 1.0), // Y = 2X + 1
+            eq("Z", vec!["Y"], vec![3.0], 0.0), // Z = 3Y
         ];
 
         let model = ScmModel::new(equations).unwrap();
@@ -813,17 +816,9 @@ mod tests {
         let z = result["Z"];
 
         // Y = 2*1 + 1 = 3
-        assert!(
-            (y - 3.0).abs() < 1e-9,
-            "expected Y=3.0, got {}",
-            y
-        );
+        assert!((y - 3.0).abs() < 1e-9, "expected Y=3.0, got {}", y);
         // Z = 3*3 = 9
-        assert!(
-            (z - 9.0).abs() < 1e-9,
-            "expected Z=9.0, got {}",
-            z
-        );
+        assert!((z - 9.0).abs() < 1e-9, "expected Z=9.0, got {}", z);
     }
 
     // -----------------------------------------------------------------------
@@ -891,6 +886,7 @@ mod tests {
     // 6. test_pc_partial_correlation — known 3×3 matrix, partial corr matches formula
     // -----------------------------------------------------------------------
     #[test]
+    #[allow(clippy::identity_op, clippy::erasing_op, clippy::no_effect)]
     fn test_pc_partial_correlation() {
         // 3×3 correlation matrix
         // Variables: 0, 1, 2
@@ -910,7 +906,8 @@ mod tests {
 
         // Partial correlation r_{01|2}
         // Formula: r_{01.2} = (r_01 - r_02 * r_12) / sqrt((1 - r_02^2)(1 - r_12^2))
-        let expected = (0.8 - 0.6 * 0.5) / ((1.0 - 0.6_f64.powi(2)) * (1.0 - 0.5_f64.powi(2))).sqrt();
+        let expected =
+            (0.8 - 0.6 * 0.5) / ((1.0 - 0.6_f64.powi(2)) * (1.0 - 0.5_f64.powi(2))).sqrt();
 
         let result = PcDiscovery::partial_correlation(&corr, n, 0, 1, &[2]);
 
@@ -954,6 +951,7 @@ mod tests {
     // 9. test_pc_discover_chain — 3 variables with chain correlation → discovers edges
     // -----------------------------------------------------------------------
     #[test]
+    #[allow(clippy::identity_op, clippy::erasing_op, clippy::no_effect)]
     fn test_pc_discover_chain() {
         // Simulate correlations consistent with a chain X → Y → Z
         // r_XY = 0.9 (strong), r_YZ = 0.9 (strong), r_XZ = 0.81 (moderate, due to Y)
@@ -988,15 +986,15 @@ mod tests {
         );
 
         // Should have X-Y edge
-        let has_xy = edge_pairs.iter().any(|(f, t)| {
-            (f == "X" && t == "Y") || (f == "Y" && t == "X")
-        });
+        let has_xy = edge_pairs
+            .iter()
+            .any(|(f, t)| (f == "X" && t == "Y") || (f == "Y" && t == "X"));
         assert!(has_xy, "expected X-Y edge, edges: {:?}", edge_pairs);
 
         // Should have Y-Z edge
-        let has_yz = edge_pairs.iter().any(|(f, t)| {
-            (f == "Y" && t == "Z") || (f == "Z" && t == "Y")
-        });
+        let has_yz = edge_pairs
+            .iter()
+            .any(|(f, t)| (f == "Y" && t == "Z") || (f == "Z" && t == "Y"));
         assert!(has_yz, "expected Y-Z edge, edges: {:?}", edge_pairs);
     }
 
@@ -1111,7 +1109,7 @@ mod tests {
         // Model with a fork: W → X, W → Y; verify both X and Y computed correctly
         let equations = vec![
             eq("W", vec![], vec![], 0.0),
-            eq("X", vec!["W"], vec![2.0], 0.0), // X = 2W
+            eq("X", vec!["W"], vec![2.0], 0.0),  // X = 2W
             eq("Y", vec!["W"], vec![-1.0], 3.0), // Y = -W + 3
         ];
 
@@ -1122,7 +1120,15 @@ mod tests {
 
         let result = model.evaluate(&obs);
 
-        assert!((result["X"] - 8.0).abs() < 1e-9, "X = 2*4 = 8, got {}", result["X"]);
-        assert!((result["Y"] - (-1.0)).abs() < 1e-9, "Y = -4 + 3 = -1, got {}", result["Y"]);
+        assert!(
+            (result["X"] - 8.0).abs() < 1e-9,
+            "X = 2*4 = 8, got {}",
+            result["X"]
+        );
+        assert!(
+            (result["Y"] - (-1.0)).abs() < 1e-9,
+            "Y = -4 + 3 = -1, got {}",
+            result["Y"]
+        );
     }
 }

@@ -35,7 +35,9 @@ use fundb_storage::LsmTree;
 use serde::Serialize;
 
 use crate::batch::RecordBatch;
-use crate::operators::{FilterOperator, ProjectOperator, ScanOperator, VectorScanOperator};
+use crate::operators::{
+    FilterOperator, ProjectOperator, ScanOperator, SortOperator, VectorScanOperator,
+};
 
 // ---------------------------------------------------------------------------
 // Executor
@@ -138,10 +140,10 @@ impl Executor {
                 Ok(batch)
             }
 
-            // ── Sort (ordering not yet implemented) ──────────────────────
-            LogicalPlan::Sort { input, order_by: _ } => {
-                // Row order is preserved from the scan; full sort is deferred.
-                self.execute_plan(*input).await
+            // ── Sort (ORDER BY) ───────────────────────────────────────────
+            LogicalPlan::Sort { input, order_by } => {
+                let batch = self.execute_plan(*input).await?;
+                SortOperator::new(batch, order_by).execute().await
             }
 
             // ── INSERT ────────────────────────────────────────────────────

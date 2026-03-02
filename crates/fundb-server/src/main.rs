@@ -1,8 +1,7 @@
 //! FunDB server entry point — PostgreSQL wire-protocol server with real
-//! query execution (parse → bind → execute → storage).
+//! query execution (parse → bind → execute → storage), plus HTTP REST API.
 //!
-//! Listens on port 5433 and accepts connections from any PostgreSQL-compatible
-//! client (e.g. `psql -h 127.0.0.1 -p 5433 -U fun fundb`).
+//! Listens on port 5433 (PG wire) and 8080 (HTTP REST API).
 
 use std::sync::Arc;
 
@@ -14,8 +13,10 @@ use tokio::net::TcpListener;
 use tokio::sync::RwLock;
 
 mod handler;
+mod http;
 mod stub_handler;
 use handler::FunDBHandler;
+use http::HttpServer;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -36,6 +37,15 @@ async fn main() -> anyhow::Result<()> {
     let handler = FunDBHandler::new(executor, catalog);
     let handler: Arc<dyn fundb_protocol::QueryHandler> = Arc::new(handler);
 
+    // Start HTTP REST API server on port 8080
+    let http_server = HttpServer::new("0.0.0.0:8080");
+    tokio::spawn(async move {
+        if let Err(e) = http_server.run().await {
+            tracing::error!("HTTP server error: {}", e);
+        }
+    });
+
+    // Start PG wire-protocol server on port 5433
     let addr = "0.0.0.0:5433";
     let listener = TcpListener::bind(addr).await?;
     tracing::info!("FunDB listening on {}", addr);

@@ -27,11 +27,12 @@ COPY crates/fundb-cluster/Cargo.toml      crates/fundb-cluster/Cargo.toml
 COPY crates/fundb-protocol/Cargo.toml     crates/fundb-protocol/Cargo.toml
 COPY crates/fundb-server/Cargo.toml       crates/fundb-server/Cargo.toml
 COPY crates/fundb-cli/Cargo.toml          crates/fundb-cli/Cargo.toml
+COPY crates/fundb-integration-tests/Cargo.toml crates/fundb-integration-tests/Cargo.toml
 
 # Create stub lib/main files so cargo can resolve the dependency graph
 RUN for crate in fundb-core fundb-storage fundb-indexes fundb-sql fundb-optimizer \
         fundb-executor fundb-cognitive fundb-causal fundb-semantic fundb-learning \
-        fundb-raft fundb-cluster fundb-protocol; do \
+        fundb-raft fundb-cluster fundb-protocol fundb-integration-tests; do \
       mkdir -p crates/$crate/src && echo "// stub" > crates/$crate/src/lib.rs; \
     done && \
     mkdir -p crates/fundb-server/src && echo "fn main(){}" > crates/fundb-server/src/main.rs && \

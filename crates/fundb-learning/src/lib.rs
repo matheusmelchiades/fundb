@@ -2,4 +2,4 @@
 
 pub mod ltr;
 
-pub use ltr::{LtrRanker};
+pub use ltr::LtrRanker;

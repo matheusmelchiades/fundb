@@ -121,8 +121,7 @@ fn health_handler() -> String {
 }
 
 async fn query_handler(body: &str) -> String {
-    let query = extract_json_string_field(body, "query")
-        .unwrap_or_else(|| "SELECT 1".to_string());
+    let query = extract_json_string_field(body, "query").unwrap_or_else(|| "SELECT 1".to_string());
     format!(
         r#"{{"columns":[],"rows":[],"command_tag":"OK","query":"{}"}}"#,
         query.replace('"', "\\\"")
@@ -130,8 +129,7 @@ async fn query_handler(body: &str) -> String {
 }
 
 async fn understand_handler(body: &str) -> String {
-    let intent = extract_json_string_field(body, "intent")
-        .unwrap_or_else(|| "unknown".to_string());
+    let intent = extract_json_string_field(body, "intent").unwrap_or_else(|| "unknown".to_string());
     format!(
         r#"{{"result_type":"confident","confidence":0.7,"plan_description":"Scan{{collection:\"{}\"}}" }}"#,
         intent.replace('"', "\\\"")

@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use fundb_server::{
-    AuditAction, AuditEntry, AuditLog, AuditOutcome, Counter, Histogram, InMemoryExporter,
-    MetricsRegistry, Permission, RbacEngine, Role, TenantContext,
-    TlsConfig, TlsVersion, Tracer, scope_query, validate_record_ownership,
+    scope_query, validate_record_ownership, AuditAction, AuditEntry, AuditLog, AuditOutcome,
+    Counter, Histogram, InMemoryExporter, MetricsRegistry, Permission, RbacEngine, Role,
+    TenantContext, TlsConfig, TlsVersion, Tracer,
 };
 use uuid::Uuid;
 
@@ -189,12 +189,20 @@ fn test_audit_log_filters_by_tenant() {
 
     // Log 10 entries for tenant A
     for _ in 0..10 {
-        log.record(audit_entry(tenant_a, AuditAction::Query, AuditOutcome::Allowed));
+        log.record(audit_entry(
+            tenant_a,
+            AuditAction::Query,
+            AuditOutcome::Allowed,
+        ));
     }
 
     // Log 5 entries for tenant B
     for _ in 0..5 {
-        log.record(audit_entry(tenant_b, AuditAction::Write, AuditOutcome::Allowed));
+        log.record(audit_entry(
+            tenant_b,
+            AuditAction::Write,
+            AuditOutcome::Allowed,
+        ));
     }
 
     let a_entries = log.entries_for_tenant(tenant_a);
@@ -223,8 +231,14 @@ fn test_audit_log_fifo_eviction() {
     // Oldest entries should be evicted — last 5 should remain (entry_3..entry_7)
     let recent = log.recent(5);
     assert_eq!(recent.len(), 5);
-    assert_eq!(recent[0].detail, "entry_3", "oldest surviving entry should be entry_3");
-    assert_eq!(recent[4].detail, "entry_7", "newest entry should be entry_7");
+    assert_eq!(
+        recent[0].detail, "entry_3",
+        "oldest surviving entry should be entry_3"
+    );
+    assert_eq!(
+        recent[4].detail, "entry_7",
+        "newest entry should be entry_7"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -239,23 +253,34 @@ fn test_metrics_prometheus_format() {
     counter.increment();
     registry.register_counter(counter);
 
-    let histogram = Histogram::new(
-        "test_histogram",
-        "A test histogram",
-        vec![1.0, 5.0, 10.0],
-    );
+    let histogram = Histogram::new("test_histogram", "A test histogram", vec![1.0, 5.0, 10.0]);
     histogram.observe(3.0);
     histogram.observe(7.0);
     registry.register_histogram(histogram);
 
     let text = registry.render_text();
 
-    assert!(text.contains("# HELP test_counter"), "should have HELP line for counter");
-    assert!(text.contains("# TYPE test_counter counter"), "should have TYPE line for counter");
-    assert!(text.contains("# HELP test_histogram"), "should have HELP line for histogram");
-    assert!(text.contains("# TYPE test_histogram histogram"), "should have TYPE line for histogram");
+    assert!(
+        text.contains("# HELP test_counter"),
+        "should have HELP line for counter"
+    );
+    assert!(
+        text.contains("# TYPE test_counter counter"),
+        "should have TYPE line for counter"
+    );
+    assert!(
+        text.contains("# HELP test_histogram"),
+        "should have HELP line for histogram"
+    );
+    assert!(
+        text.contains("# TYPE test_histogram histogram"),
+        "should have TYPE line for histogram"
+    );
     assert!(text.contains("test_counter"), "should contain counter data");
-    assert!(text.contains("test_histogram_bucket"), "should contain histogram buckets");
+    assert!(
+        text.contains("test_histogram_bucket"),
+        "should contain histogram buckets"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -264,7 +289,10 @@ fn test_metrics_prometheus_format() {
 #[test]
 fn test_tracer_parent_child_spans() {
     let exporter = Arc::new(InMemoryExporter::new());
-    let tracer = Tracer::new(Arc::clone(&exporter) as Arc<dyn fundb_server::SpanExporter>, 1.0);
+    let tracer = Tracer::new(
+        Arc::clone(&exporter) as Arc<dyn fundb_server::SpanExporter>,
+        1.0,
+    );
 
     // Create parent span
     let mut parent = tracer.start_span("query", None);
@@ -300,11 +328,17 @@ fn test_tracer_parent_child_spans() {
 #[test]
 fn test_tls_config_validation() {
     let config = TlsConfig::new("/path/to/cert.pem", "/path/to/key.pem");
-    assert!(config.is_tls13_only(), "default TLS config should be TLS 1.3 only");
+    assert!(
+        config.is_tls13_only(),
+        "default TLS config should be TLS 1.3 only"
+    );
 
     let mut config12 = TlsConfig::new("/cert.pem", "/key.pem");
     config12.min_version = TlsVersion::Tls12;
-    assert!(!config12.is_tls13_only(), "TLS 1.2 config should not be TLS 1.3 only");
+    assert!(
+        !config12.is_tls13_only(),
+        "TLS 1.2 config should not be TLS 1.3 only"
+    );
 
     // Validate should succeed (stub)
     assert!(config.validate().is_ok(), "validation should pass for stub");

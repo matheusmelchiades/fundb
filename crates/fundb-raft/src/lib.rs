@@ -3,27 +3,27 @@
 pub mod raft;
 
 pub use raft::{
+    // RPC messages
+    AppendEntriesRequest,
+    AppendEntriesResponse,
+    EntryType,
+    HardState,
+    InstallSnapshotRequest,
+    InstallSnapshotResponse,
+    // Data types
+    LogEntry,
+    MemoryRaftStorage,
     // Type aliases
     NodeId,
     PeerAddr,
     // Error
     RaftError,
-    // Data types
-    LogEntry,
-    EntryType,
-    HardState,
-    Snapshot,
-    RaftRole,
-    // RPC messages
-    AppendEntriesRequest,
-    AppendEntriesResponse,
-    RequestVoteRequest,
-    RequestVoteResponse,
-    InstallSnapshotRequest,
-    InstallSnapshotResponse,
-    // Storage
-    RaftStorage,
-    MemoryRaftStorage,
     // Node
     RaftNode,
+    RaftRole,
+    // Storage
+    RaftStorage,
+    RequestVoteRequest,
+    RequestVoteResponse,
+    Snapshot,
 };

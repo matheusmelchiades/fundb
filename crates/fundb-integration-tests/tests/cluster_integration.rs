@@ -3,8 +3,8 @@ use std::sync::Arc;
 
 use fundb_cluster::ShardMap;
 use fundb_raft::{
-    AppendEntriesRequest, EntryType, InstallSnapshotRequest,
-    LogEntry, MemoryRaftStorage, RaftNode, RequestVoteRequest,
+    AppendEntriesRequest, EntryType, InstallSnapshotRequest, LogEntry, MemoryRaftStorage, RaftNode,
+    RequestVoteRequest,
 };
 use uuid::Uuid;
 
@@ -99,7 +99,10 @@ async fn test_raft_leader_replicates_log() {
     };
 
     let resp = follower.handle_append_entries(req).await;
-    assert!(resp.success, "follower should accept AppendEntries from leader");
+    assert!(
+        resp.success,
+        "follower should accept AppendEntries from leader"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -298,7 +301,9 @@ fn test_shard_replication_groups() {
 
     let id = Uuid::from_u128(0xABCD);
     let shard = map.shard_for("replicated", &id);
-    let group = map.replication_group(shard).expect("replication group missing");
+    let group = map
+        .replication_group(shard)
+        .expect("replication group missing");
 
     assert_eq!(group.replication_factor, 3, "RF should be 3");
 
@@ -332,7 +337,10 @@ async fn test_raft_install_snapshot() {
     };
 
     let resp = node.handle_install_snapshot(req).await;
-    assert_eq!(resp.term, 3, "snapshot response term should match request term");
+    assert_eq!(
+        resp.term, 3,
+        "snapshot response term should match request term"
+    );
 
     // After installing snapshot, commit_index should advance
     let ci = node.commit_index();

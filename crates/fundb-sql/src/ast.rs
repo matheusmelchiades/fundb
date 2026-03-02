@@ -1,8 +1,9 @@
-/// Complete AST for FunQL — a superset of SQL with vector, graph, temporal,
-/// confidence, causal, context-aware, and semantic extensions.
+// Complete AST for FunQL — a superset of SQL with vector, graph, temporal,
+// confidence, causal, context-aware, and semantic extensions.
 
 // ── Top-level statement ────────────────────────────────────────────────────
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Statement {
     Select(SelectStmt),
@@ -277,9 +278,18 @@ pub struct RecallByStmt {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RecallWeight {
-    SemanticSimilarity { query: Expr, weight: Option<Expr> },
-    Recency { decay: Option<String>, half_life: Option<String>, weight: Option<Expr> },
-    Importance { weight: Option<Expr> },
+    SemanticSimilarity {
+        query: Expr,
+        weight: Option<Expr>,
+    },
+    Recency {
+        decay: Option<String>,
+        half_life: Option<String>,
+        weight: Option<Expr>,
+    },
+    Importance {
+        weight: Option<Expr>,
+    },
 }
 
 // ── FORGET ────────────────────────────────────────────────────────────────────
@@ -391,7 +401,10 @@ pub enum Expr {
     /// `[elem, elem, …]` vector literal
     Array(Vec<Expr>),
     /// `table.column`  or  `alias.field`
-    Qualified { table: String, field: String },
+    Qualified {
+        table: String,
+        field: String,
+    },
     /// `CASE WHEN … THEN … ELSE … END`
     Case {
         operand: Option<Box<Expr>>,

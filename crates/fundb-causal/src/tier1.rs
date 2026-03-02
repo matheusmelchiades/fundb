@@ -7,10 +7,10 @@
 //   - BFS forward (effects_of) and backward (causes_of) traversal
 //   - Mermaid, DOT, and JSON visualisation
 
+use fundb_core::CausalEdge;
 use std::collections::{HashMap, HashSet, VecDeque};
-use uuid::Uuid;
 use thiserror::Error;
-use fundb_core::{CausalEdge, CausalType, CausalOrigin, StabilityStatus};
+use uuid::Uuid;
 
 // ---------------------------------------------------------------------------
 // Public error type
@@ -109,10 +109,7 @@ impl CausalEngine {
             .or_default()
             .push(edge.clone());
 
-        self.reverse
-            .entry(edge.target_id)
-            .or_default()
-            .push(edge);
+        self.reverse.entry(edge.target_id).or_default().push(edge);
 
         Ok(())
     }
@@ -297,7 +294,11 @@ impl CausalEngine {
 
             let empty: Vec<CausalEdge> = Vec::new();
             for edge in adj.get(&node).unwrap_or(&empty) {
-                let neighbour = if forward { edge.target_id } else { edge.source_id };
+                let neighbour = if forward {
+                    edge.target_id
+                } else {
+                    edge.source_id
+                };
                 let new_strength = strength * edge.strength;
 
                 let entry = best.entry(neighbour).or_insert(f32::NEG_INFINITY);
@@ -410,27 +411,35 @@ impl Default for CausalEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fundb_core::{CausalType, CausalOrigin, StabilityStatus, DirectionStatus};
+    use fundb_core::{CausalOrigin, CausalType, DirectionStatus, StabilityStatus};
 
     // Helper node UUIDs.
-    fn a() -> Uuid { Uuid::from_u128(0x_A000_0000_0000_0000_0000_0000_0000_0001) }
-    fn b() -> Uuid { Uuid::from_u128(0x_B000_0000_0000_0000_0000_0000_0000_0002) }
-    fn c() -> Uuid { Uuid::from_u128(0x_C000_0000_0000_0000_0000_0000_0000_0003) }
-    fn d() -> Uuid { Uuid::from_u128(0x_D000_0000_0000_0000_0000_0000_0000_0004) }
+    fn a() -> Uuid {
+        Uuid::from_u128(0x_A000_0000_0000_0000_0000_0000_0000_0001)
+    }
+    fn b() -> Uuid {
+        Uuid::from_u128(0x_B000_0000_0000_0000_0000_0000_0000_0002)
+    }
+    fn c() -> Uuid {
+        Uuid::from_u128(0x_C000_0000_0000_0000_0000_0000_0000_0003)
+    }
+    fn d() -> Uuid {
+        Uuid::from_u128(0x_D000_0000_0000_0000_0000_0000_0000_0004)
+    }
 
     fn make_edge(source: Uuid, target: Uuid, strength: f32) -> CausalEdge {
         CausalEdge {
-            source_id:        source,
-            target_id:        target,
-            relation:         CausalType::Caused,
+            source_id: source,
+            target_id: target,
+            relation: CausalType::Caused,
             strength,
-            mechanism:        None,
-            origin:           CausalOrigin::UserDeclared,
-            confidence:       strength,
-            stability_score:  None,
+            mechanism: None,
+            origin: CausalOrigin::UserDeclared,
+            confidence: strength,
+            stability_score: None,
             stability_status: StabilityStatus::NotApplicable,
             direction_status: DirectionStatus::Confirmed,
-            discovery_algo:   None,
+            discovery_algo: None,
         }
     }
 
@@ -441,17 +450,17 @@ mod tests {
         stability: f32,
     ) -> CausalEdge {
         CausalEdge {
-            source_id:        source,
-            target_id:        target,
-            relation:         CausalType::Caused,
+            source_id: source,
+            target_id: target,
+            relation: CausalType::Caused,
             strength,
-            mechanism:        None,
-            origin:           CausalOrigin::UserDeclared,
-            confidence:       strength,
-            stability_score:  Some(stability),
+            mechanism: None,
+            origin: CausalOrigin::UserDeclared,
+            confidence: strength,
+            stability_score: Some(stability),
             stability_status: StabilityStatus::Stable,
             direction_status: DirectionStatus::Confirmed,
-            discovery_algo:   None,
+            discovery_algo: None,
         }
     }
 
@@ -493,7 +502,8 @@ mod tests {
 
         assert!(
             matches!(result, Err(CausalError::Cycle { .. })),
-            "expected CausalError::Cycle, got {:?}", result
+            "expected CausalError::Cycle, got {:?}",
+            result
         );
     }
 
@@ -533,8 +543,19 @@ mod tests {
         };
 
         // Trace A→B (weak edge, should be filtered out).
-        let paths_ab = engine.trace(a(), b(), TraceOptions { max_depth: 5, min_strength: 0.8, min_stability: None });
-        assert!(paths_ab.is_empty(), "A→B(0.5) should be filtered out by min_strength=0.8");
+        let paths_ab = engine.trace(
+            a(),
+            b(),
+            TraceOptions {
+                max_depth: 5,
+                min_strength: 0.8,
+                min_stability: None,
+            },
+        );
+        assert!(
+            paths_ab.is_empty(),
+            "A→B(0.5) should be filtered out by min_strength=0.8"
+        );
 
         // Trace A→C (strong edge, should pass).
         let paths_ac = engine.trace(a(), c(), opts);
@@ -548,9 +569,13 @@ mod tests {
     fn test_min_stability_filter() {
         let mut engine = CausalEngine::new();
         // High-stability edge A→B.
-        engine.insert_edge(make_edge_with_stability(a(), b(), 0.9, 0.9)).unwrap();
+        engine
+            .insert_edge(make_edge_with_stability(a(), b(), 0.9, 0.9))
+            .unwrap();
         // Low-stability edge A→C.
-        engine.insert_edge(make_edge_with_stability(a(), c(), 0.9, 0.3)).unwrap();
+        engine
+            .insert_edge(make_edge_with_stability(a(), c(), 0.9, 0.3))
+            .unwrap();
 
         let opts = TraceOptions {
             max_depth: 5,
@@ -558,11 +583,22 @@ mod tests {
             min_stability: Some(0.6),
         };
 
-        let paths_ab = engine.trace(a(), b(), TraceOptions { max_depth: 5, min_strength: 0.0, min_stability: Some(0.6) });
+        let paths_ab = engine.trace(
+            a(),
+            b(),
+            TraceOptions {
+                max_depth: 5,
+                min_strength: 0.0,
+                min_stability: Some(0.6),
+            },
+        );
         assert_eq!(paths_ab.len(), 1, "A→B with stability 0.9 should pass");
 
         let paths_ac = engine.trace(a(), c(), opts);
-        assert!(paths_ac.is_empty(), "A→C with stability 0.3 should be filtered by min_stability=0.6");
+        assert!(
+            paths_ac.is_empty(),
+            "A→C with stability 0.3 should be filtered by min_stability=0.6"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -579,7 +615,10 @@ mod tests {
 
         assert!(effects.contains_key(&b()), "B should be an effect of A");
         assert!(effects.contains_key(&c()), "C should be an effect of A");
-        assert!(effects.contains_key(&d()), "D should be a transitive effect of A via B");
+        assert!(
+            effects.contains_key(&d()),
+            "D should be a transitive effect of A via B"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -595,7 +634,10 @@ mod tests {
         let causes: HashMap<Uuid, f32> = engine.causes_of(d(), 3).into_iter().collect();
 
         assert!(causes.contains_key(&b()), "B should be a cause of D");
-        assert!(causes.contains_key(&a()), "A should be a transitive cause of D via B");
+        assert!(
+            causes.contains_key(&a()),
+            "A should be a transitive cause of D via B"
+        );
     }
 
     // -----------------------------------------------------------------------

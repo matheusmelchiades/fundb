@@ -8,23 +8,23 @@ pub type Lsn = u64;
 /// A read/write transaction token.
 #[derive(Debug, Clone)]
 pub struct Transaction {
-    pub txn_id:      u64,
+    pub txn_id: u64,
     pub snapshot_ts: Timestamp,
 }
 
 // Storage modules — per CONTRIBUTING.md, STORY-2-4 (this story) adds all pub mod declarations.
-pub mod memtable;
-pub mod wal;
-pub mod sstable;
 pub mod block_cache;
-pub mod mvcc;
 pub mod compaction;
 pub mod lsm;
+pub mod memtable;
+pub mod mvcc;
+pub mod sstable;
+pub mod wal;
 
-pub use memtable::{ImmutableMemTable, MemTable};
-pub use wal::{Wal, WalEntry};
-pub use sstable::{SstableReader, SstableWriter, merge_sstables};
-pub use block_cache::{BlockCache, CacheKey, SharedBlockCache, new_shared_cache};
-pub use mvcc::MvccStore;
+pub use block_cache::{new_shared_cache, BlockCache, CacheKey, SharedBlockCache};
 pub use compaction::CompactionPolicy;
 pub use lsm::LsmTree;
+pub use memtable::{ImmutableMemTable, MemTable};
+pub use mvcc::MvccStore;
+pub use sstable::{merge_sstables, SstableReader, SstableWriter};
+pub use wal::{Wal, WalEntry};

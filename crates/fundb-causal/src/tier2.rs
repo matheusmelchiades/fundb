@@ -200,7 +200,12 @@ fn granger_test_at_lag(
     let y_slice = &y[..n_total.min(y.len())];
     let var_y = variance(y_slice);
     if var_y < 1e-10 {
-        return Some(GrangerResult { f_stat: 0.0, p_value: 1.0, lag, differenced });
+        return Some(GrangerResult {
+            f_stat: 0.0,
+            p_value: 1.0,
+            lag,
+            differenced,
+        });
     }
 
     // Build restricted model: y[t] ~ intercept + y[t-1..t-lag]
@@ -288,11 +293,7 @@ fn f_to_pvalue(f_stat: f64, df1: usize, df2: usize) -> f64 {
 ///   - `[1.0 (intercept), y[t-1], …, y[t-lag], x[t-1], …, x[t-lag]]` when `x_opt` is `Some`
 ///
 /// Target: `y[t]`.
-fn build_lagged_matrix(
-    y: &[f64],
-    x_opt: Option<&[f64]>,
-    lag: usize,
-) -> (Vec<Vec<f64>>, Vec<f64>) {
+fn build_lagged_matrix(y: &[f64], x_opt: Option<&[f64]>, lag: usize) -> (Vec<Vec<f64>>, Vec<f64>) {
     let n_y = y.len();
     let n_x = x_opt.map_or(n_y, |x| x.len());
     let n = n_y.min(n_x);
@@ -333,13 +334,14 @@ fn build_lagged_matrix(
 ///
 /// Returns the coefficient vector.  Works correctly for small systems (up to
 /// ~20 columns) as required by the Granger test at small lags.
+#[allow(clippy::needless_range_loop)]
 fn ols_coefficients(x_matrix: &[Vec<f64>], y: &[f64]) -> Vec<f64> {
     if x_matrix.is_empty() || y.is_empty() {
         return vec![];
     }
 
-    let n = x_matrix.len();      // observations
-    let p = x_matrix[0].len();   // parameters (columns)
+    let n = x_matrix.len(); // observations
+    let p = x_matrix[0].len(); // parameters (columns)
 
     if n < p {
         // Under-determined: return zeros.
@@ -686,8 +688,12 @@ mod tests {
         // x alternates; y is derived from a different alternating pattern
         // that is unrelated to x — designed to produce mostly non-significant
         // Granger tests across windows.
-        let x: Vec<f64> = (0..100).map(|i| if i % 2 == 0 { 1.0 } else { -1.0 }).collect();
-        let y: Vec<f64> = (0..100).map(|i| if i % 3 == 0 { 2.0 } else { -0.5 }).collect();
+        let x: Vec<f64> = (0..100)
+            .map(|i| if i % 2 == 0 { 1.0 } else { -1.0 })
+            .collect();
+        let y: Vec<f64> = (0..100)
+            .map(|i| if i % 3 == 0 { 2.0 } else { -0.5 })
+            .collect();
 
         let engine = GrangerDiscovery::new();
         let result = engine.rolling_window_test(&x, &y, 10, 5);

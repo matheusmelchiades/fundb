@@ -111,7 +111,12 @@ async fn main() -> anyhow::Result<()> {
                     let rendered = renderer.render(&response);
                     let tag = rendered.trim();
                     if !tag.is_empty() {
-                        println!("  [{}/{}] OK: {}", i + 1, total, tag.lines().next().unwrap_or(""));
+                        println!(
+                            "  [{}/{}] OK: {}",
+                            i + 1,
+                            total,
+                            tag.lines().next().unwrap_or("")
+                        );
                     } else {
                         println!("  [{}/{}] OK", i + 1, total);
                     }

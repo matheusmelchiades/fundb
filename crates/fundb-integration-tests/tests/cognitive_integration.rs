@@ -1,7 +1,6 @@
 use fundb_cognitive::{
-    AgentMemory, ConfidencePropagator, ContextOptimizer, ContextOptions,
-    ContradictionDetector, MemoryType, Polarity,
-    RecallWeights, RememberOptions,
+    AgentMemory, ConfidencePropagator, ContextOptimizer, ContextOptions, ContradictionDetector,
+    MemoryType, Polarity, RecallWeights, RememberOptions,
 };
 use fundb_core::{FunRecordBuilder, Source, SourceMethod};
 
@@ -62,7 +61,11 @@ fn test_contradiction_detection_conflicting() {
 
     let polarity = ContradictionDetector::polarity(&rec_a, &rec_b);
     // Based on tag extraction, negated tags should be Conflicting
-    assert_eq!(polarity, Polarity::Conflicting, "negated tags should be conflicting");
+    assert_eq!(
+        polarity,
+        Polarity::Conflicting,
+        "negated tags should be conflicting"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -89,7 +92,11 @@ fn test_contradiction_corroboration_boosts() {
         .build();
 
     let polarity = ContradictionDetector::polarity(&rec_a, &rec_b);
-    assert_eq!(polarity, Polarity::Corroborating, "identical tags should corroborate");
+    assert_eq!(
+        polarity,
+        Polarity::Corroborating,
+        "identical tags should corroborate"
+    );
 
     let boosted = ConfidencePropagator::update_on_corroboration(0.5);
     assert!(
@@ -132,7 +139,10 @@ fn test_contradiction_cascade_multiple() {
     let results = ContradictionDetector::check_insert(&new_rec, &candidates);
     // Should detect contradictions with at least some candidates
     // The exact count depends on the similarity detection logic
-    assert!(!results.is_empty() || candidates.len() > 0, "cascade detection should process candidates");
+    assert!(
+        !results.is_empty() || !candidates.is_empty(),
+        "cascade detection should process candidates"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -392,7 +402,12 @@ fn test_confidence_n_contradictions_convergence() {
     let _last = 1.0f32;
     for n in 1..=100u32 {
         let conf = ConfidencePropagator::confidence_for_n_equal_contradictions(n);
-        assert!(conf >= 0.0 && conf <= 1.0, "confidence out of bounds for n={}: {}", n, conf);
+        assert!(
+            (0.0..=1.0).contains(&conf),
+            "confidence out of bounds for n={}: {}",
+            n,
+            conf
+        );
         // Should trend toward 0.5
         if n >= 50 {
             assert!(
@@ -420,10 +435,10 @@ fn test_contradiction_vector_similarity() {
         .data(rmp_serde::to_vec(&serde_json::json!({"label": "dog"})).unwrap())
         .build();
 
-    let results = ContradictionDetector::check_insert(&rec_a, &[rec_b]);
-    // With identical vectors, should detect similarity even without tag overlap
-    // The exact behavior depends on the implementation
-    assert!(results.len() >= 0, "contradiction check should complete without panic");
+    // With identical vectors, should detect similarity even without tag overlap.
+    // The exact behavior depends on the implementation — we just verify it
+    // completes without panicking.
+    let _results = ContradictionDetector::check_insert(&rec_a, &[rec_b]);
 }
 
 // ---------------------------------------------------------------------------
@@ -435,8 +450,16 @@ fn test_confidence_never_negative() {
     for _ in 0..100 {
         current = ConfidencePropagator::propagate_negation(current);
         // propagate_negation(c) = 1.0 - c, which alternates between 0 and 1
-        assert!(current >= 0.0, "confidence should never be negative: {}", current);
-        assert!(current <= 1.0, "confidence should never exceed 1.0: {}", current);
+        assert!(
+            current >= 0.0,
+            "confidence should never be negative: {}",
+            current
+        );
+        assert!(
+            current <= 1.0,
+            "confidence should never exceed 1.0: {}",
+            current
+        );
     }
 }
 

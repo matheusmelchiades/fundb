@@ -4,9 +4,9 @@
 // Supports multi-hop traversal with BFS and DFS path-finding,
 // enabling "who influenced whom" queries over the knowledge graph.
 
+use anyhow::Result;
 use std::collections::{HashMap, HashSet, VecDeque};
 use uuid::Uuid;
-use anyhow::Result;
 
 /// A directed, weighted edge between two nodes in the knowledge graph.
 ///
@@ -18,11 +18,11 @@ use anyhow::Result;
 /// - `props`     = MessagePack-encoded extra properties (schema-on-read)
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Edge {
-    pub subject:    Uuid,
-    pub predicate:  String,
-    pub object:     Uuid,
+    pub subject: Uuid,
+    pub predicate: String,
+    pub object: Uuid,
     pub confidence: f32,
-    pub props:      Vec<u8>,  // MessagePack-encoded extra properties
+    pub props: Vec<u8>, // MessagePack-encoded extra properties
 }
 
 /// In-memory bidirectional graph index keyed by Subject–Predicate–Object triples.
@@ -69,9 +69,9 @@ impl GraphIndex {
         props: Vec<u8>,
     ) -> Result<()> {
         let edge = Edge {
-            subject:   s,
+            subject: s,
             predicate: predicate.to_string(),
-            object:    o,
+            object: o,
             confidence,
             props,
         };
@@ -88,15 +88,11 @@ impl GraphIndex {
     /// If no such edge exists this is a no-op (returns `Ok(())`).
     pub fn delete_edge(&mut self, s: Uuid, predicate: &str, o: Uuid) -> Result<()> {
         if let Some(edges) = self.outgoing.get_mut(&s) {
-            edges.retain(|e| {
-                !(e.subject == s && e.predicate == predicate && e.object == o)
-            });
+            edges.retain(|e| !(e.subject == s && e.predicate == predicate && e.object == o));
         }
 
         if let Some(edges) = self.incoming.get_mut(&o) {
-            edges.retain(|e| {
-                !(e.subject == s && e.predicate == predicate && e.object == o)
-            });
+            edges.retain(|e| !(e.subject == s && e.predicate == predicate && e.object == o));
         }
 
         Ok(())
@@ -110,7 +106,7 @@ impl GraphIndex {
         match self.outgoing.get(&subject) {
             None => vec![],
             Some(edges) => match predicate {
-                None    => edges.clone(),
+                None => edges.clone(),
                 Some(p) => edges.iter().filter(|e| e.predicate == p).cloned().collect(),
             },
         }
@@ -124,7 +120,7 @@ impl GraphIndex {
         match self.incoming.get(&object) {
             None => vec![],
             Some(edges) => match predicate {
-                None    => edges.clone(),
+                None => edges.clone(),
                 Some(p) => edges.iter().filter(|e| e.predicate == p).cloned().collect(),
             },
         }
@@ -168,11 +164,7 @@ impl GraphIndex {
                 if let Some(edges) = self.outgoing.get(&node) {
                     for edge in edges.iter().filter(|e| e.predicate == predicate) {
                         if !visited.contains(&edge.object) {
-                            queue.push_back((
-                                edge.object,
-                                depth + 1,
-                                strength * edge.confidence,
-                            ));
+                            queue.push_back((edge.object, depth + 1, strength * edge.confidence));
                         }
                     }
                 }
@@ -216,15 +208,16 @@ impl GraphIndex {
     }
 
     /// Recursive DFS helper used by [`path`].
+    #[allow(clippy::too_many_arguments)]
     fn dfs(
-        current:   Uuid,
-        target:    Uuid,
-        path:      &mut Vec<Uuid>,
-        visited:   &mut HashSet<Uuid>,
-        depth:     u32,
+        current: Uuid,
+        target: Uuid,
+        path: &mut Vec<Uuid>,
+        visited: &mut HashSet<Uuid>,
+        depth: u32,
         max_depth: u32,
-        outgoing:  &HashMap<Uuid, Vec<Edge>>,
-        results:   &mut Vec<Vec<Uuid>>,
+        outgoing: &HashMap<Uuid, Vec<Edge>>,
+        results: &mut Vec<Vec<Uuid>>,
     ) {
         if current == target {
             results.push(path.clone());
@@ -280,10 +273,18 @@ mod tests {
     use super::*;
 
     // Convenience helpers — fixed deterministic UUIDs for all tests.
-    fn a() -> Uuid { Uuid::from_u128(1) }
-    fn b() -> Uuid { Uuid::from_u128(2) }
-    fn c() -> Uuid { Uuid::from_u128(3) }
-    fn d() -> Uuid { Uuid::from_u128(4) }
+    fn a() -> Uuid {
+        Uuid::from_u128(1)
+    }
+    fn b() -> Uuid {
+        Uuid::from_u128(2)
+    }
+    fn c() -> Uuid {
+        Uuid::from_u128(3)
+    }
+    fn d() -> Uuid {
+        Uuid::from_u128(4)
+    }
 
     // -----------------------------------------------------------------------
     // 1. Insert and outgoing filter
@@ -294,7 +295,7 @@ mod tests {
 
         g.insert_edge(a(), "follows", b(), 1.0, vec![]).unwrap();
         g.insert_edge(a(), "follows", c(), 1.0, vec![]).unwrap();
-        g.insert_edge(a(), "likes",   d(), 1.0, vec![]).unwrap();
+        g.insert_edge(a(), "likes", d(), 1.0, vec![]).unwrap();
 
         let follows = g.outgoing(a(), Some("follows"));
         assert_eq!(follows.len(), 2, "should find 2 'follows' edges");
@@ -331,7 +332,11 @@ mod tests {
 
         g.delete_edge(a(), "follows", b()).unwrap();
 
-        assert_eq!(g.edge_count(), 1, "edge_count should decrement after deletion");
+        assert_eq!(
+            g.edge_count(),
+            1,
+            "edge_count should decrement after deletion"
+        );
 
         let remaining = g.outgoing(a(), Some("follows"));
         assert_eq!(remaining.len(), 1);
@@ -339,7 +344,10 @@ mod tests {
 
         // Verify the reverse index is also cleaned up.
         let inc = g.incoming(b(), Some("follows"));
-        assert!(inc.is_empty(), "incoming index for B should be empty after deletion");
+        assert!(
+            inc.is_empty(),
+            "incoming index for B should be empty after deletion"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -386,12 +394,19 @@ mod tests {
         let reachable = g.bfs(a(), "next", 100);
 
         // Must have terminated and found exactly B and C.
-        assert_eq!(reachable.len(), 2, "should find exactly B and C despite cycle");
+        assert_eq!(
+            reachable.len(),
+            2,
+            "should find exactly B and C despite cycle"
+        );
 
         let nodes: HashSet<Uuid> = reachable.iter().map(|(n, _, _)| *n).collect();
         assert!(nodes.contains(&b()), "B must be reachable");
         assert!(nodes.contains(&c()), "C must be reachable");
-        assert!(!nodes.contains(&a()), "start node A must not appear in results");
+        assert!(
+            !nodes.contains(&a()),
+            "start node A must not appear in results"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -408,10 +423,14 @@ mod tests {
 
         let paths = g.path(a(), c(), 3);
 
-        assert_eq!(paths.len(), 2, "should find exactly 2 simple paths from A to C");
+        assert_eq!(
+            paths.len(),
+            2,
+            "should find exactly 2 simple paths from A to C"
+        );
 
         // Both expected paths.
-        let expected_long:  Vec<Uuid> = vec![a(), b(), c()];
+        let expected_long: Vec<Uuid> = vec![a(), b(), c()];
         let expected_short: Vec<Uuid> = vec![a(), c()];
 
         assert!(
@@ -447,7 +466,11 @@ mod tests {
         // Path to B: confidence = 0.8
         let (depth_b, strength_b) = map[&b()];
         assert_eq!(depth_b, 1);
-        assert!((strength_b - 0.8_f32).abs() < 1e-6, "strength to B should be 0.8, got {}", strength_b);
+        assert!(
+            (strength_b - 0.8_f32).abs() < 1e-6,
+            "strength to B should be 0.8, got {}",
+            strength_b
+        );
 
         // Path to C: confidence = 0.8 * 0.5 = 0.4
         let (depth_c, strength_c) = map[&c()];

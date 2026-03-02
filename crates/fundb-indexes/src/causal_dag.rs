@@ -8,10 +8,10 @@
 //   - Forward effects() and backward causes() traversal
 //   - Hot-path closure caching via materialize_closure()
 
+use anyhow::Result;
+use fundb_core::record::CausalEdge;
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
-use fundb_core::record::CausalEdge;
-use anyhow::Result;
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -22,9 +22,9 @@ use anyhow::Result;
 #[derive(Debug, Clone)]
 pub struct CausalPath {
     /// Ordered list of node UUIDs from source to target (inclusive).
-    pub nodes:          Vec<Uuid>,
+    pub nodes: Vec<Uuid>,
     /// Ordered list of causal edges traversed along the path.
-    pub edges:          Vec<CausalEdge>,
+    pub edges: Vec<CausalEdge>,
     /// Product of all edge strengths along the path (0.0–1.0).
     pub total_strength: f32,
 }
@@ -51,8 +51,8 @@ pub enum CausalError {
 /// - `reverse`:       backward index (target → incoming edges) for `causes()`.
 /// - `closure_cache`: pre-computed path lists for hot (from, to) pairs.
 pub struct CausalDagIndex {
-    adjacency:     HashMap<Uuid, Vec<CausalEdge>>,
-    reverse:       HashMap<Uuid, Vec<CausalEdge>>,
+    adjacency: HashMap<Uuid, Vec<CausalEdge>>,
+    reverse: HashMap<Uuid, Vec<CausalEdge>>,
     closure_cache: HashMap<(Uuid, Uuid), Vec<CausalPath>>,
 }
 
@@ -60,8 +60,8 @@ impl CausalDagIndex {
     /// Create a new, empty `CausalDagIndex`.
     pub fn new() -> Self {
         CausalDagIndex {
-            adjacency:     HashMap::new(),
-            reverse:       HashMap::new(),
+            adjacency: HashMap::new(),
+            reverse: HashMap::new(),
             closure_cache: HashMap::new(),
         }
     }
@@ -81,7 +81,9 @@ impl CausalDagIndex {
         //    adding source_id → target_id would create a cycle.
         let mut visited = HashSet::new();
         if self.can_reach(edge.target_id, edge.source_id, &mut visited) {
-            return Err(CausalError::Cycle { detected_at: edge.target_id });
+            return Err(CausalError::Cycle {
+                detected_at: edge.target_id,
+            });
         }
 
         // 3. Insert into both indexes.
@@ -90,10 +92,7 @@ impl CausalDagIndex {
             .or_default()
             .push(edge.clone());
 
-        self.reverse
-            .entry(edge.target_id)
-            .or_default()
-            .push(edge);
+        self.reverse.entry(edge.target_id).or_default().push(edge);
 
         Ok(())
     }
@@ -104,7 +103,13 @@ impl CausalDagIndex {
     /// Checks the closure cache first; if a cached result exists it is returned
     /// immediately (cache stores all paths with min_strength = 0.0, so a cached
     /// result is filtered here to honour `min_strength`).
-    pub fn paths(&self, from: Uuid, to: Uuid, max_depth: u32, min_strength: f32) -> Vec<CausalPath> {
+    pub fn paths(
+        &self,
+        from: Uuid,
+        to: Uuid,
+        max_depth: u32,
+        min_strength: f32,
+    ) -> Vec<CausalPath> {
         // Check cache (cache stores full paths without strength filtering).
         if let Some(cached) = self.closure_cache.get(&(from, to)) {
             return cached
@@ -116,7 +121,7 @@ impl CausalDagIndex {
 
         // DFS path search.
         let mut results: Vec<CausalPath> = Vec::new();
-        let mut path_nodes: Vec<Uuid>      = vec![from];
+        let mut path_nodes: Vec<Uuid> = vec![from];
         let mut path_edges: Vec<CausalEdge> = Vec::new();
 
         Self::dfs_paths(
@@ -159,8 +164,8 @@ impl CausalDagIndex {
     pub fn materialize_closure(&mut self, from: Uuid, to: Uuid) {
         // Compute uncached paths using the full depth / no strength filter.
         let mut results: Vec<CausalPath> = Vec::new();
-        let mut path_nodes: Vec<Uuid>       = vec![from];
-        let mut path_edges: Vec<CausalEdge>  = Vec::new();
+        let mut path_nodes: Vec<Uuid> = vec![from];
+        let mut path_edges: Vec<CausalEdge> = Vec::new();
 
         Self::dfs_paths(
             from,
@@ -181,6 +186,11 @@ impl CausalDagIndex {
     /// Return the total number of causal edges stored in the index.
     pub fn len(&self) -> usize {
         self.adjacency.values().map(|v| v.len()).sum()
+    }
+
+    /// Returns `true` if the index contains no causal edges.
+    pub fn is_empty(&self) -> bool {
+        self.adjacency.is_empty()
     }
 
     // -----------------------------------------------------------------------
@@ -208,21 +218,21 @@ impl CausalDagIndex {
     /// Recursive DFS path finder (backtracking, simple-path only).
     #[allow(clippy::too_many_arguments)]
     fn dfs_paths(
-        current:     Uuid,
-        target:      Uuid,
-        path_nodes:  &mut Vec<Uuid>,
-        path_edges:  &mut Vec<CausalEdge>,
-        strength:    f32,
-        max_depth:   u32,
-        depth:       u32,
+        current: Uuid,
+        target: Uuid,
+        path_nodes: &mut Vec<Uuid>,
+        path_edges: &mut Vec<CausalEdge>,
+        strength: f32,
+        max_depth: u32,
+        depth: u32,
         min_strength: f32,
-        adjacency:   &HashMap<Uuid, Vec<CausalEdge>>,
-        results:     &mut Vec<CausalPath>,
+        adjacency: &HashMap<Uuid, Vec<CausalEdge>>,
+        results: &mut Vec<CausalPath>,
     ) {
         if current == target && depth > 0 {
             results.push(CausalPath {
-                nodes:          path_nodes.clone(),
-                edges:          path_edges.clone(),
+                nodes: path_nodes.clone(),
+                edges: path_edges.clone(),
                 total_strength: strength,
             });
             return;
@@ -269,10 +279,10 @@ impl CausalDagIndex {
     ///
     /// `_forward` is unused at the call site but kept for future extension.
     fn traverse_reachable(
-        start:     Uuid,
+        start: Uuid,
         max_depth: u32,
-        adj:       &HashMap<Uuid, Vec<CausalEdge>>,
-        _forward:  bool,
+        adj: &HashMap<Uuid, Vec<CausalEdge>>,
+        _forward: bool,
     ) -> Vec<(Uuid, f32)> {
         // Map: node → best cumulative strength seen so far.
         let mut best: HashMap<Uuid, f32> = HashMap::new();
@@ -290,7 +300,11 @@ impl CausalDagIndex {
                     // For forward traversal the neighbour is target_id.
                     // For reverse traversal the adjacency map is keyed by target_id,
                     // so edges contain the original CausalEdge — neighbour is source_id.
-                    let neighbour = if _forward { edge.target_id } else { edge.source_id };
+                    let neighbour = if _forward {
+                        edge.target_id
+                    } else {
+                        edge.source_id
+                    };
                     let new_strength = strength * edge.strength;
 
                     let entry = best.entry(neighbour).or_insert(f32::NEG_INFINITY);
@@ -319,27 +333,35 @@ impl Default for CausalDagIndex {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fundb_core::{CausalType, CausalOrigin, StabilityStatus, DirectionStatus};
+    use fundb_core::{CausalOrigin, CausalType, DirectionStatus, StabilityStatus};
 
     // Helper UUIDs.
-    fn a() -> Uuid { Uuid::from_u128(1) }
-    fn b() -> Uuid { Uuid::from_u128(2) }
-    fn c() -> Uuid { Uuid::from_u128(3) }
-    fn d() -> Uuid { Uuid::from_u128(4) }
+    fn a() -> Uuid {
+        Uuid::from_u128(1)
+    }
+    fn b() -> Uuid {
+        Uuid::from_u128(2)
+    }
+    fn c() -> Uuid {
+        Uuid::from_u128(3)
+    }
+    fn d() -> Uuid {
+        Uuid::from_u128(4)
+    }
 
     fn make_edge(source: Uuid, target: Uuid, strength: f32) -> CausalEdge {
         CausalEdge {
-            source_id:        source,
-            target_id:        target,
-            relation:         CausalType::Caused,
+            source_id: source,
+            target_id: target,
+            relation: CausalType::Caused,
             strength,
-            mechanism:        None,
-            origin:           CausalOrigin::UserDeclared,
-            confidence:       strength,
-            stability_score:  None,
+            mechanism: None,
+            origin: CausalOrigin::UserDeclared,
+            confidence: strength,
+            stability_score: None,
             stability_status: StabilityStatus::NotApplicable,
             direction_status: DirectionStatus::Confirmed,
-            discovery_algo:   None,
+            discovery_algo: None,
         }
     }
 
@@ -408,9 +430,21 @@ mod tests {
         assert!(map.contains_key(&c()), "C should be an effect of A");
         assert!(map.contains_key(&d()), "D should be an effect of A via B");
 
-        assert!((map[&b()] - 0.9_f32).abs() < 1e-5, "strength to B should be 0.9, got {}", map[&b()]);
-        assert!((map[&c()] - 0.7_f32).abs() < 1e-5, "strength to C should be 0.7, got {}", map[&c()]);
-        assert!((map[&d()] - 0.45_f32).abs() < 1e-5, "strength to D should be 0.9*0.5=0.45, got {}", map[&d()]);
+        assert!(
+            (map[&b()] - 0.9_f32).abs() < 1e-5,
+            "strength to B should be 0.9, got {}",
+            map[&b()]
+        );
+        assert!(
+            (map[&c()] - 0.7_f32).abs() < 1e-5,
+            "strength to C should be 0.7, got {}",
+            map[&c()]
+        );
+        assert!(
+            (map[&d()] - 0.45_f32).abs() < 1e-5,
+            "strength to D should be 0.9*0.5=0.45, got {}",
+            map[&d()]
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -430,8 +464,16 @@ mod tests {
         assert!(map.contains_key(&b()), "B should be a cause of D");
         assert!(map.contains_key(&a()), "A should be a cause of D (via B)");
 
-        assert!((map[&b()] - 0.5_f32).abs() < 1e-5,  "strength from B to D should be 0.5, got {}", map[&b()]);
-        assert!((map[&a()] - 0.45_f32).abs() < 1e-5, "strength from A to D via B should be 0.45, got {}", map[&a()]);
+        assert!(
+            (map[&b()] - 0.5_f32).abs() < 1e-5,
+            "strength from B to D should be 0.5, got {}",
+            map[&b()]
+        );
+        assert!(
+            (map[&a()] - 0.45_f32).abs() < 1e-5,
+            "strength from A to D via B should be 0.45, got {}",
+            map[&a()]
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -454,7 +496,11 @@ mod tests {
         );
 
         let cached = &idx.closure_cache[&(a(), c())];
-        assert_eq!(cached.len(), 1, "cached result should contain one path A→B→C");
+        assert_eq!(
+            cached.len(),
+            1,
+            "cached result should contain one path A→B→C"
+        );
         assert!((cached[0].total_strength - 0.64_f32).abs() < 1e-5);
 
         // A subsequent paths() call should hit the cache and return the same answer.

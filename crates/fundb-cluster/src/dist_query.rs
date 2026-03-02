@@ -171,6 +171,7 @@ pub struct MergedResult {
 
 /// An in-process shard executor used by tests (and optionally development) in
 /// place of real network RPCs.
+#[derive(Default)]
 pub struct MockShardExecutor {
     data: HashMap<ShardId, Vec<ShardRecord>>,
 }
@@ -178,9 +179,7 @@ pub struct MockShardExecutor {
 impl MockShardExecutor {
     /// Create an empty executor with no data seeded.
     pub fn new() -> Self {
-        Self {
-            data: HashMap::new(),
-        }
+        Self::default()
     }
 
     /// Populate a shard with a fixed set of records.
@@ -448,11 +447,8 @@ impl DistQueryCoordinator {
 
                 let handle = tokio::spawn(async move {
                     let fut = execute_on_shard(shard_id, q, mock);
-                    match tokio::time::timeout(
-                        std::time::Duration::from_millis(timeout_ms),
-                        fut,
-                    )
-                    .await
+                    match tokio::time::timeout(std::time::Duration::from_millis(timeout_ms), fut)
+                        .await
                     {
                         Ok(result) => result,
                         Err(_elapsed) => Err(DistQueryError::ShardTimeout(shard_id)),
@@ -464,7 +460,9 @@ impl DistQueryCoordinator {
 
             for handle in handles {
                 let outcome = handle.await.unwrap_or_else(|join_err| {
-                    Err(DistQueryError::MergeError(format!("join error: {join_err}")))
+                    Err(DistQueryError::MergeError(format!(
+                        "join error: {join_err}"
+                    )))
                 });
                 results.push(outcome);
             }
@@ -566,91 +564,78 @@ impl DistQueryCoordinator {
             // -----------------------------------------------------------------
             // Aggregate: combine partial statistics.
             // -----------------------------------------------------------------
-            DistQuery::Aggregate { op, .. } => {
-                match op {
-                    AggOp::Count => {
-                        let total: u64 = shard_results
-                            .iter()
-                            .filter_map(|sr| sr.partial_count)
-                            .sum();
-                        Ok(MergedResult {
-                            records: vec![],
-                            total_count: Some(total),
-                            aggregate_value: None,
-                            shards_queried,
-                            shards_failed: failures,
-                            total_elapsed_ms: 0,
-                        })
-                    }
-                    AggOp::Sum => {
-                        let total: f64 = shard_results
-                            .iter()
-                            .filter_map(|sr| sr.partial_sum)
-                            .sum();
-                        Ok(MergedResult {
-                            records: vec![],
-                            total_count: None,
-                            aggregate_value: Some(total),
-                            shards_queried,
-                            shards_failed: failures,
-                            total_elapsed_ms: 0,
-                        })
-                    }
-                    AggOp::Avg => {
-                        let total_sum: f64 = shard_results
-                            .iter()
-                            .filter_map(|sr| sr.partial_sum)
-                            .sum();
-                        let total_count: u64 = shard_results
-                            .iter()
-                            .filter_map(|sr| sr.partial_count)
-                            .sum();
-                        let avg = if total_count == 0 {
-                            0.0
-                        } else {
-                            total_sum / total_count as f64
-                        };
-                        Ok(MergedResult {
-                            records: vec![],
-                            total_count: None,
-                            aggregate_value: Some(avg),
-                            shards_queried,
-                            shards_failed: failures,
-                            total_elapsed_ms: 0,
-                        })
-                    }
-                    AggOp::Min => {
-                        let min = shard_results
-                            .iter()
-                            .filter_map(|sr| sr.partial_sum)
-                            .fold(f64::INFINITY, f64::min);
-                        let value = if min.is_infinite() { 0.0 } else { min };
-                        Ok(MergedResult {
-                            records: vec![],
-                            total_count: None,
-                            aggregate_value: Some(value),
-                            shards_queried,
-                            shards_failed: failures,
-                            total_elapsed_ms: 0,
-                        })
-                    }
-                    AggOp::Max => {
-                        let max = shard_results
-                            .iter()
-                            .filter_map(|sr| sr.partial_sum)
-                            .fold(f64::NEG_INFINITY, f64::max);
-                        let value = if max.is_infinite() { 0.0 } else { max };
-                        Ok(MergedResult {
-                            records: vec![],
-                            total_count: None,
-                            aggregate_value: Some(value),
-                            shards_queried,
-                            shards_failed: failures,
-                            total_elapsed_ms: 0,
-                        })
-                    }
+            DistQuery::Aggregate { op, .. } => match op {
+                AggOp::Count => {
+                    let total: u64 = shard_results.iter().filter_map(|sr| sr.partial_count).sum();
+                    Ok(MergedResult {
+                        records: vec![],
+                        total_count: Some(total),
+                        aggregate_value: None,
+                        shards_queried,
+                        shards_failed: failures,
+                        total_elapsed_ms: 0,
+                    })
                 }
-            }
+                AggOp::Sum => {
+                    let total: f64 = shard_results.iter().filter_map(|sr| sr.partial_sum).sum();
+                    Ok(MergedResult {
+                        records: vec![],
+                        total_count: None,
+                        aggregate_value: Some(total),
+                        shards_queried,
+                        shards_failed: failures,
+                        total_elapsed_ms: 0,
+                    })
+                }
+                AggOp::Avg => {
+                    let total_sum: f64 = shard_results.iter().filter_map(|sr| sr.partial_sum).sum();
+                    let total_count: u64 =
+                        shard_results.iter().filter_map(|sr| sr.partial_count).sum();
+                    let avg = if total_count == 0 {
+                        0.0
+                    } else {
+                        total_sum / total_count as f64
+                    };
+                    Ok(MergedResult {
+                        records: vec![],
+                        total_count: None,
+                        aggregate_value: Some(avg),
+                        shards_queried,
+                        shards_failed: failures,
+                        total_elapsed_ms: 0,
+                    })
+                }
+                AggOp::Min => {
+                    let min = shard_results
+                        .iter()
+                        .filter_map(|sr| sr.partial_sum)
+                        .fold(f64::INFINITY, f64::min);
+                    let value = if min.is_infinite() { 0.0 } else { min };
+                    Ok(MergedResult {
+                        records: vec![],
+                        total_count: None,
+                        aggregate_value: Some(value),
+                        shards_queried,
+                        shards_failed: failures,
+                        total_elapsed_ms: 0,
+                    })
+                }
+                AggOp::Max => {
+                    let max = shard_results
+                        .iter()
+                        .filter_map(|sr| sr.partial_sum)
+                        .fold(f64::NEG_INFINITY, f64::max);
+                    let value = if max.is_infinite() { 0.0 } else { max };
+                    Ok(MergedResult {
+                        records: vec![],
+                        total_count: None,
+                        aggregate_value: Some(value),
+                        shards_queried,
+                        shards_failed: failures,
+                        total_elapsed_ms: 0,
+                    })
+                }
+            },
         }
     }
 }
@@ -734,8 +719,7 @@ mod tests {
 
         // Force the collection to record all the shards we care about by
         // iterating UUID space until each desired shard has been hit.
-        let mut seen: std::collections::HashSet<ShardId> =
-            std::collections::HashSet::new();
+        let mut seen: std::collections::HashSet<ShardId> = std::collections::HashSet::new();
         let mut counter: u128 = 0;
         while seen.len() < desired_shards.len() {
             let id = Uuid::from_u128(counter);
@@ -787,8 +771,14 @@ mod tests {
         let shard_b = coord.route_write("events", &record_id);
         let shard_c = coord.route_write("events", &record_id);
 
-        assert_eq!(shard_a, shard_b, "same record must always map to same shard");
-        assert_eq!(shard_b, shard_c, "routing must be deterministic across calls");
+        assert_eq!(
+            shard_a, shard_b,
+            "same record must always map to same shard"
+        );
+        assert_eq!(
+            shard_b, shard_c,
+            "routing must be deterministic across calls"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -826,7 +816,13 @@ mod tests {
         );
 
         let result = coord
-            .execute("users", DistQuery::Scan { filter: None, limit: None })
+            .execute(
+                "users",
+                DistQuery::Scan {
+                    filter: None,
+                    limit: None,
+                },
+            )
             .await
             .expect("scan must succeed");
 
@@ -882,7 +878,13 @@ mod tests {
         );
 
         let result = coord
-            .execute("articles", DistQuery::Scan { filter: None, limit: None })
+            .execute(
+                "articles",
+                DistQuery::Scan {
+                    filter: None,
+                    limit: None,
+                },
+            )
             .await
             .expect("scan must succeed");
 
@@ -1012,7 +1014,12 @@ mod tests {
         );
 
         let result = coord
-            .execute("logs", DistQuery::PointLookup { record_id: target_id })
+            .execute(
+                "logs",
+                DistQuery::PointLookup {
+                    record_id: target_id,
+                },
+            )
             .await
             .expect("point lookup must succeed");
 
@@ -1048,8 +1055,9 @@ mod tests {
 
         let mut exec = MockShardExecutor::new();
         for &shard in &shard_ids {
-            let records: Vec<ShardRecord> =
-                (0..10).map(|_| make_record(Uuid::new_v4(), 0.8, 0.5)).collect();
+            let records: Vec<ShardRecord> = (0..10)
+                .map(|_| make_record(Uuid::new_v4(), 0.8, 0.5))
+                .collect();
             exec.seed_shard(shard, records);
         }
 
@@ -1108,11 +1116,15 @@ mod tests {
         let mut exec = MockShardExecutor::new();
         exec.seed_shard(
             shard_ids[0],
-            (0..4).map(|_| make_record(Uuid::new_v4(), 0.5, 0.0)).collect(),
+            (0..4)
+                .map(|_| make_record(Uuid::new_v4(), 0.5, 0.0))
+                .collect(),
         );
         exec.seed_shard(
             shard_ids[1],
-            (0..6).map(|_| make_record(Uuid::new_v4(), 1.0, 0.0)).collect(),
+            (0..6)
+                .map(|_| make_record(Uuid::new_v4(), 1.0, 0.0))
+                .collect(),
         );
 
         let coord = DistQueryCoordinator::new_with_mock(
@@ -1133,13 +1145,8 @@ mod tests {
             .await
             .expect("aggregate avg must succeed");
 
-        let avg = result
-            .aggregate_value
-            .expect("aggregate_value must be set");
-        assert!(
-            (avg - 0.8).abs() < 1e-9,
-            "expected avg=0.8, got {avg}"
-        );
+        let avg = result.aggregate_value.expect("aggregate_value must be set");
+        assert!((avg - 0.8).abs() < 1e-9, "expected avg=0.8, got {avg}");
     }
 
     // -----------------------------------------------------------------------
@@ -1156,11 +1163,8 @@ mod tests {
         let shard_map = Arc::new(raw_map);
         let exec = Arc::new(MockShardExecutor::new());
 
-        let coord = DistQueryCoordinator::new_with_mock(
-            shard_map,
-            DistQueryConfig::default(),
-            exec,
-        );
+        let coord =
+            DistQueryCoordinator::new_with_mock(shard_map, DistQueryConfig::default(), exec);
 
         let err = coord
             .execute(
@@ -1203,7 +1207,13 @@ mod tests {
         );
 
         let result = coord
-            .execute("knowledge", DistQuery::Scan { filter: None, limit: None })
+            .execute(
+                "knowledge",
+                DistQuery::Scan {
+                    filter: None,
+                    limit: None,
+                },
+            )
             .await
             .expect("scan must succeed");
 
@@ -1227,7 +1237,10 @@ mod tests {
     #[test]
     fn test_dist_query_config_default() {
         let cfg = DistQueryConfig::default();
-        assert_eq!(cfg.oversample_factor, 3, "oversample_factor must default to 3");
+        assert_eq!(
+            cfg.oversample_factor, 3,
+            "oversample_factor must default to 3"
+        );
         assert_eq!(cfg.timeout_ms, 5000, "timeout_ms must default to 5000");
         assert_eq!(
             cfg.max_concurrent_shards, 16,

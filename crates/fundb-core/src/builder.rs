@@ -1,7 +1,7 @@
-use std::collections::BTreeMap;
 use crate::id::new_record_id;
 use crate::record::{CausalEdge, Edge, FunRecord, Sample, Source};
 use crate::types::Timestamp;
+use std::collections::BTreeMap;
 
 /// Fluent builder for [`FunRecord`].
 ///
@@ -30,40 +30,40 @@ use crate::types::Timestamp;
 /// ```
 #[derive(Debug)]
 pub struct FunRecordBuilder {
-    collection:  String,
-    tenant:      u32,
-    data:        Vec<u8>,
-    vectors:     BTreeMap<String, Vec<f32>>,
-    edges:       Vec<Edge>,
-    timeseries:  Vec<Sample>,
-    confidence:  f32,
-    sources:     Vec<Source>,
-    supports:    Vec<crate::record::Ref>,
+    collection: String,
+    tenant: u32,
+    data: Vec<u8>,
+    vectors: BTreeMap<String, Vec<f32>>,
+    edges: Vec<Edge>,
+    timeseries: Vec<Sample>,
+    confidence: f32,
+    sources: Vec<Source>,
+    supports: Vec<crate::record::Ref>,
     contradicts: Vec<crate::record::Ref>,
-    caused_by:   Vec<CausalEdge>,
-    effects:     Vec<CausalEdge>,
-    valid_from:  Timestamp,
-    valid_to:    Timestamp,
+    caused_by: Vec<CausalEdge>,
+    effects: Vec<CausalEdge>,
+    valid_from: Timestamp,
+    valid_to: Timestamp,
 }
 
 impl FunRecordBuilder {
     /// Create a new builder for the given collection name.
     pub fn new(collection: impl Into<String>) -> Self {
         Self {
-            collection:  collection.into(),
-            tenant:      0,
-            data:        Vec::new(),
-            vectors:     BTreeMap::new(),
-            edges:       Vec::new(),
-            timeseries:  Vec::new(),
-            confidence:  1.0,
-            sources:     Vec::new(),
-            supports:    Vec::new(),
+            collection: collection.into(),
+            tenant: 0,
+            data: Vec::new(),
+            vectors: BTreeMap::new(),
+            edges: Vec::new(),
+            timeseries: Vec::new(),
+            confidence: 1.0,
+            sources: Vec::new(),
+            supports: Vec::new(),
             contradicts: Vec::new(),
-            caused_by:   Vec::new(),
-            effects:     Vec::new(),
-            valid_from:  0,
-            valid_to:    i64::MAX,
+            caused_by: Vec::new(),
+            effects: Vec::new(),
+            valid_from: 0,
+            valid_to: i64::MAX,
         }
     }
 
@@ -124,7 +124,7 @@ impl FunRecordBuilder {
     /// Set the application-layer validity window.
     pub fn valid_time(mut self, from: Timestamp, to: Timestamp) -> Self {
         self.valid_from = from;
-        self.valid_to   = to;
+        self.valid_to = to;
         self
     }
 
@@ -152,23 +152,23 @@ impl FunRecordBuilder {
             .as_nanos() as i64;
 
         FunRecord {
-            _id:          new_record_id(),
-            _collection:  self.collection,
-            _tenant:      self.tenant,
-            _sys_from:    now_ns,
-            _sys_to:      i64::MAX,
-            _valid_from:  self.valid_from,
-            _valid_to:    self.valid_to,
-            data:         self.data,
-            _vectors:     self.vectors,
-            _edges:       self.edges,
-            _timeseries:  self.timeseries,
-            _confidence:  self.confidence,
-            _sources:     self.sources,
-            _supports:    self.supports,
+            _id: new_record_id(),
+            _collection: self.collection,
+            _tenant: self.tenant,
+            _sys_from: now_ns,
+            _sys_to: i64::MAX,
+            _valid_from: self.valid_from,
+            _valid_to: self.valid_to,
+            data: self.data,
+            _vectors: self.vectors,
+            _edges: self.edges,
+            _timeseries: self.timeseries,
+            _confidence: self.confidence,
+            _sources: self.sources,
+            _supports: self.supports,
             _contradicts: self.contradicts,
-            _caused_by:   self.caused_by,
-            _effects:     self.effects,
+            _caused_by: self.caused_by,
+            _effects: self.effects,
         }
     }
 }

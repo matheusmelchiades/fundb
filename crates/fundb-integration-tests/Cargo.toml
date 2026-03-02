@@ -28,3 +28,4 @@ bytes            = { workspace = true }
 async-trait      = { workspace = true }
 tempfile         = "3"
 serde_json       = "1"
+csv              = "1"

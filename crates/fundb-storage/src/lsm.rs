@@ -110,9 +110,7 @@ impl LsmTree {
                         // Tombstones: skip for now (the tombstone is already in
                         // the SSTable from the previous flush).
                     }
-                    WalEntry::TxnCommit(_)
-                    | WalEntry::TxnAbort(_)
-                    | WalEntry::Checkpoint(_) => {}
+                    WalEntry::TxnCommit(_) | WalEntry::TxnAbort(_) | WalEntry::Checkpoint(_) => {}
                 }
             }
         }
@@ -247,9 +245,13 @@ impl LsmTree {
         for path in sst_files.iter().rev() {
             let path_str = path.to_string_lossy().to_string();
             let cache_key = CacheKey {
-                file_id: format!("{}:{}", path_str, rmp_serde::to_vec(key)
-                    .map(|b| hex_bytes(&b))
-                    .unwrap_or_default()),
+                file_id: format!(
+                    "{}:{}",
+                    path_str,
+                    rmp_serde::to_vec(key)
+                        .map(|b| hex_bytes(&b))
+                        .unwrap_or_default()
+                ),
                 block_offset: 0,
             };
 
@@ -366,7 +368,7 @@ impl LsmTree {
         // Swap in a new empty memtable and take ownership of the old one.
         let old_memtable = {
             let mut active = self.active.write().await;
-            std::mem::replace(&mut *active, MemTable::new())
+            std::mem::take(&mut *active)
         };
 
         // Freeze it.
@@ -455,8 +457,9 @@ impl LsmTree {
         // Open the selected SSTables.
         let mut readers: Vec<SstableReader> = Vec::with_capacity(to_merge.len());
         for path in &to_merge {
-            let reader = SstableReader::open(path)
-                .with_context(|| format!("compaction: failed to open SSTable: {}", path.display()))?;
+            let reader = SstableReader::open(path).with_context(|| {
+                format!("compaction: failed to open SSTable: {}", path.display())
+            })?;
             readers.push(reader);
         }
 
@@ -467,8 +470,7 @@ impl LsmTree {
             .unwrap_or(0);
         let merged_path = self.sstable_dir.join(format!("{:030}.sst", ts_nanos));
 
-        merge_sstables(readers, &merged_path)
-            .context("compaction: merge_sstables failed")?;
+        merge_sstables(readers, &merged_path).context("compaction: merge_sstables failed")?;
 
         // Delete the old files.
         for path in &to_merge {
@@ -516,7 +518,9 @@ fn sorted_sst_files(dir: &Path) -> Result<Vec<PathBuf>> {
     let read_dir = match fs::read_dir(dir) {
         Ok(rd) => rd,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(vec![]),
-        Err(e) => return Err(e).with_context(|| format!("failed to read directory: {}", dir.display())),
+        Err(e) => {
+            return Err(e).with_context(|| format!("failed to read directory: {}", dir.display()))
+        }
     };
 
     let mut files: Vec<PathBuf> = read_dir
@@ -532,10 +536,7 @@ fn sorted_sst_files(dir: &Path) -> Result<Vec<PathBuf>> {
         .collect();
 
     // Sort ascending by filename so oldest (smallest timestamp) comes first.
-    files.sort_by(|a, b| {
-        a.file_name()
-            .cmp(&b.file_name())
-    });
+    files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
 
     Ok(files)
 }
@@ -650,7 +651,7 @@ mod tests {
         tree.delete(make_key("items", [5u8; 16])).await.unwrap();
 
         let from = make_key("items", [0u8; 16]);
-        let to   = make_key("items", [9u8; 16]);
+        let to = make_key("items", [9u8; 16]);
         let results = tree.scan("items", &from, &to).await.unwrap();
 
         // 10 written, 1 deleted → 9 visible.
@@ -676,13 +677,13 @@ mod tests {
     #[tokio::test]
     async fn test_wal_replay_on_reopen() {
         let tmp = TempDir::new().unwrap();
-        let key  = make_key("recover", [42u8; 16]);
+        let key = make_key("recover", [42u8; 16]);
         let record_id;
 
         {
-            let tree   = LsmTree::open(tmp.path(), 64 * 1024 * 1024).unwrap();
+            let tree = LsmTree::open(tmp.path(), 64 * 1024 * 1024).unwrap();
             let record = make_record("recover");
-            record_id  = record._id;
+            record_id = record._id;
             tree.write(key.clone(), record).await.unwrap();
             // Drop without explicit flush — data lives in WAL.
         }
@@ -690,7 +691,10 @@ mod tests {
         // Re-open; WAL replay should restore the record.
         let tree2 = LsmTree::open(tmp.path(), 64 * 1024 * 1024).unwrap();
         let found = tree2.get(&key).await.unwrap();
-        assert!(found.is_some(), "record must survive process restart via WAL replay");
+        assert!(
+            found.is_some(),
+            "record must survive process restart via WAL replay"
+        );
         assert_eq!(found.unwrap()._id, record_id);
     }
 
@@ -714,6 +718,9 @@ mod tests {
         tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
 
         let files = sorted_sst_files(tmp.path()).unwrap();
-        assert!(!files.is_empty(), "at least one .sst file must exist after flush");
+        assert!(
+            !files.is_empty(),
+            "at least one .sst file must exist after flush"
+        );
     }
 }

@@ -11,11 +11,14 @@
 //! | `scan`      | [`ScanOperator`], [`VectorScanOperator`]    |
 //! | `filter`    | [`FilterOperator`]                          |
 //! | `project`   | [`ProjectOperator`]                         |
+//! | `sort`      | [`SortOperator`]                            |
 
 pub mod filter;
 pub mod project;
 pub mod scan;
+pub mod sort;
 
 pub use filter::FilterOperator;
 pub use project::ProjectOperator;
 pub use scan::{ScanOperator, VectorScanOperator};
+pub use sort::SortOperator;

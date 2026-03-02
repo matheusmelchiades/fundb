@@ -5,8 +5,8 @@
 //! metrics or tracing crates are required.
 
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 // ---------------------------------------------------------------------------
@@ -156,11 +156,7 @@ pub struct Histogram {
 }
 
 impl Histogram {
-    pub fn new(
-        name: impl Into<String>,
-        help: impl Into<String>,
-        buckets: Vec<f64>,
-    ) -> Self {
+    pub fn new(name: impl Into<String>, help: impl Into<String>, buckets: Vec<f64>) -> Self {
         let n = buckets.len() + 1; // +1 for +Inf
         Self {
             name: name.into(),
@@ -246,18 +242,21 @@ impl MetricsRegistry {
     }
 
     pub fn register_counter(&mut self, c: Counter) -> &Counter {
-        self.counters.insert(c.name.clone(), c);
-        self.counters.values().last().unwrap()
+        let name = c.name.clone();
+        self.counters.insert(name.clone(), c);
+        self.counters.get(&name).unwrap()
     }
 
     pub fn register_gauge(&mut self, g: Gauge) -> &Gauge {
-        self.gauges.insert(g.name.clone(), g);
-        self.gauges.values().last().unwrap()
+        let name = g.name.clone();
+        self.gauges.insert(name.clone(), g);
+        self.gauges.get(&name).unwrap()
     }
 
     pub fn register_histogram(&mut self, h: Histogram) -> &Histogram {
-        self.histograms.insert(h.name.clone(), h);
-        self.histograms.values().last().unwrap()
+        let name = h.name.clone();
+        self.histograms.insert(name.clone(), h);
+        self.histograms.get(&name).unwrap()
     }
 
     pub fn counter(&self, name: &str) -> Option<&Counter> {
@@ -422,10 +421,7 @@ impl FunDbMetrics {
                 "Query execution latency in milliseconds",
                 default_latency_buckets(),
             ),
-            write_throughput: Counter::new(
-                "fundb_write_ops_total",
-                "Total write operations",
-            ),
+            write_throughput: Counter::new("fundb_write_ops_total", "Total write operations"),
             active_connections: Gauge::new(
                 "fundb_active_connections",
                 "Number of currently active client connections",
@@ -434,14 +430,8 @@ impl FunDbMetrics {
                 "fundb_replication_lag_ms",
                 "Replication lag in milliseconds",
             ),
-            cache_hits: Counter::new(
-                "fundb_cache_hits_total",
-                "Total cache hit events",
-            ),
-            cache_misses: Counter::new(
-                "fundb_cache_misses_total",
-                "Total cache miss events",
-            ),
+            cache_hits: Counter::new("fundb_cache_hits_total", "Total cache hit events"),
+            cache_misses: Counter::new("fundb_cache_misses_total", "Total cache miss events"),
             vector_scan_latency: Histogram::new(
                 "fundb_vector_scan_latency_ms",
                 "Vector similarity scan latency in milliseconds",
@@ -523,11 +513,7 @@ impl Span {
     }
 
     /// Record a named event on this span.
-    pub fn add_event(
-        &mut self,
-        name: impl Into<String>,
-        attrs: HashMap<String, String>,
-    ) {
+    pub fn add_event(&mut self, name: impl Into<String>, attrs: HashMap<String, String>) {
         self.events.push(SpanEvent {
             name: name.into(),
             timestamp_ms: now_ms(),
@@ -919,8 +905,8 @@ mod tests {
             "Bucket distribution test",
             vec![5.0, 10.0, 50.0],
         );
-        h.observe(3.0);  // lands in <=5, <=10, <=50, +Inf
-        h.observe(7.0);  // lands in <=10, <=50, +Inf  (not <=5)
+        h.observe(3.0); // lands in <=5, <=10, <=50, +Inf
+        h.observe(7.0); // lands in <=10, <=50, +Inf  (not <=5)
         h.observe(30.0); // lands in <=50, +Inf  (not <=5 or <=10)
 
         let bc = h.bucket_counts();
@@ -1005,10 +991,7 @@ mod tests {
     fn test_grafana_dashboard_json() {
         let json = grafana_dashboard_json();
         assert!(!json.is_empty());
-        assert!(
-            json.contains("FunDB Operations"),
-            "Dashboard title missing"
-        );
+        assert!(json.contains("FunDB Operations"), "Dashboard title missing");
         // Basic structural checks — the string must be parseable as JSON.
         // We rely only on std (no serde_json in the module), so we do a
         // lightweight structural probe rather than full parse.
@@ -1061,23 +1044,25 @@ mod tests {
         assert_eq!(exporter.len(), 1);
         let stored = exporter.spans.lock().unwrap();
         let s = &stored[0];
-        assert_eq!(s.attributes.get("db.system").map(|v| v.as_str()), Some("fundb"));
+        assert_eq!(
+            s.attributes.get("db.system").map(|v| v.as_str()),
+            Some("fundb")
+        );
         assert_eq!(
             s.attributes.get("db.operation").map(|v| v.as_str()),
             Some("SELECT")
         );
     }
-}
 
-// ---------------------------------------------------------------------------
-// Helper impl used only in tests (avoids modifying SpanContext)
-// ---------------------------------------------------------------------------
+    // -----------------------------------------------------------------------
+    // Helper impl used only in tests (avoids modifying SpanContext)
+    // -----------------------------------------------------------------------
 
-impl SpanContext {
-    /// No-op method used in tests to exercise the struct without adding
-    /// production API surface.
-    #[cfg(test)]
-    fn operation_name_check(&self) -> &str {
-        ""
+    impl SpanContext {
+        /// No-op method used in tests to exercise the struct without adding
+        /// production API surface.
+        fn operation_name_check(&self) -> &str {
+            ""
+        }
     }
 }

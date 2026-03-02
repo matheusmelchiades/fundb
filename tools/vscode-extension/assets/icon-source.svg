@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <!-- Background: rounded square -->
+  <rect width="256" height="256" rx="40" fill="#1A1A2E"/>
+
+  <g transform="translate(128, 128)">
+    <!-- 5 convergence paths — BOLD for small-size readability -->
+    <!-- Vectors (violet) - top-left -->
+    <path d="M-80,-68 Q-45,-38 -22,-22" stroke="#7C3AED" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- Graphs (teal) - top-right -->
+    <path d="M80,-68 Q45,-38 22,-22" stroke="#0D9488" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- Documents (blue) - left -->
+    <path d="M-88,10 Q-55,6 -24,1" stroke="#2563EB" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- Time-Series (rose) - right -->
+    <path d="M88,10 Q55,6 24,1" stroke="#E11D48" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- Agent Memory (gold) - bottom -->
+    <path d="M0,85 Q0,55 0,24" stroke="#D97706" stroke-width="10" stroke-linecap="round" fill="none"/>
+
+    <!-- Endpoint dots -->
+    <circle cx="-80" cy="-68" r="12" fill="#7C3AED"/>
+    <circle cx="80" cy="-68" r="12" fill="#0D9488"/>
+    <circle cx="-88" cy="10" r="12" fill="#2563EB"/>
+    <circle cx="88" cy="10" r="12" fill="#E11D48"/>
+    <circle cx="0" cy="85" r="12" fill="#D97706"/>
+
+    <!-- Central node (rounded square) -->
+    <rect x="-28" y="-28" width="56" height="56" rx="14" fill="#E8872B"/>
+  </g>
+</svg>

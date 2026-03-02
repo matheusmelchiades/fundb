@@ -1,5 +1,4 @@
-/// Meta-command parser for backslash commands entered in the REPL.
-
+//! Meta-command parser for backslash commands entered in the REPL.
 use crate::args::OutputFormat;
 
 // ---------------------------------------------------------------------------
@@ -39,13 +38,15 @@ impl MetaCommand {
     pub fn parse(input: &str) -> Self {
         // Strip optional leading backslash and trim
         let trimmed = input.trim();
-        let without_slash = if trimmed.starts_with('\\') {
-            &trimmed[1..]
+        let without_slash = if let Some(stripped) = trimmed.strip_prefix('\\') {
+            stripped
         } else {
             trimmed
         };
 
-        let mut iter = without_slash.splitn(4, char::is_whitespace).filter(|t| !t.is_empty());
+        let mut iter = without_slash
+            .splitn(4, char::is_whitespace)
+            .filter(|t| !t.is_empty());
         let cmd = match iter.next() {
             Some(c) => c,
             None => return MetaCommand::Unknown(input.to_string()),
@@ -53,8 +54,8 @@ impl MetaCommand {
 
         // Collect remaining tokens for subcommand use
         let rest: Vec<&str> = without_slash
-            .splitn(2, char::is_whitespace)
-            .nth(1)
+            .split_once(char::is_whitespace)
+            .map(|x| x.1)
             .unwrap_or("")
             .split_whitespace()
             .collect();

@@ -48,11 +48,11 @@ struct MemoryEntry {
     content: String,
     embedding: Vec<f32>,
     importance: f32,
-    memory_type: MemoryType,
+    _memory_type: MemoryType,
     decay_rate: f32,
     created_at: i64,
-    last_accessed: i64,
-    access_count: u32,
+    _last_accessed: i64,
+    _access_count: u32,
     confidence: f32,
     tombstone: bool,
 }
@@ -68,8 +68,9 @@ pub struct AgentMemory {
 
 /// Polynomial hash used for bag-of-words bucketing.
 fn djb2_hash(word: &str) -> u64 {
-    word.bytes()
-        .fold(5381u64, |acc, b| acc.wrapping_mul(33).wrapping_add(b as u64))
+    word.bytes().fold(5381u64, |acc, b| {
+        acc.wrapping_mul(33).wrapping_add(b as u64)
+    })
 }
 
 /// Split `text` on whitespace and common punctuation, lowercase, skip empties.
@@ -148,11 +149,11 @@ impl AgentMemory {
             content: content.to_string(),
             embedding,
             importance: opts.importance,
-            memory_type: opts.memory_type,
+            _memory_type: opts.memory_type,
             decay_rate: opts.decay_rate,
             created_at: now,
-            last_accessed: now,
-            access_count: 0,
+            _last_accessed: now,
+            _access_count: 0,
             confidence: opts.importance.min(1.0),
             tombstone: false,
         };
@@ -180,8 +181,7 @@ impl AgentMemory {
             .filter(|(_, e)| !e.tombstone && e.agent_id == agent_id)
             .map(|(idx, e)| {
                 let semantic_score = cosine_sim(&query_embedding, &e.embedding);
-                let recency_score =
-                    1.0 / (1.0 + (self.clock - e.created_at) as f32);
+                let recency_score = 1.0 / (1.0 + (self.clock - e.created_at) as f32);
                 let importance_score = e.importance;
 
                 let total = weights.semantic * semantic_score
@@ -256,13 +256,14 @@ impl AgentMemory {
                     continue;
                 }
 
-                let sim =
-                    cosine_sim(&self.entries[idx_a].embedding, &self.entries[idx_b].embedding);
+                let sim = cosine_sim(
+                    &self.entries[idx_a].embedding,
+                    &self.entries[idx_b].embedding,
+                );
 
                 if sim > 0.9 {
                     // Keep the higher-importance entry; tombstone the other.
-                    let keep_a =
-                        self.entries[idx_a].importance >= self.entries[idx_b].importance;
+                    let keep_a = self.entries[idx_a].importance >= self.entries[idx_b].importance;
                     let drop_idx = if keep_a { idx_b } else { idx_a };
                     self.entries[drop_idx].tombstone = true;
                     tombstoned += 1;
@@ -329,7 +330,10 @@ mod tests {
             .unwrap();
 
         let results = mem.recall("agent1", "sky color", semantic_weights(), 5);
-        assert!(!results.is_empty(), "recall should return at least one result");
+        assert!(
+            !results.is_empty(),
+            "recall should return at least one result"
+        );
         assert!(
             results[0].score > 0.0,
             "score should be positive, got {}",
@@ -490,6 +494,10 @@ mod tests {
         }
 
         let results = mem.recall("agent1", "memory", balanced_weights(), 5);
-        assert_eq!(results.len(), 5, "recall should return exactly top_k results");
+        assert_eq!(
+            results.len(),
+            5,
+            "recall should return exactly top_k results"
+        );
     }
 }

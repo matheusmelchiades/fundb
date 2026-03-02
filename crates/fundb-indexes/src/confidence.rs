@@ -8,8 +8,8 @@
 //   - Range queries returning all UUIDs whose confidence falls in [min, max]
 //   - 100-bucket histogram for confidence distribution analysis
 
-use uuid::Uuid;
 use anyhow::Result;
+use uuid::Uuid;
 
 // ---------------------------------------------------------------------------
 // Index
@@ -81,6 +81,11 @@ impl ConfidenceIndex {
     pub fn len(&self) -> usize {
         self.entries.len()
     }
+
+    /// Returns `true` if the index contains no entries.
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
 }
 
 impl Default for ConfidenceIndex {
@@ -117,14 +122,17 @@ mod tests {
 
         // range(0.5, 1.0) should return records with confidence 0.5, 0.6, 0.7, 0.8, 0.9.
         let result = idx.range(0.5, 1.0);
-        assert_eq!(result.len(), 5, "range(0.5, 1.0) should return 5 records; got {:?}", result);
+        assert_eq!(
+            result.len(),
+            5,
+            "range(0.5, 1.0) should return 5 records; got {:?}",
+            result
+        );
 
         // Verify the returned UUIDs correspond to seeds 5..9.
         let expected_seeds: std::collections::HashSet<u128> = (5..10).collect();
-        let result_seeds: std::collections::HashSet<u128> = result
-            .iter()
-            .map(|id| id.as_u128())
-            .collect();
+        let result_seeds: std::collections::HashSet<u128> =
+            result.iter().map(|id| id.as_u128()).collect();
         assert_eq!(result_seeds, expected_seeds, "wrong UUIDs returned");
     }
 
@@ -171,7 +179,11 @@ mod tests {
         idx.update(x, 0.8).unwrap();
 
         let result = idx.range(0.7, 1.0);
-        assert_eq!(result.len(), 1, "record should appear in range(0.7, 1.0) after update");
+        assert_eq!(
+            result.len(),
+            1,
+            "record should appear in range(0.7, 1.0) after update"
+        );
         assert_eq!(result[0], x, "returned UUID should be X");
     }
 

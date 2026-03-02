@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- FunDB sidebar icon - simplified monochrome for VSCode activity bar -->
+  <g transform="translate(12, 12)">
+    <!-- Central node -->
+    <rect x="-4" y="-4" width="8" height="8" rx="2" fill="currentColor"/>
+    <!-- Convergence paths -->
+    <path d="M-9,-8 Q-5,-5 -3,-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M9,-8 Q5,-5 3,-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M-10,1 Q-7,1 -4,0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M10,1 Q7,1 4,0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M0,10 Q0,7 0,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <!-- Dots -->
+    <circle cx="-9" cy="-8" r="1.5" fill="currentColor"/>
+    <circle cx="9" cy="-8" r="1.5" fill="currentColor"/>
+    <circle cx="-10" cy="1" r="1.5" fill="currentColor"/>
+    <circle cx="10" cy="1" r="1.5" fill="currentColor"/>
+    <circle cx="0" cy="10" r="1.5" fill="currentColor"/>
+  </g>
+</svg>

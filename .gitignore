@@ -1,8 +1,7 @@
 # Rust
 target/
 **/*.rs.bk
-# library crate — don't commit lock file
-Cargo.lock
+# Cargo.lock is committed — this is a binary application, not a library
 *.pdb
 
 # IDE / local agent config
@@ -31,3 +30,8 @@ crates/fundb-sql/src/grammar.rs
 
 # Build cache
 .cargo/
+
+# Node.js
+node_modules/
+dist/
+*.vsix

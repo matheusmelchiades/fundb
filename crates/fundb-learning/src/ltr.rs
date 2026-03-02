@@ -33,7 +33,7 @@ impl AgentModel {
 }
 
 struct FeedbackRecord {
-    query_id: Uuid,
+    _query_id: Uuid,
     used: Vec<Uuid>,
     ignored: Vec<Uuid>,
 }
@@ -42,6 +42,7 @@ struct FeedbackRecord {
 // Public API
 // ---------------------------------------------------------------------------
 
+#[derive(Default)]
 pub struct LtrRanker {
     /// Per-agent learned model.
     models: HashMap<String, AgentModel>,
@@ -86,7 +87,7 @@ impl LtrRanker {
             .entry(agent_id.to_string())
             .or_default()
             .push(FeedbackRecord {
-                query_id,
+                _query_id: query_id,
                 used: used.to_vec(),
                 ignored: ignored.to_vec(),
             });
@@ -164,8 +165,7 @@ impl LtrRanker {
 /// rel_i = 1.0 if the item at position i was used, else 0.0.
 fn ndcg_for_record(record: &FeedbackRecord) -> f32 {
     // Build a set for fast membership test.
-    let used_set: std::collections::HashSet<Uuid> =
-        record.used.iter().copied().collect();
+    let used_set: std::collections::HashSet<Uuid> = record.used.iter().copied().collect();
 
     // Construct the ordered list: used items first, then ignored items.
     // This represents the "current" ranking the model produces.
@@ -182,7 +182,11 @@ fn ndcg_for_record(record: &FeedbackRecord) -> f32 {
         .take(10)
         .enumerate()
         .map(|(i, uuid)| {
-            let rel = if used_set.contains(uuid) { 1.0_f32 } else { 0.0_f32 };
+            let rel = if used_set.contains(uuid) {
+                1.0_f32
+            } else {
+                0.0_f32
+            };
             rel / (i as f32 + 2.0_f32).log2()
         })
         .sum();
@@ -215,13 +219,7 @@ mod tests {
     }
 
     // Helper: record N identical feedback entries (doc_a used, doc_b ignored).
-    fn fill_feedback(
-        ranker: &mut LtrRanker,
-        agent_id: &str,
-        doc_a: Uuid,
-        doc_b: Uuid,
-        n: usize,
-    ) {
+    fn fill_feedback(ranker: &mut LtrRanker, agent_id: &str, doc_a: Uuid, doc_b: Uuid, n: usize) {
         for _ in 0..n {
             ranker.record_feedback(agent_id, Uuid::new_v4(), &[doc_a], &[doc_b]);
         }
@@ -234,11 +232,17 @@ mod tests {
     fn test_cold_start_returns_original() {
         let ranker = LtrRanker::new();
         let docs = make_uuids(5);
-        let candidates: Vec<(Uuid, f32)> =
-            docs.iter().copied().zip([0.9, 0.8, 0.7, 0.6, 0.5]).collect();
+        let candidates: Vec<(Uuid, f32)> = docs
+            .iter()
+            .copied()
+            .zip([0.9, 0.8, 0.7, 0.6, 0.5])
+            .collect();
 
         let result = ranker.rerank("agent_x", "query", candidates.clone());
-        assert_eq!(result, candidates, "cold start must preserve original order");
+        assert_eq!(
+            result, candidates,
+            "cold start must preserve original order"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -251,12 +255,7 @@ mod tests {
 
         // 5 records: 2 used + 2 ignored per record → 20 signals total.
         for _ in 0..5 {
-            ranker.record_feedback(
-                "agent_a",
-                Uuid::new_v4(),
-                &docs[0..2],
-                &docs[2..4],
-            );
+            ranker.record_feedback("agent_a", Uuid::new_v4(), &docs[0..2], &docs[2..4]);
         }
 
         let model = ranker.models.get("agent_a").expect("model must exist");
@@ -305,7 +304,10 @@ mod tests {
         let candidates = vec![(doc_b, 0.9_f32), (doc_a, 0.1_f32)];
         let result = ranker.rerank("agent_b", "q", candidates.clone());
 
-        assert_eq!(result, candidates, "agent_b must not be affected by agent_a feedback");
+        assert_eq!(
+            result, candidates,
+            "agent_b must not be affected by agent_a feedback"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -387,12 +389,7 @@ mod tests {
 
         // 200 records so total_signals = 200 × 20 = 4000.
         for _ in 0..200 {
-            ranker.record_feedback(
-                "agent_improve",
-                Uuid::new_v4(),
-                &good_docs,
-                &bad_docs,
-            );
+            ranker.record_feedback("agent_improve", Uuid::new_v4(), &good_docs, &bad_docs);
         }
 
         let ndcg = ranker

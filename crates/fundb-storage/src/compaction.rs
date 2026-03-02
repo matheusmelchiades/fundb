@@ -52,9 +52,9 @@ impl CompactionPolicy {
                 // Heuristic: trigger when total file count exceeds max_levels * 4.
                 sstable_files.len() > max_levels * 4
             }
-            CompactionPolicy::SizeTiered {
-                min_sstable_count,
-            } => sstable_files.len() >= *min_sstable_count,
+            CompactionPolicy::SizeTiered { min_sstable_count } => {
+                sstable_files.len() >= *min_sstable_count
+            }
         }
     }
 
@@ -80,12 +80,10 @@ impl CompactionPolicy {
                 if n == 0 {
                     return vec![];
                 }
-                let take = (n + 1) / 2; // ceil division
+                let take = n.div_ceil(2);
                 sstable_files[..take].to_vec()
             }
-            CompactionPolicy::SizeTiered {
-                min_sstable_count,
-            } => {
+            CompactionPolicy::SizeTiered { min_sstable_count } => {
                 let n = sstable_files.len();
                 if n < *min_sstable_count {
                     return vec![];
@@ -106,7 +104,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn paths(names: &[&str]) -> Vec<PathBuf> {
-        names.iter().map(|n| PathBuf::from(n)).collect()
+        names.iter().map(PathBuf::from).collect()
     }
 
     // -----------------------------------------------------------------------
@@ -120,8 +118,14 @@ mod tests {
             max_levels: 7,
         };
         // 7 * 4 = 28; 20 files is below the threshold.
-        let files = paths(&(0..20).map(|i| format!("{:020}.sst", i)).collect::<Vec<_>>()
-            .iter().map(|s| s.as_str()).collect::<Vec<_>>());
+        let files = paths(
+            &(0..20)
+                .map(|i| format!("{:020}.sst", i))
+                .collect::<Vec<_>>()
+                .iter()
+                .map(|s| s.as_str())
+                .collect::<Vec<_>>(),
+        );
         assert!(!policy.should_compact(&files));
     }
 
@@ -132,7 +136,9 @@ mod tests {
             max_levels: 7,
         };
         // 7 * 4 = 28; 29 files exceeds the threshold.
-        let files: Vec<PathBuf> = (0..29).map(|i| PathBuf::from(format!("{:020}.sst", i))).collect();
+        let files: Vec<PathBuf> = (0..29)
+            .map(|i| PathBuf::from(format!("{:020}.sst", i)))
+            .collect();
         assert!(policy.should_compact(&files));
     }
 

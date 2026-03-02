@@ -75,11 +75,7 @@ pub struct ContextMetadata {
 /// Estimate the token cost of a single record using the specification formula.
 fn estimate_tokens(record: &FunRecord) -> u32 {
     let data_estimate: u32 = 50;
-    let vector_tokens: u32 = record
-        ._vectors
-        .values()
-        .map(|v| v.len() as u32 * 6)
-        .sum();
+    let vector_tokens: u32 = record._vectors.values().map(|v| v.len() as u32 * 6).sum();
     let scalar_tokens: u32 = 10;
     data_estimate + vector_tokens + scalar_tokens
 }
@@ -111,7 +107,11 @@ fn cosine_sim(a: &FunRecord, b: &FunRecord) -> f32 {
         return 0.0;
     }
 
-    let dot: f32 = va[..min_len].iter().zip(vb[..min_len].iter()).map(|(x, y)| x * y).sum();
+    let dot: f32 = va[..min_len]
+        .iter()
+        .zip(vb[..min_len].iter())
+        .map(|(x, y)| x * y)
+        .sum();
     let norm_a: f32 = va[..min_len].iter().map(|x| x * x).sum::<f32>().sqrt();
     let norm_b: f32 = vb[..min_len].iter().map(|x| x * x).sum::<f32>().sqrt();
 
@@ -284,8 +284,7 @@ impl ContextOptimizer {
 
         // --- 5. Compute metadata --------------------------------------------
         let candidates_selected = selected.len() as u32;
-        let coverage_score =
-            candidates_selected as f32 / (candidates_evaluated.max(1) as f32);
+        let coverage_score = candidates_selected as f32 / (candidates_evaluated.max(1) as f32);
         let coherence_score = mean_pairwise_cosine(&selected);
         let diversity_score = 1.0 - coherence_score;
         let avg_confidence = if selected.is_empty() {
@@ -293,10 +292,7 @@ impl ContextOptimizer {
         } else {
             selected.iter().map(|r| r._confidence).sum::<f32>() / selected.len() as f32
         };
-        let contradictions_found = selected
-            .iter()
-            .filter(|r| r._confidence < 0.3)
-            .count() as u32;
+        let contradictions_found = selected.iter().filter(|r| r._confidence < 0.3).count() as u32;
 
         let metadata = ContextMetadata {
             tokens_used: used_tokens,
@@ -392,7 +388,7 @@ mod tests {
         // record is the first one considered (and picked on tie).
         let candidates: Vec<(FunRecord, f32)> = vec![
             (make_record(vec![1.0, 0.0], 0.9, 0), 0.3),
-            (make_record(vec![0.0, 1.0], 0.9, 0), 0.7),  // highest relevance
+            (make_record(vec![0.0, 1.0], 0.9, 0), 0.7), // highest relevance
             (make_record(vec![0.5, 0.5], 0.9, 0), 0.5),
         ];
 
@@ -446,16 +442,25 @@ mod tests {
         let (selected, _) = ContextOptimizer::select(candidates, opts);
         assert!(!selected.is_empty(), "should select at least one record");
 
-        let has_cluster_a = selected
-            .iter()
-            .any(|r| r._vectors.get("emb").map(|v| (v[0] - 1.0).abs() < 1e-5).unwrap_or(false));
-        let has_cluster_b = selected
-            .iter()
-            .any(|r| r._vectors.get("emb").map(|v| (v[1] - 1.0).abs() < 1e-5).unwrap_or(false));
+        let has_cluster_a = selected.iter().any(|r| {
+            r._vectors
+                .get("emb")
+                .map(|v| (v[0] - 1.0).abs() < 1e-5)
+                .unwrap_or(false)
+        });
+        let has_cluster_b = selected.iter().any(|r| {
+            r._vectors
+                .get("emb")
+                .map(|v| (v[1] - 1.0).abs() < 1e-5)
+                .unwrap_or(false)
+        });
 
         // With a generous budget and candidates from both clusters, both should
         // appear since all fit within the budget.
-        assert!(has_cluster_a || has_cluster_b, "should pick from at least one cluster");
+        assert!(
+            has_cluster_a || has_cluster_b,
+            "should pick from at least one cluster"
+        );
         // With 10 records all fitting in budget, we expect both clusters selected.
         assert!(
             has_cluster_a && has_cluster_b,
@@ -515,9 +520,15 @@ mod tests {
         let (selected, meta) = ContextOptimizer::select(candidates, opts);
 
         assert_eq!(meta.candidates_evaluated, 5);
-        assert!(meta.candidates_selected > 0, "should select at least one record");
+        assert!(
+            meta.candidates_selected > 0,
+            "should select at least one record"
+        );
         assert!(meta.tokens_used > 0, "tokens_used should be > 0");
-        assert!(meta.tokens_used <= 4096, "tokens_used must not exceed budget");
+        assert!(
+            meta.tokens_used <= 4096,
+            "tokens_used must not exceed budget"
+        );
         assert_eq!(meta.tokens_budget, 4096);
 
         // coverage_score must be in [0, 1]

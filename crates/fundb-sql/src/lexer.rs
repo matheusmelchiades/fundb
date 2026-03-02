@@ -18,7 +18,11 @@ pub struct LexError {
 
 impl std::fmt::Display for LexError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "LexError at {}:{}: {}", self.line, self.col, self.message)
+        write!(
+            f,
+            "LexError at {}:{}: {}",
+            self.line, self.col, self.message
+        )
     }
 }
 
@@ -181,7 +185,9 @@ impl<'a> Lexer<'a> {
         };
 
         // Numbers: 42, 3.14, .5
-        if ch.is_ascii_digit() || (ch == '.' && self.peek_char(1).map_or(false, |c| c.is_ascii_digit())) {
+        if ch.is_ascii_digit()
+            || (ch == '.' && self.peek_char(1).is_some_and(|c| c.is_ascii_digit()))
+        {
             return self.lex_number(line, col, start);
         }
 
@@ -199,7 +205,7 @@ impl<'a> Lexer<'a> {
         if ch == ':' {
             // peek ahead — if next is a letter/underscore it's a param, else Colon
             let next = self.peek_char(1);
-            if next.map_or(false, |c| c.is_alphabetic() || c == '_') {
+            if next.is_some_and(|c| c.is_alphabetic() || c == '_') {
                 return self.lex_param(line, col);
             } else {
                 self.advance();
@@ -240,7 +246,7 @@ impl<'a> Lexer<'a> {
                     Token::NotEq
                 } else {
                     return Err(LexError {
-                        message: format!("unexpected character '!'"),
+                        message: "unexpected character '!'".to_string(),
                         line,
                         col,
                     });
@@ -340,14 +346,21 @@ impl<'a> Lexer<'a> {
 
         let tok = if has_dot {
             let v: f64 = raw.parse().map_err(|_| LexError {
-                message: format!("invalid float literal '{}'. Expected format: 3.14 or 0.5", raw),
+                message: format!(
+                    "invalid float literal '{}'. Expected format: 3.14 or 0.5",
+                    raw
+                ),
                 line,
                 col,
             })?;
             Token::FloatLiteral(v)
         } else {
             let v: i64 = raw.parse().map_err(|_| LexError {
-                message: format!("invalid integer literal '{}'. Value may be out of range (max: {})", raw, i64::MAX),
+                message: format!(
+                    "invalid integer literal '{}'. Value may be out of range (max: {})",
+                    raw,
+                    i64::MAX
+                ),
                 line,
                 col,
             })?;

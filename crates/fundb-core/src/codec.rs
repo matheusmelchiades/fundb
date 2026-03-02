@@ -1,6 +1,6 @@
+use crate::record::FunRecord;
 use anyhow::Result;
 use bytes::Bytes;
-use crate::record::FunRecord;
 
 // ---------------------------------------------------------------------------
 // Core encode / decode traits
@@ -50,8 +50,8 @@ pub fn encode_compressed(record: &FunRecord) -> Result<Bytes> {
 
 /// Decompress a zstd-compressed blob and decode a [`FunRecord`] from the result.
 pub fn decode_compressed(bytes: &[u8]) -> Result<FunRecord> {
-    let decompressed = zstd::decode_all(bytes)
-        .map_err(|e| anyhow::anyhow!("zstd decode error: {}", e))?;
+    let decompressed =
+        zstd::decode_all(bytes).map_err(|e| anyhow::anyhow!("zstd decode error: {}", e))?;
     FunRecord::decode(&decompressed)
 }
 
@@ -72,11 +72,7 @@ pub fn decode_compressed(bytes: &[u8]) -> Result<FunRecord> {
 pub fn estimate_tokens(record: &FunRecord) -> u32 {
     let byte_length = record.data.len();
 
-    let vector_dims: usize = record
-        ._vectors
-        .values()
-        .map(|v| v.len())
-        .sum();
+    let vector_dims: usize = record._vectors.values().map(|v| v.len()).sum();
 
     // Fixed approximation for scalar cognitive fields per OQ-5 resolution.
     let scalar_fields: usize = 10;
@@ -127,7 +123,10 @@ mod tests {
         let decoded = FunRecord::decode(&encoded).expect("decode must succeed");
         // Re-encode the decoded value; bytes must be identical.
         let re_encoded = decoded.encode().expect("re-encode must succeed");
-        assert_eq!(encoded, re_encoded, "encode(decode(encode(r))) must equal encode(r)");
+        assert_eq!(
+            encoded, re_encoded,
+            "encode(decode(encode(r))) must equal encode(r)"
+        );
     }
 
     #[test]
@@ -149,9 +148,13 @@ mod tests {
             // 1 – empty record
             FunRecordBuilder::new("col_a").build(),
             // 2 – with data only
-            FunRecordBuilder::new("col_b").data(vec![0x01, 0x02, 0x03]).build(),
+            FunRecordBuilder::new("col_b")
+                .data(vec![0x01, 0x02, 0x03])
+                .build(),
             // 3 – with small vector
-            FunRecordBuilder::new("col_c").vector("emb", vec![1.0, 2.0]).build(),
+            FunRecordBuilder::new("col_c")
+                .vector("emb", vec![1.0, 2.0])
+                .build(),
             // 4 – data + vector
             record_with(32, 16),
             // 5 – larger data
@@ -181,8 +184,8 @@ mod tests {
             },
             // 12 – with edge
             {
-                use crate::record::Edge;
                 use crate::id::new_record_id;
+                use crate::record::Edge;
                 let e = Edge {
                     label: "follows".to_string(),
                     target: new_record_id(),
@@ -215,27 +218,43 @@ mod tests {
             record_with(512, 512),
             // 18 – supports ref
             {
-                use crate::record::Ref;
                 use crate::id::new_record_id;
+                use crate::record::Ref;
                 let mut r = FunRecordBuilder::new("col_l").build();
-                r._supports.push(Ref { id: new_record_id(), strength: 0.5 });
+                r._supports.push(Ref {
+                    id: new_record_id(),
+                    strength: 0.5,
+                });
                 r
             },
             // 19 – contradicts ref
             {
-                use crate::record::Ref;
                 use crate::id::new_record_id;
+                use crate::record::Ref;
                 let mut r = FunRecordBuilder::new("col_m").build();
-                r._contradicts.push(Ref { id: new_record_id(), strength: 0.3 });
+                r._contradicts.push(Ref {
+                    id: new_record_id(),
+                    strength: 0.3,
+                });
                 r
             },
             // 20 – all non-causal fields set
             {
+                use crate::id::new_record_id;
                 use crate::record::{Edge, Ref, Source};
                 use crate::types::SourceMethod;
-                use crate::id::new_record_id;
-                let e = Edge { label: "cites".to_string(), target: new_record_id(), props: vec![0x80], confidence: 0.8 };
-                let s = Source { origin: "sensor:01".to_string(), timestamp: 0, method: SourceMethod::Observation, confidence: 1.0 };
+                let e = Edge {
+                    label: "cites".to_string(),
+                    target: new_record_id(),
+                    props: vec![0x80],
+                    confidence: 0.8,
+                };
+                let s = Source {
+                    origin: "sensor:01".to_string(),
+                    timestamp: 0,
+                    method: SourceMethod::Observation,
+                    confidence: 1.0,
+                };
                 let mut r = FunRecordBuilder::new("col_n")
                     .tenant(99)
                     .data(vec![1, 2, 3, 4])
@@ -245,17 +264,33 @@ mod tests {
                     .source(s)
                     .valid_time(0, i64::MAX)
                     .build();
-                r._supports.push(Ref { id: new_record_id(), strength: 0.6 });
-                r._contradicts.push(Ref { id: new_record_id(), strength: 0.2 });
+                r._supports.push(Ref {
+                    id: new_record_id(),
+                    strength: 0.6,
+                });
+                r._contradicts.push(Ref {
+                    id: new_record_id(),
+                    strength: 0.2,
+                });
                 r
             },
         ];
 
         for (i, record) in test_cases.iter().enumerate() {
-            let encoded = record.encode().unwrap_or_else(|e| panic!("case {}: encode failed: {}", i + 1, e));
-            let decoded = FunRecord::decode(&encoded).unwrap_or_else(|e| panic!("case {}: decode failed: {}", i + 1, e));
-            let re_encoded = decoded.encode().unwrap_or_else(|e| panic!("case {}: re-encode failed: {}", i + 1, e));
-            assert_eq!(encoded, re_encoded, "case {}: encode(decode(encode(r))) != encode(r)", i + 1);
+            let encoded = record
+                .encode()
+                .unwrap_or_else(|e| panic!("case {}: encode failed: {}", i + 1, e));
+            let decoded = FunRecord::decode(&encoded)
+                .unwrap_or_else(|e| panic!("case {}: decode failed: {}", i + 1, e));
+            let re_encoded = decoded
+                .encode()
+                .unwrap_or_else(|e| panic!("case {}: re-encode failed: {}", i + 1, e));
+            assert_eq!(
+                encoded,
+                re_encoded,
+                "case {}: encode(decode(encode(r))) != encode(r)",
+                i + 1
+            );
         }
     }
 
@@ -308,9 +343,7 @@ mod tests {
         // a = 1200/4 = 300
         // b = 0*6 + 10*3 = 30
         // max(300, 30) = 300
-        let record = FunRecordBuilder::new("t")
-            .data(vec![0xAB; 1200])
-            .build();
+        let record = FunRecordBuilder::new("t").data(vec![0xAB; 1200]).build();
         assert_eq!(estimate_tokens(&record), 300);
     }
 

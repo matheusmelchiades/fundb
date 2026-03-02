@@ -1,6 +1,8 @@
 use std::ops::Bound;
 
-use fundb_core::{CausalEdge, CausalOrigin, CausalType, DirectionStatus, FunRecordBuilder, StabilityStatus};
+use fundb_core::{
+    CausalEdge, CausalOrigin, CausalType, DirectionStatus, FunRecordBuilder, StabilityStatus,
+};
 use fundb_indexes::{BTree, CausalDagIndex, ConfidenceIndex, HnswIndex};
 use fundb_integration_tests::{key_for_record, open_lsm};
 use uuid::Uuid;
@@ -81,7 +83,9 @@ fn test_hnsw_insert_search_recall() {
     // Insert 99 more random vectors
     for _ in 0..99 {
         let id = Uuid::now_v7();
-        let vec: Vec<f32> = (0..128).map(|i| (i as f32 * 0.1).cos() * rand_f32()).collect();
+        let vec: Vec<f32> = (0..128)
+            .map(|i| (i as f32 * 0.1).cos() * rand_f32())
+            .collect();
         index.insert(id, &vec).unwrap();
     }
 
@@ -126,9 +130,10 @@ fn test_causal_dag_with_real_edges() {
     let mut dag = CausalDagIndex::new();
 
     // Build a 10-node linear DAG: 0→1→2→...→9
-    let nodes: Vec<Uuid> = (0..10).map(|n| uuid(n)).collect();
+    let nodes: Vec<Uuid> = (0..10).map(uuid).collect();
     for i in 0..9 {
-        dag.insert_edge(causal_edge(nodes[i], nodes[i + 1], 0.9)).unwrap();
+        dag.insert_edge(causal_edge(nodes[i], nodes[i + 1], 0.9))
+            .unwrap();
     }
 
     // Find paths from node 0 to node 9
@@ -164,7 +169,11 @@ fn test_causal_dag_closure_cache() {
     let paths1 = dag.paths(a, c, 10, 0.0);
     let paths2 = dag.paths(a, c, 10, 0.0);
 
-    assert_eq!(paths1.len(), paths2.len(), "cached closure should give same result");
+    assert_eq!(
+        paths1.len(),
+        paths2.len(),
+        "cached closure should give same result"
+    );
     assert!(!paths1.is_empty(), "should find path a→b→c");
 }
 
@@ -204,7 +213,7 @@ fn test_confidence_index_range() {
         let conf = i as f32 / 10.0;
         let id = Uuid::from_u128(i as u128);
         index.insert(id, conf).unwrap();
-        if conf >= 0.4 && conf <= 0.8 {
+        if (0.4..=0.8).contains(&conf) {
             expected += 1;
         }
     }
@@ -244,12 +253,20 @@ fn test_btree_insert_delete_integrity() {
 
     // Verify deleted keys are gone
     for i in (0..1000i64).step_by(2) {
-        assert!(tree.get(&i).unwrap().is_none(), "deleted key {} should be gone", i);
+        assert!(
+            tree.get(&i).unwrap().is_none(),
+            "deleted key {} should be gone",
+            i
+        );
     }
 
     // Verify remaining keys still exist
     for i in (1..1000i64).step_by(2) {
-        assert!(tree.get(&i).unwrap().is_some(), "key {} should still exist", i);
+        assert!(
+            tree.get(&i).unwrap().is_some(),
+            "key {} should still exist",
+            i
+        );
     }
 }
 
@@ -267,13 +284,18 @@ fn test_hnsw_high_dimension_recall() {
 
     for _ in 0..49 {
         let id = Uuid::now_v7();
-        let vec: Vec<f32> = (0..dims).map(|i| (i as f32 * 0.1).cos() * rand_f32()).collect();
+        let vec: Vec<f32> = (0..dims)
+            .map(|i| (i as f32 * 0.1).cos() * rand_f32())
+            .collect();
         index.insert(id, &vec).unwrap();
     }
 
     let results = index.search(&target_vec, 5, 1.0);
     let found = results.iter().any(|(id, _)| *id == target_id);
-    assert!(found, "high-dim HNSW should still find exact match in top-5");
+    assert!(
+        found,
+        "high-dim HNSW should still find exact match in top-5"
+    );
 }
 
 // ---------------------------------------------------------------------------

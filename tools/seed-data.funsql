@@ -1,0 +1,563 @@
+-- ============================================================================
+-- FunDB Comprehensive Seed Data
+-- Populates the database with realistic data across multiple collections
+-- for end-to-end testing of SELECT, filtering, and cognitive features.
+-- ============================================================================
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- USERS — 10 users with different roles
+-- ══════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO users (name, email, role, department, created_at)
+VALUES ('Alice Silva', 'alice@fundb.io', 'admin', 'engineering', '2025-01-15T10:00:00Z');
+
+INSERT INTO users (name, email, role, department, created_at)
+VALUES ('Bob Santos', 'bob@fundb.io', 'developer', 'engineering', '2025-02-20T14:30:00Z');
+
+INSERT INTO users (name, email, role, department, created_at)
+VALUES ('Carol Souza', 'carol@fundb.io', 'developer', 'engineering', '2025-03-10T09:15:00Z');
+
+INSERT INTO users (name, email, role, department, created_at)
+VALUES ('Dave Oliveira', 'dave@fundb.io', 'moderator', 'community', '2025-04-05T16:45:00Z');
+
+INSERT INTO users (name, email, role, department, created_at)
+VALUES ('Eva Lima', 'eva@fundb.io', 'analyst', 'data', '2025-05-12T11:20:00Z');
+
+INSERT INTO users (name, email, role, department, created_at)
+VALUES ('Frank Pereira', 'frank@fundb.io', 'developer', 'engineering', '2025-06-01T08:00:00Z');
+
+INSERT INTO users (name, email, role, department, created_at)
+VALUES ('Grace Almeida', 'grace@fundb.io', 'designer', 'product', '2025-06-15T13:45:00Z');
+
+INSERT INTO users (name, email, role, department, created_at)
+VALUES ('Henry Costa', 'henry@fundb.io', 'manager', 'engineering', '2025-07-01T10:30:00Z');
+
+INSERT INTO users (name, email, role, department, created_at)
+VALUES ('Iris Fernandes', 'iris@fundb.io', 'analyst', 'data', '2025-07-20T15:00:00Z');
+
+INSERT INTO users (name, email, role, department, created_at)
+VALUES ('Jack Martins', 'jack@fundb.io', 'developer', 'engineering', '2025-08-01T09:00:00Z');
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- PRODUCTS — 12 products across categories
+-- ══════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO products (name, category, price, stock, description, _vector)
+VALUES (
+  'Neural Keyboard Pro',
+  'hardware',
+  299.99,
+  150,
+  'Mechanical keyboard with AI-powered adaptive key mapping and haptic feedback',
+  [0.12, 0.85, 0.33, 0.67, 0.91, 0.22, 0.45, 0.78]
+);
+
+INSERT INTO products (name, category, price, stock, description, _vector)
+VALUES (
+  'Quantum Mouse X1',
+  'hardware',
+  149.99,
+  300,
+  'Precision mouse with predictive tracking and ergonomic design',
+  [0.88, 0.15, 0.42, 0.71, 0.29, 0.63, 0.51, 0.37]
+);
+
+INSERT INTO products (name, category, price, stock, description, _vector)
+VALUES (
+  'Holo Monitor 32',
+  'display',
+  1299.99,
+  45,
+  '32-inch holographic display with eye tracking and ambient light adjustment',
+  [0.55, 0.92, 0.18, 0.44, 0.76, 0.31, 0.89, 0.60]
+);
+
+INSERT INTO products (name, category, price, stock, description, _vector)
+VALUES (
+  'Cloud Dock Ultra',
+  'accessories',
+  89.99,
+  500,
+  'Universal docking station with auto-config and power delivery',
+  [0.33, 0.47, 0.81, 0.19, 0.55, 0.72, 0.28, 0.94]
+);
+
+INSERT INTO products (name, category, price, stock, description, _vector)
+VALUES (
+  'Smart Cable Kit',
+  'accessories',
+  39.99,
+  1000,
+  'Self-organizing cable management system with magnetic connectors',
+  [0.21, 0.68, 0.53, 0.87, 0.14, 0.46, 0.79, 0.35]
+);
+
+INSERT INTO products (name, category, price, stock, description, _vector)
+VALUES (
+  'AI Webcam 4K',
+  'peripherals',
+  199.99,
+  200,
+  '4K webcam with automatic framing, background blur, and noise cancellation',
+  [0.72, 0.34, 0.91, 0.15, 0.83, 0.48, 0.27, 0.66]
+);
+
+INSERT INTO products (name, category, price, stock, description, _vector)
+VALUES (
+  'Neural Headset',
+  'audio',
+  349.99,
+  120,
+  'Wireless headset with brain-computer interface for focus detection',
+  [0.44, 0.77, 0.29, 0.88, 0.52, 0.16, 0.93, 0.41]
+);
+
+INSERT INTO products (name, category, price, stock, description, _vector)
+VALUES (
+  'Ergonomic Desk Mat',
+  'accessories',
+  59.99,
+  800,
+  'Pressure-sensitive desk mat with posture analytics',
+  [0.19, 0.56, 0.74, 0.38, 0.61, 0.83, 0.22, 0.47]
+);
+
+INSERT INTO products (name, category, price, stock, description, _vector)
+VALUES (
+  'Code Editor Tablet',
+  'hardware',
+  599.99,
+  80,
+  'E-ink tablet optimized for code review with syntax highlighting',
+  [0.67, 0.23, 0.85, 0.41, 0.78, 0.12, 0.59, 0.93]
+);
+
+INSERT INTO products (name, category, price, stock, description, _vector)
+VALUES (
+  'Ambient Speaker',
+  'audio',
+  129.99,
+  250,
+  'Spatial audio speaker that adapts sound based on room acoustics',
+  [0.38, 0.81, 0.47, 0.62, 0.25, 0.73, 0.56, 0.14]
+);
+
+INSERT INTO products (name, category, price, stock, description, _vector)
+VALUES (
+  'Holo Monitor 27',
+  'display',
+  899.99,
+  90,
+  '27-inch holographic display for developers with split-view support',
+  [0.51, 0.89, 0.22, 0.48, 0.71, 0.35, 0.84, 0.57]
+);
+
+INSERT INTO products (name, category, price, stock, description, _vector)
+VALUES (
+  'Portable Projector',
+  'display',
+  449.99,
+  60,
+  'Pocket-sized laser projector with 4K output and gesture controls',
+  [0.63, 0.41, 0.76, 0.28, 0.92, 0.54, 0.17, 0.85]
+);
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- ORDERS — 15 orders linking users to products
+-- ══════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Alice Silva', 'Neural Keyboard Pro', 1, 299.99, 'delivered', '2025-06-01T08:00:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Bob Santos', 'Holo Monitor 32', 1, 1299.99, 'delivered', '2025-06-15T12:00:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Alice Silva', 'Quantum Mouse X1', 2, 299.98, 'delivered', '2025-06-20T15:30:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Carol Souza', 'Smart Cable Kit', 3, 119.97, 'shipped', '2025-07-01T09:00:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Dave Oliveira', 'Cloud Dock Ultra', 1, 89.99, 'delivered', '2025-07-10T17:00:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Eva Lima', 'AI Webcam 4K', 1, 199.99, 'shipped', '2025-07-15T10:00:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Frank Pereira', 'Neural Headset', 1, 349.99, 'pending', '2025-08-01T14:00:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Grace Almeida', 'Ergonomic Desk Mat', 2, 119.98, 'delivered', '2025-08-05T11:00:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Henry Costa', 'Code Editor Tablet', 1, 599.99, 'delivered', '2025-08-10T16:00:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Bob Santos', 'Ambient Speaker', 2, 259.98, 'shipped', '2025-08-20T09:30:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Alice Silva', 'Neural Headset', 1, 349.99, 'delivered', '2025-09-01T13:00:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Iris Fernandes', 'Holo Monitor 27', 1, 899.99, 'pending', '2025-09-10T10:00:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Jack Martins', 'Portable Projector', 1, 449.99, 'shipped', '2025-09-15T14:30:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Carol Souza', 'AI Webcam 4K', 1, 199.99, 'delivered', '2025-09-20T08:00:00Z');
+
+INSERT INTO orders (user_name, product_name, quantity, total, status, ordered_at)
+VALUES ('Dave Oliveira', 'Quantum Mouse X1', 1, 149.99, 'pending', '2025-10-01T11:00:00Z');
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- REVIEWS — 12 reviews with confidence scores
+-- ══════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO reviews (user_name, product_name, rating, text, _confidence)
+VALUES ('Alice Silva', 'Neural Keyboard Pro', 5, 'Best keyboard I have ever used. The AI mapping learns my patterns within days.', 0.95);
+
+INSERT INTO reviews (user_name, product_name, rating, text, _confidence)
+VALUES ('Bob Santos', 'Holo Monitor 32', 4, 'Stunning display, but the holographic mode takes a while to calibrate properly.', 0.82);
+
+INSERT INTO reviews (user_name, product_name, rating, text, _confidence)
+VALUES ('Carol Souza', 'Smart Cable Kit', 3, 'Decent cable management. The magnetic connectors are neat but nothing groundbreaking.', 0.71);
+
+INSERT INTO reviews (user_name, product_name, rating, text, _confidence)
+VALUES ('Dave Oliveira', 'Cloud Dock Ultra', 5, 'Plug and play, auto-detected every device instantly. Rock solid.', 0.93);
+
+INSERT INTO reviews (user_name, product_name, rating, text, _confidence)
+VALUES ('Eva Lima', 'AI Webcam 4K', 4, 'Excellent image quality. The auto-framing is impressive for video calls.', 0.88);
+
+INSERT INTO reviews (user_name, product_name, rating, text, _confidence)
+VALUES ('Frank Pereira', 'Neural Headset', 5, 'The focus detection feature is a game changer for deep work sessions.', 0.91);
+
+INSERT INTO reviews (user_name, product_name, rating, text, _confidence)
+VALUES ('Grace Almeida', 'Ergonomic Desk Mat', 4, 'Love the posture analytics. It nudged me to fix my sitting habits.', 0.85);
+
+INSERT INTO reviews (user_name, product_name, rating, text, _confidence)
+VALUES ('Henry Costa', 'Code Editor Tablet', 5, 'Perfect for code reviews on the go. E-ink is so much easier on the eyes.', 0.94);
+
+INSERT INTO reviews (user_name, product_name, rating, text, _confidence)
+VALUES ('Alice Silva', 'Quantum Mouse X1', 4, 'Very precise tracking. The predictive movement takes some getting used to.', 0.79);
+
+INSERT INTO reviews (user_name, product_name, rating, text, _confidence)
+VALUES ('Bob Santos', 'Ambient Speaker', 3, 'Good sound quality but the room adaptation feature is hit or miss.', 0.68);
+
+INSERT INTO reviews (user_name, product_name, rating, text, _confidence)
+VALUES ('Iris Fernandes', 'Holo Monitor 27', 4, 'Great developer monitor. Split-view works beautifully for side-by-side diffs.', 0.87);
+
+INSERT INTO reviews (user_name, product_name, rating, text, _confidence)
+VALUES ('Jack Martins', 'Portable Projector', 5, 'Incredible for presentations. 4K output from something that fits in my pocket.', 0.92);
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- ARTICLES — 8 articles for semantic search testing
+-- ══════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO articles (title, body, author, category, published_at, _vector)
+VALUES (
+  'Introduction to FunDB',
+  'FunDB is an AI-native cognitive database designed for the next generation of applications. It combines document storage, vector search, graph traversal, and causal reasoning into a single unified system.',
+  'Alice Silva',
+  'tutorial',
+  '2025-08-01T10:00:00Z',
+  [0.45, 0.78, 0.12, 0.93, 0.34, 0.67, 0.55, 0.21]
+);
+
+INSERT INTO articles (title, body, author, category, published_at, _vector)
+VALUES (
+  'Vector Search Deep Dive',
+  'Understanding how vector similarity search works under the hood. We explore HNSW indexes, cosine distance metrics, and approximate nearest neighbor algorithms used in FunDB.',
+  'Bob Santos',
+  'technical',
+  '2025-08-15T14:00:00Z',
+  [0.82, 0.19, 0.64, 0.37, 0.91, 0.28, 0.73, 0.46]
+);
+
+INSERT INTO articles (title, body, author, category, published_at, _vector)
+VALUES (
+  'Graph Databases vs FunDB',
+  'Comparing traditional graph databases with FunDB integrated graph traversal. Unlike Neo4j or ArangoDB, FunDB embeds graph edges directly into the record model.',
+  'Carol Souza',
+  'comparison',
+  '2025-09-01T09:00:00Z',
+  [0.56, 0.41, 0.88, 0.23, 0.69, 0.52, 0.17, 0.84]
+);
+
+INSERT INTO articles (title, body, author, category, published_at, _vector)
+VALUES (
+  'Building AI Agents with FunDB',
+  'How to use FunDB as the memory layer for autonomous AI agents. REMEMBER, RECALL, and FORGET commands give agents persistent, searchable memory with confidence tracking.',
+  'Dave Oliveira',
+  'tutorial',
+  '2025-09-15T11:00:00Z',
+  [0.31, 0.85, 0.47, 0.72, 0.19, 0.93, 0.38, 0.61]
+);
+
+INSERT INTO articles (title, body, author, category, published_at, _vector)
+VALUES (
+  'Causal Reasoning in Databases',
+  'An introduction to causal inference inside FunDB. From explicit causal edges to Granger causality and structural causal models, FunDB supports three tiers of causal reasoning.',
+  'Eva Lima',
+  'technical',
+  '2025-10-01T10:00:00Z',
+  [0.68, 0.22, 0.79, 0.55, 0.43, 0.86, 0.31, 0.74]
+);
+
+INSERT INTO articles (title, body, author, category, published_at, _vector)
+VALUES (
+  'FunDB Performance Benchmarks',
+  'We benchmark FunDB against PostgreSQL, MongoDB, and Pinecone across different workloads: OLTP writes, vector search, and graph traversal queries.',
+  'Frank Pereira',
+  'benchmark',
+  '2025-10-15T15:00:00Z',
+  [0.77, 0.33, 0.51, 0.89, 0.16, 0.62, 0.44, 0.95]
+);
+
+INSERT INTO articles (title, body, author, category, published_at, _vector)
+VALUES (
+  'Confidence Scores Explained',
+  'How FunDB propagates confidence scores through query operations. JOIN uses minimum, UNION uses maximum, and aggregation uses weighted average.',
+  'Grace Almeida',
+  'tutorial',
+  '2025-11-01T09:30:00Z',
+  [0.42, 0.91, 0.35, 0.68, 0.57, 0.24, 0.83, 0.49]
+);
+
+INSERT INTO articles (title, body, author, category, published_at, _vector)
+VALUES (
+  'Migrating from PostgreSQL to FunDB',
+  'A practical guide to migrating your PostgreSQL application to FunDB. FunDB speaks the PostgreSQL wire protocol, so most clients work out of the box.',
+  'Henry Costa',
+  'guide',
+  '2025-11-15T12:00:00Z',
+  [0.59, 0.27, 0.94, 0.41, 0.83, 0.18, 0.66, 0.52]
+);
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- DOCUMENTS — 10 knowledge base documents for cognitive queries
+-- ══════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO documents (title, content, source, doc_type, _confidence, _vector)
+VALUES (
+  'Machine Learning Fundamentals',
+  'Machine learning is a subset of artificial intelligence that enables systems to learn from data. Supervised learning uses labeled datasets, while unsupervised learning discovers hidden patterns.',
+  'MIT OpenCourseWare',
+  'education',
+  0.96,
+  [0.91, 0.45, 0.23, 0.78, 0.56, 0.34, 0.67, 0.12]
+);
+
+INSERT INTO documents (title, content, source, doc_type, _confidence, _vector)
+VALUES (
+  'Neural Network Architecture',
+  'Deep neural networks consist of multiple layers of interconnected neurons. Each layer transforms input data through weighted connections and activation functions.',
+  'Stanford CS231n',
+  'education',
+  0.93,
+  [0.87, 0.41, 0.29, 0.73, 0.62, 0.38, 0.55, 0.19]
+);
+
+INSERT INTO documents (title, content, source, doc_type, _confidence, _vector)
+VALUES (
+  'Database Indexing Strategies',
+  'B-tree indexes provide O(log n) lookup for equality and range queries. Hash indexes offer O(1) equality lookups. LSM-trees optimize for write-heavy workloads.',
+  'Database Internals by Alex Petrov',
+  'reference',
+  0.91,
+  [0.34, 0.72, 0.88, 0.15, 0.49, 0.63, 0.27, 0.81]
+);
+
+INSERT INTO documents (title, content, source, doc_type, _confidence, _vector)
+VALUES (
+  'Distributed Consensus Algorithms',
+  'Raft is a consensus algorithm designed for understandability. It ensures that all nodes in a distributed system agree on the same log of commands through leader election and log replication.',
+  'In Search of an Understandable Consensus Algorithm',
+  'paper',
+  0.89,
+  [0.52, 0.18, 0.76, 0.93, 0.41, 0.67, 0.33, 0.85]
+);
+
+INSERT INTO documents (title, content, source, doc_type, _confidence, _vector)
+VALUES (
+  'Vector Similarity Metrics',
+  'Cosine similarity measures the angle between two vectors. Euclidean distance measures absolute distance. Dot product similarity combines magnitude and direction.',
+  'Information Retrieval Textbook',
+  'reference',
+  0.94,
+  [0.78, 0.25, 0.61, 0.42, 0.89, 0.33, 0.71, 0.47]
+);
+
+INSERT INTO documents (title, content, source, doc_type, _confidence, _vector)
+VALUES (
+  'Causal Inference Methods',
+  'Pearl causal model uses directed acyclic graphs to represent cause-effect relationships. Interventional queries ask what happens if we change a variable. Counterfactuals ask what would have happened.',
+  'The Book of Why by Judea Pearl',
+  'reference',
+  0.92,
+  [0.63, 0.39, 0.84, 0.21, 0.57, 0.78, 0.45, 0.91]
+);
+
+INSERT INTO documents (title, content, source, doc_type, _confidence, _vector)
+VALUES (
+  'Time-Series Data Management',
+  'Time-series databases optimize for sequential writes and range queries over time. Bitemporal models track both the valid time and the system time of each record.',
+  'Timescale Documentation',
+  'reference',
+  0.87,
+  [0.41, 0.83, 0.52, 0.19, 0.74, 0.36, 0.68, 0.95]
+);
+
+INSERT INTO documents (title, content, source, doc_type, _confidence, _vector)
+VALUES (
+  'Graph Traversal Algorithms',
+  'Breadth-first search explores all neighbors before going deeper. Depth-first search explores as far as possible before backtracking. Both have O(V+E) complexity.',
+  'Introduction to Algorithms by CLRS',
+  'education',
+  0.95,
+  [0.29, 0.67, 0.43, 0.81, 0.55, 0.92, 0.18, 0.73]
+);
+
+INSERT INTO documents (title, content, source, doc_type, _confidence, _vector)
+VALUES (
+  'Prompt Engineering Best Practices',
+  'Effective prompts are specific, provide context, and include examples. Chain-of-thought prompting helps with reasoning tasks. System prompts set the behavior of AI assistants.',
+  'Anthropic Documentation',
+  'guide',
+  0.88,
+  [0.55, 0.31, 0.79, 0.46, 0.82, 0.17, 0.94, 0.63]
+);
+
+INSERT INTO documents (title, content, source, doc_type, _confidence, _vector)
+VALUES (
+  'Embedding Models Comparison',
+  'OpenAI text-embedding-3 produces 1536-dimensional vectors. Cohere embed-v3 supports multiple languages. Sentence transformers are open-source alternatives for local deployment.',
+  'AI Engineering Blog',
+  'comparison',
+  0.85,
+  [0.73, 0.48, 0.16, 0.92, 0.37, 0.65, 0.51, 0.28]
+);
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- METRICS — 15 system metrics for time-series testing
+-- ══════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('cpu_usage', 42.5, 'percent', 'fundb-node-1', '2025-10-01T00:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('cpu_usage', 67.8, 'percent', 'fundb-node-1', '2025-10-01T01:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('cpu_usage', 23.1, 'percent', 'fundb-node-1', '2025-10-01T02:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('memory_usage', 4096.0, 'mb', 'fundb-node-1', '2025-10-01T00:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('memory_usage', 4352.0, 'mb', 'fundb-node-1', '2025-10-01T01:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('memory_usage', 3890.0, 'mb', 'fundb-node-1', '2025-10-01T02:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('disk_io', 1250.7, 'ops_per_sec', 'fundb-node-1', '2025-10-01T00:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('disk_io', 3420.3, 'ops_per_sec', 'fundb-node-1', '2025-10-01T01:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('disk_io', 890.1, 'ops_per_sec', 'fundb-node-1', '2025-10-01T02:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('query_latency', 2.3, 'ms', 'fundb-node-1', '2025-10-01T00:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('query_latency', 5.7, 'ms', 'fundb-node-1', '2025-10-01T01:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('query_latency', 1.8, 'ms', 'fundb-node-1', '2025-10-01T02:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('connections_active', 28.0, 'count', 'fundb-node-1', '2025-10-01T00:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('connections_active', 45.0, 'count', 'fundb-node-1', '2025-10-01T01:00:00Z');
+
+INSERT INTO metrics (name, value, unit, host, recorded_at)
+VALUES ('connections_active', 12.0, 'count', 'fundb-node-1', '2025-10-01T02:00:00Z');
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- EVENTS — 12 system events for audit/logging testing
+-- ══════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO events (event_type, actor, target, detail, severity, occurred_at)
+VALUES ('user_login', 'Alice Silva', 'auth_service', 'Successful login from 192.168.1.10', 'info', '2025-10-01T08:00:00Z');
+
+INSERT INTO events (event_type, actor, target, detail, severity, occurred_at)
+VALUES ('query_executed', 'Bob Santos', 'fundb-node-1', 'SELECT * FROM products WHERE category = hardware', 'info', '2025-10-01T08:15:00Z');
+
+INSERT INTO events (event_type, actor, target, detail, severity, occurred_at)
+VALUES ('user_login_failed', 'unknown', 'auth_service', 'Failed login attempt from 10.0.0.55', 'warning', '2025-10-01T08:30:00Z');
+
+INSERT INTO events (event_type, actor, target, detail, severity, occurred_at)
+VALUES ('collection_created', 'Alice Silva', 'fundb-node-1', 'Created collection: analytics', 'info', '2025-10-01T09:00:00Z');
+
+INSERT INTO events (event_type, actor, target, detail, severity, occurred_at)
+VALUES ('bulk_insert', 'Carol Souza', 'fundb-node-1', 'Inserted 500 records into metrics', 'info', '2025-10-01T09:30:00Z');
+
+INSERT INTO events (event_type, actor, target, detail, severity, occurred_at)
+VALUES ('memory_warning', 'system', 'fundb-node-1', 'Memory usage exceeded 80% threshold', 'warning', '2025-10-01T10:00:00Z');
+
+INSERT INTO events (event_type, actor, target, detail, severity, occurred_at)
+VALUES ('compaction_started', 'system', 'fundb-node-1', 'SSTable compaction triggered for level 2', 'info', '2025-10-01T10:30:00Z');
+
+INSERT INTO events (event_type, actor, target, detail, severity, occurred_at)
+VALUES ('user_login', 'Dave Oliveira', 'auth_service', 'Successful login from 192.168.1.22', 'info', '2025-10-01T11:00:00Z');
+
+INSERT INTO events (event_type, actor, target, detail, severity, occurred_at)
+VALUES ('query_timeout', 'Eva Lima', 'fundb-node-1', 'Query exceeded 30s timeout: complex graph traversal', 'error', '2025-10-01T11:30:00Z');
+
+INSERT INTO events (event_type, actor, target, detail, severity, occurred_at)
+VALUES ('backup_completed', 'system', 'fundb-node-1', 'Daily backup completed: 2.3GB snapshot', 'info', '2025-10-01T12:00:00Z');
+
+INSERT INTO events (event_type, actor, target, detail, severity, occurred_at)
+VALUES ('index_rebuilt', 'system', 'fundb-node-1', 'HNSW vector index rebuilt for documents collection', 'info', '2025-10-01T12:30:00Z');
+
+INSERT INTO events (event_type, actor, target, detail, severity, occurred_at)
+VALUES ('user_login_failed', 'unknown', 'auth_service', 'Brute force detection: 5 failed attempts from 10.0.0.55', 'error', '2025-10-01T13:00:00Z');
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- TASKS — 10 project tasks for project management testing
+-- ══════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO tasks (title, assignee, status, priority, project, created_at)
+VALUES ('Implement vector search pagination', 'Bob Santos', 'done', 'high', 'FunDB Core', '2025-09-01T10:00:00Z');
+
+INSERT INTO tasks (title, assignee, status, priority, project, created_at)
+VALUES ('Add HNSW index auto-tuning', 'Carol Souza', 'in_progress', 'high', 'FunDB Core', '2025-09-05T11:00:00Z');
+
+INSERT INTO tasks (title, assignee, status, priority, project, created_at)
+VALUES ('Write migration guide from PostgreSQL', 'Henry Costa', 'done', 'medium', 'Documentation', '2025-09-10T09:00:00Z');
+
+INSERT INTO tasks (title, assignee, status, priority, project, created_at)
+VALUES ('Design dashboard UI mockups', 'Grace Almeida', 'in_progress', 'medium', 'FunDB Console', '2025-09-15T14:00:00Z');
+
+INSERT INTO tasks (title, assignee, status, priority, project, created_at)
+VALUES ('Benchmark Raft consensus throughput', 'Frank Pereira', 'todo', 'high', 'FunDB Core', '2025-09-20T10:00:00Z');
+
+INSERT INTO tasks (title, assignee, status, priority, project, created_at)
+VALUES ('Add CSV export to CLI', 'Jack Martins', 'done', 'low', 'FunDB CLI', '2025-09-25T08:00:00Z');
+
+INSERT INTO tasks (title, assignee, status, priority, project, created_at)
+VALUES ('Implement confidence decay function', 'Eva Lima', 'in_progress', 'high', 'FunDB Core', '2025-10-01T10:00:00Z');
+
+INSERT INTO tasks (title, assignee, status, priority, project, created_at)
+VALUES ('Create Python SDK quickstart', 'Dave Oliveira', 'todo', 'medium', 'SDKs', '2025-10-05T09:00:00Z');
+
+INSERT INTO tasks (title, assignee, status, priority, project, created_at)
+VALUES ('Fix memory leak in WAL compaction', 'Alice Silva', 'in_progress', 'critical', 'FunDB Core', '2025-10-10T16:00:00Z');
+
+INSERT INTO tasks (title, assignee, status, priority, project, created_at)
+VALUES ('Set up nightly performance regression tests', 'Iris Fernandes', 'todo', 'medium', 'Infrastructure', '2025-10-15T11:00:00Z');

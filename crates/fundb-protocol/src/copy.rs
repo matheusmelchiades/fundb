@@ -251,11 +251,7 @@ mod tests {
         let row = parse_copy_text_row("alice\t\\N\tNY");
         assert_eq!(
             row,
-            vec![
-                Some("alice".to_string()),
-                None,
-                Some("NY".to_string()),
-            ]
+            vec![Some("alice".to_string()), None, Some("NY".to_string()),]
         );
     }
 

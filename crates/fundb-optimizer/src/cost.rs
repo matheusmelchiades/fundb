@@ -1,9 +1,9 @@
+use fundb_sql::{BinaryOp, Expr, Literal, LogicalPlan};
 /// Cost-based optimizer for FunDB.
 ///
 /// Translates a `LogicalPlan` into a `PhysicalPlan` by applying cost estimates
 /// derived from table statistics (row counts, histograms, index sizes).
 use std::collections::HashMap;
-use fundb_sql::{LogicalPlan, Expr, Literal, BinaryOp};
 
 // ── Statistics ─────────────────────────────────────────────────────────────────
 
@@ -70,10 +70,7 @@ pub enum PhysicalPlan {
         estimated_rows: u64,
     },
     /// Row limit.
-    Limit {
-        input: Box<PhysicalPlan>,
-        n: usize,
-    },
+    Limit { input: Box<PhysicalPlan>, n: usize },
     /// Aggregate.
     Aggregate {
         input: Box<PhysicalPlan>,
@@ -337,8 +334,7 @@ impl CostOptimizer {
                     if selectivity < 0.01 {
                         // Very selective: index scan wins.
                         let index_field = predicate_index_field(&pred);
-                        let selected =
-                            (row_count as f64 * selectivity).ceil() as u64;
+                        let selected = (row_count as f64 * selectivity).ceil() as u64;
                         PhysicalPlan::IndexScan {
                             estimated_cost: index_scan_cost(row_count, selectivity),
                             estimated_rows: selected,
@@ -375,8 +371,7 @@ impl CostOptimizer {
                     .get(&collection)
                     .copied()
                     .unwrap_or(10_000);
-                let estimated_rows =
-                    (row_count as f64 * threshold as f64 * 0.1) as u64;
+                let estimated_rows = (row_count as f64 * threshold as f64 * 0.1) as u64;
                 PhysicalPlan::VectorScan {
                     collection,
                     vector_field,

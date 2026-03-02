@@ -1,0 +1,15 @@
+-- ============================================================================
+-- FunDB Smoke Test
+-- These queries work with the current StubHandler
+-- ============================================================================
+
+-- Basic connectivity test
+SELECT 1;
+
+-- Server version
+SELECT VERSION();
+
+-- Multiple simple selects
+SELECT 1;
+SELECT 2;
+SELECT 3;

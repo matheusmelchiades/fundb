@@ -15,6 +15,7 @@ pub struct CliArgs {
     pub user: String,
     pub password: Option<String>,
     pub command: Option<String>,
+    pub file: Option<String>,
     pub no_color: bool,
     pub output_format: OutputFormat,
 }
@@ -28,6 +29,7 @@ impl Default for CliArgs {
             user: "fundb".to_string(),
             password: None,
             command: None,
+            file: None,
             no_color: false,
             output_format: OutputFormat::Table,
         }
@@ -63,7 +65,10 @@ impl CliArgs {
                     i += 1;
                     let v = Self::require_next(&raw, i, arg)?;
                     args.port = v.parse::<u16>().map_err(|_| {
-                        anyhow::anyhow!("Invalid port number '{}': must be a number between 1 and 65535", v)
+                        anyhow::anyhow!(
+                            "Invalid port number '{}': must be a number between 1 and 65535",
+                            v
+                        )
                     })?;
                 }
                 "--database" | "-d" => {
@@ -82,6 +87,10 @@ impl CliArgs {
                     i += 1;
                     args.command = Some(Self::require_next(&raw, i, arg)?);
                 }
+                "--file" | "-i" => {
+                    i += 1;
+                    args.file = Some(Self::require_next(&raw, i, arg)?);
+                }
                 "--format" | "-f" => {
                     i += 1;
                     let v = Self::require_next(&raw, i, arg)?;
@@ -98,7 +107,10 @@ impl CliArgs {
                     };
                 }
                 other if other.starts_with('-') => {
-                    return Err(anyhow::anyhow!("Unknown argument '{}'. Run 'fundb --help' for usage information", other));
+                    return Err(anyhow::anyhow!(
+                        "Unknown argument '{}'. Run 'fundb --help' for usage information",
+                        other
+                    ));
                 }
                 _ => {
                     // Positional argument: treat as database name
@@ -113,9 +125,9 @@ impl CliArgs {
     }
 
     fn require_next(raw: &[String], i: usize, flag: &str) -> anyhow::Result<String> {
-        raw.get(i)
-            .cloned()
-            .ok_or_else(|| anyhow::anyhow!("Flag '{}' requires a value. Usage: {} <value>", flag, flag))
+        raw.get(i).cloned().ok_or_else(|| {
+            anyhow::anyhow!("Flag '{}' requires a value. Usage: {} <value>", flag, flag)
+        })
     }
 
     pub fn usage() -> &'static str {
@@ -129,6 +141,7 @@ Options:
   -u, --user <USER>         Username (default: fundb)
   -W, --password <PASSWORD> Password
   -c, --command <SQL>       Run single SQL command and exit
+  -i, --file <PATH>         Execute SQL statements from a .funsql file
   -f, --format <FMT>        Output format: table (default), json, csv
       --no-color            Disable ANSI color output
   -V, --version             Print version and exit
@@ -148,6 +161,7 @@ Meta-commands (in REPL mode):
 Examples:
   fundb --host localhost --port 5433
   fundb -c 'SELECT 1'
+  fundb -i seed-data.funsql
   fundb --format json -c 'SELECT * FROM documents LIMIT 5'
 "
     }

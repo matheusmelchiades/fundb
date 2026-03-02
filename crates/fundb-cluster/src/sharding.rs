@@ -260,7 +260,10 @@ impl ShardMap {
         let mut migrations = Vec::new();
         for shard_id in owned_shards {
             // Find the ring entry for this shard to get its hash.
-            if let Some(entry_hash) = self.ring.iter().find(|e| e.shard_id == shard_id)
+            if let Some(entry_hash) = self
+                .ring
+                .iter()
+                .find(|e| e.shard_id == shard_id)
                 .map(|e| e.hash)
             {
                 // The shard's ring entry is already for another node (node was removed).
@@ -284,7 +287,8 @@ impl ShardMap {
                 // entry for the removed node). Reassign via successor search.
                 // Use hash of shard_id itself as a stable key.
                 let hash = fnv1a_64(&shard_id.to_le_bytes());
-                let new_owner = self.ring
+                let new_owner = self
+                    .ring
                     .iter()
                     .find(|e| e.hash >= hash)
                     .or_else(|| self.ring.first())
@@ -366,7 +370,15 @@ impl ShardMap {
     /// Build the routing key string for a `(collection, record_id)` pair.
     #[inline]
     fn routing_key(&self, collection: &str, record_id: &Uuid) -> String {
-        format!("{}/{}", collection, record_id.as_bytes().iter().map(|b| format!("{:02x}", b)).collect::<String>())
+        format!(
+            "{}/{}",
+            collection,
+            record_id
+                .as_bytes()
+                .iter()
+                .map(|b| format!("{:02x}", b))
+                .collect::<String>()
+        )
     }
 
     /// Walk the sorted ring and return the `shard_id` of the first entry
@@ -400,7 +412,7 @@ impl ShardMap {
             match self.shard_owners.get(&shard_id).copied() {
                 Some(old_owner) if old_owner != new_owner => {
                     // The shard changed owner.
-                    if new_node.map_or(true, |n| new_owner == n) {
+                    if new_node.is_none_or(|n| new_owner == n) {
                         migrations.push(ShardMigration {
                             shard_id,
                             from_node: old_owner,
@@ -575,7 +587,10 @@ mod tests {
         }
 
         let shards = m.shards_for_collection("inventory");
-        assert!(!shards.is_empty(), "expected non-empty shard set for 'inventory'");
+        assert!(
+            !shards.is_empty(),
+            "expected non-empty shard set for 'inventory'"
+        );
 
         // Unknown collection should return empty.
         assert!(m.shards_for_collection("unknown").is_empty());
@@ -604,7 +619,9 @@ mod tests {
         m.set_replication_factor(3);
 
         let shard = m.shard_for("replicated", &Uuid::from_u128(0xABCD));
-        let group = m.replication_group(shard).expect("replication group missing");
+        let group = m
+            .replication_group(shard)
+            .expect("replication group missing");
 
         assert_eq!(group.replication_factor, 3);
         assert_eq!(group.shard_id, shard);
@@ -612,7 +629,11 @@ mod tests {
         let mut all = vec![group.leader];
         all.extend_from_slice(&group.followers);
         let unique: HashSet<_> = all.iter().collect();
-        assert_eq!(unique.len(), all.len(), "duplicate nodes in replication group");
+        assert_eq!(
+            unique.len(),
+            all.len(),
+            "duplicate nodes in replication group"
+        );
         assert_eq!(all.len(), 3, "expected 3 members in replication group");
     }
 

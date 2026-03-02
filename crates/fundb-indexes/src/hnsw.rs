@@ -5,9 +5,9 @@
 // Provides approximate nearest neighbour (ANN) search over millions of
 // high-dimensional embeddings in under 5 ms, enabling real-time RAG retrieval.
 
-use std::collections::{BinaryHeap, HashMap, HashSet};
-use std::cmp::Ordering;
 use anyhow::{anyhow, Result};
+use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use uuid::Uuid;
 
 // ---------------------------------------------------------------------------
@@ -121,11 +121,11 @@ impl HnswIndex {
         }
         // Add the node to all layers up to node_layer with an empty neighbour list.
         for l in 0..=node_layer {
-            self.layers[l].entry(id).or_insert_with(Vec::new);
+            self.layers[l].entry(id).or_default();
         }
 
         // If this is the very first node, set it as entry point and return.
-        let (mut ep_id, mut ep_layer) = match self.entry_point {
+        let (mut ep_id, ep_layer) = match self.entry_point {
             None => {
                 self.entry_point = Some((id, node_layer));
                 return Ok(());
@@ -147,7 +147,8 @@ impl HnswIndex {
 
         for layer in (0..=node_layer).rev() {
             // Find ef_construction nearest neighbours at this layer.
-            let neighbours = self.search_layer(vector, &entry_candidates, self.ef_construction, layer);
+            let neighbours =
+                self.search_layer(vector, &entry_candidates, self.ef_construction, layer);
 
             // Pick the m best to actually connect.
             let m_max = if layer == 0 { self.m * 2 } else { self.m };
@@ -155,23 +156,14 @@ impl HnswIndex {
 
             for nb in &neighbours[..connect_count] {
                 // new node -> neighbour
-                self.layers[layer]
-                    .entry(id)
-                    .or_insert_with(Vec::new)
-                    .push(nb.id);
+                self.layers[layer].entry(id).or_default().push(nb.id);
 
                 // neighbour -> new node (bidirectional)
-                self.layers[layer]
-                    .entry(nb.id)
-                    .or_insert_with(Vec::new)
-                    .push(id);
+                self.layers[layer].entry(nb.id).or_default().push(id);
 
                 // Prune neighbour's connections if over limit.
                 let nb_vec = self.vectors[&nb.id].clone();
-                let nb_neighbours = self.layers[layer]
-                    .get(&nb.id)
-                    .cloned()
-                    .unwrap_or_default();
+                let nb_neighbours = self.layers[layer].get(&nb.id).cloned().unwrap_or_default();
 
                 if nb_neighbours.len() > m_max {
                     let pruned = self.select_neighbours(&nb_vec, &nb_neighbours, m_max);
@@ -249,6 +241,11 @@ impl HnswIndex {
         self.live_count
     }
 
+    /// Returns `true` if there are no live (non-tombstoned) nodes.
+    pub fn is_empty(&self) -> bool {
+        self.live_count == 0
+    }
+
     /// Remove tombstoned nodes from all layers and rebuild edges.
     pub fn compact(&mut self) {
         if self.tombstones.is_empty() {
@@ -278,6 +275,7 @@ impl HnswIndex {
             if dead.contains(&ep_id) {
                 // Find any surviving node at the highest possible layer.
                 self.entry_point = None;
+                #[allow(clippy::never_loop)]
                 'outer: for layer in (0..self.layers.len()).rev() {
                     for &node_id in self.layers[layer].keys() {
                         self.entry_point = Some((node_id, layer));
@@ -371,10 +369,7 @@ impl HnswIndex {
         while let Some(std::cmp::Reverse(current)) = candidates.pop() {
             // Pruning: if current candidate is worse than the worst in result,
             // no further improvement is possible.
-            let worst_dist = result
-                .peek()
-                .map(|w| w.dist)
-                .unwrap_or(f32::INFINITY);
+            let worst_dist = result.peek().map(|w| w.dist).unwrap_or(f32::INFINITY);
 
             if current.dist > worst_dist && result.len() >= ef {
                 break;
@@ -407,7 +402,7 @@ impl HnswIndex {
 
         // Convert max-heap to sorted vec (nearest first).
         let mut out: Vec<Item> = result.into_vec();
-        out.sort_unstable_by(|a, b| a.cmp(b));
+        out.sort_unstable();
         out
     }
 
@@ -416,9 +411,7 @@ impl HnswIndex {
     fn select_neighbours(&self, node_vec: &[f32], candidates: &[Uuid], m: usize) -> Vec<Uuid> {
         let mut scored: Vec<(f32, Uuid)> = candidates
             .iter()
-            .filter_map(|&id| {
-                self.vectors.get(&id).map(|v| (euclidean(node_vec, v), id))
-            })
+            .filter_map(|&id| self.vectors.get(&id).map(|v| (euclidean(node_vec, v), id)))
             .collect();
         scored.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Ordering::Equal));
         scored.into_iter().take(m).map(|(_, id)| id).collect()
@@ -459,6 +452,7 @@ impl PqEncoder {
     ///
     /// Each subspace gets 256 centroids trained for 20 iterations.
     /// Training is limited to at most 10 000 vectors for efficiency.
+    #[allow(clippy::manual_is_multiple_of)]
     pub fn train(&mut self, vectors: &[Vec<f32>]) -> Result<()> {
         if vectors.is_empty() {
             return Err(anyhow!("cannot train on empty vector set"));
@@ -498,10 +492,7 @@ impl PqEncoder {
             let end = start + subdim;
 
             // Extract sub-vectors for this subspace.
-            let sub_vecs: Vec<Vec<f32>> = sample
-                .iter()
-                .map(|v| v[start..end].to_vec())
-                .collect();
+            let sub_vecs: Vec<Vec<f32>> = sample.iter().map(|v| v[start..end].to_vec()).collect();
 
             // Initialise centroids by picking the first `num_centroids` unique sub-vectors.
             let actual_k = num_centroids.min(sub_vecs.len());
@@ -567,7 +558,10 @@ impl PqEncoder {
     /// Sums Euclidean distances between the corresponding centroids for each
     /// subspace.
     pub fn approximate_distance(&self, encoded_a: &[u8], encoded_b: &[u8]) -> f32 {
-        assert!(self.trained, "PqEncoder must be trained before computing distances");
+        assert!(
+            self.trained,
+            "PqEncoder must be trained before computing distances"
+        );
         let mut total = 0.0f32;
         for sub in 0..self.num_subspaces {
             let ca = &self.codebooks[sub][encoded_a[sub] as usize];
@@ -642,7 +636,12 @@ mod tests {
         let query = make_vector(999, 4);
         let results = idx.search(&query, 5, 0.9);
 
-        assert_eq!(results.len(), 5, "expected exactly 5 results, got {}", results.len());
+        assert_eq!(
+            results.len(),
+            5,
+            "expected exactly 5 results, got {}",
+            results.len()
+        );
 
         // All distances must be non-negative.
         for (_, dist) in &results {
@@ -736,9 +735,7 @@ mod tests {
         let num_subspaces = 4;
         let mut pq = PqEncoder::new(dims, num_subspaces);
 
-        let training: Vec<Vec<f32>> = (0..300)
-            .map(|i| make_vector(i as u64, dims))
-            .collect();
+        let training: Vec<Vec<f32>> = (0..300).map(|i| make_vector(i as u64, dims)).collect();
 
         pq.train(&training).expect("train failed");
 
@@ -763,9 +760,7 @@ mod tests {
         let num_subspaces = 4;
         let mut pq = PqEncoder::new(dims, num_subspaces);
 
-        let training: Vec<Vec<f32>> = (0..300)
-            .map(|i| make_vector(i as u64, dims))
-            .collect();
+        let training: Vec<Vec<f32>> = (0..300).map(|i| make_vector(i as u64, dims)).collect();
         pq.train(&training).expect("train failed");
 
         // Identical vectors should encode to the same code → distance == 0.

@@ -21,10 +21,7 @@ pub enum Expr {
         right: Box<Expr>,
     },
     /// A unary operation.
-    UnaryOp {
-        op: UnaryOp,
-        operand: Box<Expr>,
-    },
+    UnaryOp { op: UnaryOp, operand: Box<Expr> },
     /// A function call, e.g. `count(*)`.
     FunctionCall { name: String, args: Vec<Expr> },
     /// A named query parameter, e.g. `:param_name`.
@@ -176,10 +173,7 @@ pub enum LogicalPlan {
         order_by: Vec<SortExpr>,
     },
     /// Row limit.
-    Limit {
-        input: Box<LogicalPlan>,
-        n: usize,
-    },
+    Limit { input: Box<LogicalPlan>, n: usize },
     /// Context-window optimization wrapper.
     ContextOptimize {
         input: Box<LogicalPlan>,
@@ -203,7 +197,13 @@ pub enum LogicalPlan {
         had: HashMap<String, f64>,
         predict: String,
     },
+    /// INSERT INTO collection (columns) VALUES (row1), (row2), …
+    Insert {
+        collection: String,
+        columns: Vec<String>,
+        values: Vec<Vec<Expr>>,
+    },
     /// Placeholder for statements that produce no result set
-    /// (INSERT, UPDATE, DELETE, REMEMBER, etc.).
+    /// (UPDATE, DELETE, REMEMBER, etc.).
     Empty,
 }

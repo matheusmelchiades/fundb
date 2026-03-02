@@ -18,7 +18,7 @@ use fundb_core::{FunRecord, RecordKey};
 /// for long because the write lock is held only during the BTreeMap mutation.
 /// `size_bytes()` is maintained via an `AtomicUsize` counter for lock-free reads.
 pub struct MemTable {
-    inner:      RwLock<BTreeMap<RecordKey, FunRecord>>,
+    inner: RwLock<BTreeMap<RecordKey, FunRecord>>,
     size_bytes: AtomicUsize,
 }
 
@@ -26,7 +26,7 @@ impl MemTable {
     /// Create a new, empty `MemTable`.
     pub fn new() -> Self {
         Self {
-            inner:      RwLock::new(BTreeMap::new()),
+            inner: RwLock::new(BTreeMap::new()),
             size_bytes: AtomicUsize::new(0),
         }
     }
@@ -50,11 +50,7 @@ impl MemTable {
 
     /// Return a clone of the record stored under `key`, or `None` if absent.
     pub fn get(&self, key: &RecordKey) -> Option<FunRecord> {
-        self.inner
-            .read()
-            .ok()?
-            .get(key)
-            .cloned()
+        self.inner.read().ok()?.get(key).cloned()
     }
 
     /// Return all entries whose key is in the half-open interval `[from, to)`,
@@ -261,7 +257,11 @@ mod tests {
         let frozen = mem.freeze();
 
         // The frozen snapshot has exactly 5 entries.
-        assert_eq!(frozen.len(), 5, "frozen snapshot must contain exactly 5 records");
+        assert_eq!(
+            frozen.len(),
+            5,
+            "frozen snapshot must contain exactly 5 records"
+        );
 
         // Entries must be sorted.
         let entries: Vec<_> = frozen.iter().collect();
@@ -282,7 +282,11 @@ mod tests {
         }
 
         // The frozen snapshot still has only 5 records.
-        assert_eq!(frozen.len(), 5, "freeze must be a snapshot; new inserts must not appear");
+        assert_eq!(
+            frozen.len(),
+            5,
+            "freeze must be a snapshot; new inserts must not appear"
+        );
     }
 
     // -----------------------------------------------------------------------

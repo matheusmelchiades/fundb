@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use fundb_protocol::pg_wire::{
-    BackendMessage, ConnContext, FieldDescription, QueryError, QueryHandler, QueryResult,
-    parse_startup_params,
+    parse_startup_params, BackendMessage, ConnContext, FieldDescription, QueryError, QueryHandler,
+    QueryResult,
 };
 
 // ---------------------------------------------------------------------------
@@ -92,7 +92,11 @@ async fn test_stub_handler_select_one() {
     let handler = StubHandler;
     let ctx = test_ctx();
 
-    let result = handler.execute("SELECT 1", &ctx).await.ok().expect("query execution failed");
+    let result = handler
+        .execute("SELECT 1", &ctx)
+        .await
+        .ok()
+        .expect("query execution failed");
     assert_eq!(result.columns.len(), 1);
     assert_eq!(result.rows.len(), 1);
     assert_eq!(result.rows[0][0], Some("1".to_string()));
@@ -106,13 +110,14 @@ async fn test_stub_handler_version() {
     let handler = StubHandler;
     let ctx = test_ctx();
 
-    let result = handler.execute("SELECT VERSION()", &ctx).await.ok().expect("query execution failed");
+    let result = handler
+        .execute("SELECT VERSION()", &ctx)
+        .await
+        .ok()
+        .expect("query execution failed");
     assert_eq!(result.rows.len(), 1);
     assert!(
-        result.rows[0][0]
-            .as_ref()
-            .unwrap()
-            .contains("FunDB"),
+        result.rows[0][0].as_ref().unwrap().contains("FunDB"),
         "version should contain 'FunDB'"
     );
 }
@@ -125,8 +130,15 @@ async fn test_stub_handler_unknown_returns_empty() {
     let handler = StubHandler;
     let ctx = test_ctx();
 
-    let result = handler.execute("EXPLAIN ANALYZE SELECT * FROM magic", &ctx).await.ok().expect("query execution failed");
-    assert!(result.rows.is_empty(), "unknown query should return empty result set");
+    let result = handler
+        .execute("EXPLAIN ANALYZE SELECT * FROM magic", &ctx)
+        .await
+        .ok()
+        .expect("query execution failed");
+    assert!(
+        result.rows.is_empty(),
+        "unknown query should return empty result set"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -212,7 +224,11 @@ async fn test_full_session_sequence() {
     assert_eq!(ready[0], b'Z');
 
     // 4. Query → result
-    let result = handler.execute("SELECT 1", &ctx).await.ok().expect("query execution failed");
+    let result = handler
+        .execute("SELECT 1", &ctx)
+        .await
+        .ok()
+        .expect("query execution failed");
 
     // 5. Encode RowDescription
     let row_desc = BackendMessage::RowDescription {

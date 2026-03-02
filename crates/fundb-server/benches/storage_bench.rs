@@ -121,7 +121,11 @@ fn bench_vector_index_build(c: &mut Criterion) {
 
     // Build deterministic index vectors once.
     let index: Vec<Vec<f32>> = (0..NUM_VECS)
-        .map(|i| (0..DIM).map(|d| ((i + d) as f32) / (NUM_VECS + DIM) as f32).collect())
+        .map(|i| {
+            (0..DIM)
+                .map(|d| ((i + d) as f32) / (NUM_VECS + DIM) as f32)
+                .collect()
+        })
         .collect();
 
     // Query vector — also deterministic.
@@ -133,7 +137,7 @@ fn bench_vector_index_build(c: &mut Criterion) {
         b.iter(|| {
             // Full build + search each iteration to validate total ANN overhead.
             let index_ref: &Vec<Vec<f32>> = black_box(&index);
-            let query_ref: &Vec<f32>       = black_box(&query);
+            let query_ref: &Vec<f32> = black_box(&query);
 
             let best_idx = index_ref
                 .iter()
@@ -162,15 +166,19 @@ fn bench_confidence_filter(c: &mut Criterion) {
     for i in 0..TOTAL {
         let conf = if i % 2 == 0 { 0.9_f32 } else { 0.5_f32 };
         let key = make_key("filter", i);
-        let record = FunRecordBuilder::new("filter")
-            .confidence(conf)
-            .build();
+        let record = FunRecordBuilder::new("filter").confidence(conf).build();
         mem.insert(key, record).expect("insert must not fail");
     }
 
     // Scan bounds spanning the entire "filter" collection.
-    let from_key = RecordKey { collection: "filter".to_string(), id: [0u8; 16] };
-    let to_key   = RecordKey { collection: "filter".to_string(), id: [255u8; 16] };
+    let from_key = RecordKey {
+        collection: "filter".to_string(),
+        id: [0u8; 16],
+    };
+    let to_key = RecordKey {
+        collection: "filter".to_string(),
+        id: [255u8; 16],
+    };
 
     let mut group = c.benchmark_group("storage");
     group.throughput(Throughput::Elements(TOTAL as u64));

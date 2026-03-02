@@ -2,7 +2,6 @@
 ///
 /// Reads SQL and meta-commands from stdin, dispatches them to the server or
 /// handles them locally, and prints results via the `Renderer`.
-
 use tokio::io::{AsyncBufReadExt, BufReader};
 
 use crate::commands::{MemorySubcommand, MetaCommand};
@@ -77,10 +76,7 @@ impl Repl {
 
             // Read a line
             let mut line = String::new();
-            let bytes_read = reader
-                .read_line(&mut line)
-                .await
-                .unwrap_or(0);
+            let bytes_read = reader.read_line(&mut line).await.unwrap_or(0);
 
             // EOF (Ctrl-D)
             if bytes_read == 0 {
@@ -114,9 +110,8 @@ impl Repl {
             }
 
             // --- Backslash line continuation ---
-            if trimmed.ends_with('\\') {
+            if let Some(without_cont) = trimmed.strip_suffix('\\') {
                 // Strip the trailing backslash and append to buffer
-                let without_cont = &trimmed[..trimmed.len() - 1];
                 sql_buf.push_str(without_cont);
                 sql_buf.push(' ');
                 continuation_lines += 1;
@@ -190,7 +185,10 @@ impl Repl {
                     crate::args::OutputFormat::Csv => "csv",
                 };
                 self.renderer.format = fmt;
-                println!("{}", self.renderer.render_ok(&format!("Output format: {}", name)));
+                println!(
+                    "{}",
+                    self.renderer.render_ok(&format!("Output format: {}", name))
+                );
             }
 
             MetaCommand::Understand { intent } => {

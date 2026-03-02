@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use fundb_causal::{
-    CausalEngine, CausalError, EnsembleDiscovery, GrangerDiscovery,
-    PcDiscovery, ScmModel, StructuralEquation, TraceOptions, VisFormat,
+    CausalEngine, CausalError, EnsembleDiscovery, GrangerDiscovery, PcDiscovery, ScmModel,
+    StructuralEquation, TraceOptions, VisFormat,
 };
 use fundb_core::{CausalEdge, CausalOrigin, CausalType, DirectionStatus, StabilityStatus};
 use uuid::Uuid;
@@ -196,8 +196,8 @@ fn test_granger_synthetic_causal_series() {
     let mut y = vec![0.0f64; n];
 
     // x is random-ish, y[t] = 0.8 * x[t-1] + noise
-    for i in 0..n {
-        x[i] = (i as f64 * 0.1).sin();
+    for (i, xi) in x.iter_mut().enumerate().take(n) {
+        *xi = (i as f64 * 0.1).sin();
     }
     for i in 1..n {
         y[i] = 0.8 * x[i - 1] + (i as f64 * 0.3).cos() * 0.1;
@@ -221,7 +221,9 @@ fn test_granger_no_causality_independent() {
 
     // x varies but y is constant — x carries zero predictive information for y
     let n = 100;
-    let x: Vec<f64> = (0..n).map(|i: i32| if i % 2 == 0 { 1.0 } else { -1.0 }).collect();
+    let x: Vec<f64> = (0..n)
+        .map(|i: i32| if i % 2 == 0 { 1.0 } else { -1.0 })
+        .collect();
     let y: Vec<f64> = vec![5.0; n as usize];
 
     let result = granger.test_pair(&x, &y, 3);
@@ -243,8 +245,8 @@ fn test_granger_rolling_window_stability() {
     let mut x = vec![0.0f64; n];
     let mut y = vec![0.0f64; n];
 
-    for i in 0..n {
-        x[i] = (i as f64 * 0.1).sin();
+    for (i, xi) in x.iter_mut().enumerate().take(n) {
+        *xi = (i as f64 * 0.1).sin();
     }
     for i in 1..n {
         y[i] = 0.8 * x[i - 1] + (i as f64 * 0.3).cos() * 0.05;
@@ -309,9 +311,7 @@ fn test_scm_intervention_diamond() {
     );
 
     // Intervention: do(X=0) → Y=0, Z=0, W=0
-    let interventional = model
-        .intervene("X", 0.0, "W", &obs)
-        .unwrap();
+    let interventional = model.intervene("X", 0.0, "W", &obs).unwrap();
     // After do(X=0), W should be different from natural
     assert!(
         (interventional - 5.0).abs() > 0.1 || (interventional - 0.0).abs() < 1e-6,
@@ -345,12 +345,9 @@ fn test_scm_counterfactual_with_noise() {
     let model = ScmModel::new(equations).unwrap();
 
     // Observe: X=3, Y should be 7
-    let obs: HashMap<String, f64> = [
-        ("X".to_string(), 3.0),
-        ("Y".to_string(), 7.0),
-    ]
-    .into_iter()
-    .collect();
+    let obs: HashMap<String, f64> = [("X".to_string(), 3.0), ("Y".to_string(), 7.0)]
+        .into_iter()
+        .collect();
 
     // Counterfactual: had X been 2, Y would be 2*2+1=5
     let cf_y = model.counterfactual("X", 2.0, "Y", &obs).unwrap();
@@ -371,9 +368,9 @@ fn test_pc_discovers_v_structure() {
     // X correlates with Z, Y correlates with Z, but X and Y are independent
     let vars = vec!["X".to_string(), "Y".to_string(), "Z".to_string()];
     let correlations = vec![
-        1.0, 0.0, 0.7,  // X row
-        0.0, 1.0, 0.6,  // Y row
-        0.7, 0.6, 1.0,  // Z row
+        1.0, 0.0, 0.7, // X row
+        0.0, 1.0, 0.6, // Y row
+        0.7, 0.6, 1.0, // Z row
     ];
 
     let edges = PcDiscovery::discover(&vars, &correlations, 0.05);
@@ -388,7 +385,7 @@ fn test_pc_discovers_v_structure() {
 // ---------------------------------------------------------------------------
 #[test]
 fn test_ensemble_agreement() {
-    use fundb_causal::{EnsembleEdge, PcEdge, EdgeOrientation};
+    use fundb_causal::{EdgeOrientation, PcEdge};
 
     // PC discovers A→B
     let pc_edges = vec![PcEdge {
@@ -404,11 +401,14 @@ fn test_ensemble_agreement() {
     let explicit_edges = vec![("A".to_string(), "B".to_string())];
 
     let ensemble = EnsembleDiscovery::merge(pc_edges, granger_pairs, explicit_edges, 2);
-    assert!(!ensemble.is_empty(), "ensemble should find edges with multi-source support");
+    assert!(
+        !ensemble.is_empty(),
+        "ensemble should find edges with multi-source support"
+    );
 
-    let ab_edge = ensemble.iter().find(|e| {
-        (e.from == "A" && e.to == "B") || (e.from == "B" && e.to == "A")
-    });
+    let ab_edge = ensemble
+        .iter()
+        .find(|e| (e.from == "A" && e.to == "B") || (e.from == "B" && e.to == "A"));
     assert!(ab_edge.is_some(), "ensemble should include A→B edge");
     let ab = ab_edge.unwrap();
     assert!(

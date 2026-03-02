@@ -1,8 +1,9 @@
-/// Complete AST for FunQL — a superset of SQL with vector, graph, temporal,
-/// confidence, causal, context-aware, and semantic extensions.
+// Complete AST for FunQL — a superset of SQL with vector, graph, temporal,
+// confidence, causal, context-aware, and semantic extensions.
 
 // ── Top-level statement ────────────────────────────────────────────────────
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Statement {
     Select(SelectStmt),
@@ -114,6 +115,8 @@ pub struct ContextOptions {
 pub struct TraverseClause {
     /// Edge relation name, e.g. `follows`
     pub relation: String,
+    /// Full chain for multi-hop: `users -> orders -> products`
+    pub chain: Vec<String>,
     pub depth_min: Option<Expr>,
     pub depth_max: Option<Expr>,
     /// `-> alias` if present
@@ -250,6 +253,8 @@ pub struct DiscoverCausalStmt {
     pub algorithm: Option<String>,
     pub min_confidence: Option<Expr>,
     pub store_as: Option<String>,
+    /// Variables to analyze (from VARIABLES clause)
+    pub variables: Vec<String>,
 }
 
 // ── REMEMBER ─────────────────────────────────────────────────────────────────
@@ -273,9 +278,18 @@ pub struct RecallByStmt {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RecallWeight {
-    SemanticSimilarity { query: Expr, weight: Option<Expr> },
-    Recency { decay: Option<String>, half_life: Option<String>, weight: Option<Expr> },
-    Importance { weight: Option<Expr> },
+    SemanticSimilarity {
+        query: Expr,
+        weight: Option<Expr>,
+    },
+    Recency {
+        decay: Option<String>,
+        half_life: Option<String>,
+        weight: Option<Expr>,
+    },
+    Importance {
+        weight: Option<Expr>,
+    },
 }
 
 // ── FORGET ────────────────────────────────────────────────────────────────────
@@ -387,7 +401,10 @@ pub enum Expr {
     /// `[elem, elem, …]` vector literal
     Array(Vec<Expr>),
     /// `table.column`  or  `alias.field`
-    Qualified { table: String, field: String },
+    Qualified {
+        table: String,
+        field: String,
+    },
     /// `CASE WHEN … THEN … ELSE … END`
     Case {
         operand: Option<Box<Expr>>,

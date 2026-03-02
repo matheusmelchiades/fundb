@@ -228,10 +228,10 @@ pub fn parse_extended_message(
         //   param_count(i16)         [param_len(i32) + param_data × n]
         //   result_format_count(i16) [result_format(i16) × n]  -- (ignored here)
         b'B' => {
-            let portal = read_cstring(&mut src)
-                .ok_or_else(|| "Bind: missing portal name".to_string())?;
-            let statement = read_cstring(&mut src)
-                .ok_or_else(|| "Bind: missing statement name".to_string())?;
+            let portal =
+                read_cstring(&mut src).ok_or_else(|| "Bind: missing portal name".to_string())?;
+            let statement =
+                read_cstring(&mut src).ok_or_else(|| "Bind: missing statement name".to_string())?;
 
             // Skip param format codes.
             let fmt_count =
@@ -252,7 +252,10 @@ pub fn parse_extended_message(
                     // SQL NULL
                     params.push(None);
                 } else if len < 0 {
-                    return Err(format!("Bind: invalid param length {} for param {}", len, i));
+                    return Err(format!(
+                        "Bind: invalid param length {} for param {}",
+                        len, i
+                    ));
                 } else {
                     let n = len as usize;
                     if src.len() < n {
@@ -292,22 +295,17 @@ pub fn parse_extended_message(
             let kind = match kind_byte {
                 b'S' => DescribeKind::Statement,
                 b'P' => DescribeKind::Portal,
-                other => {
-                    return Err(format!(
-                        "Describe: unknown kind byte 0x{:02x}",
-                        other
-                    ))
-                }
+                other => return Err(format!("Describe: unknown kind byte 0x{:02x}", other)),
             };
-            let name = read_cstring(&mut src)
-                .ok_or_else(|| "Describe: missing name".to_string())?;
+            let name =
+                read_cstring(&mut src).ok_or_else(|| "Describe: missing name".to_string())?;
             Ok(ExtendedFrontendMessage::Describe { kind, name })
         }
 
         // Execute ('E'):  portal\0  max_rows(i32)
         b'E' => {
-            let portal = read_cstring(&mut src)
-                .ok_or_else(|| "Execute: missing portal name".to_string())?;
+            let portal =
+                read_cstring(&mut src).ok_or_else(|| "Execute: missing portal name".to_string())?;
             let max_rows =
                 read_i32(&mut src).ok_or_else(|| "Execute: missing max_rows".to_string())?;
             Ok(ExtendedFrontendMessage::Execute { portal, max_rows })
@@ -319,10 +317,7 @@ pub fn parse_extended_message(
         // Flush ('H'): no body
         b'H' => Ok(ExtendedFrontendMessage::Flush),
 
-        other => Err(format!(
-            "unknown extended message type: 0x{:02x}",
-            other
-        )),
+        other => Err(format!("unknown extended message type: 0x{:02x}", other)),
     }
 }
 

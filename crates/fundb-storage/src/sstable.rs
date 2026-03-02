@@ -20,8 +20,7 @@ const MAGIC: &[u8; 8] = b"FUNDBSST";
 
 /// Write a value as a 4-byte LE length-prefixed MessagePack blob.
 fn write_framed<W: Write, T: serde::Serialize>(writer: &mut W, value: &T) -> Result<()> {
-    let bytes = rmp_serde::to_vec(value)
-        .map_err(|e| anyhow!("msgpack serialise error: {}", e))?;
+    let bytes = rmp_serde::to_vec(value).map_err(|e| anyhow!("msgpack serialise error: {}", e))?;
     let len = bytes.len() as u32;
     writer.write_all(&len.to_le_bytes())?;
     writer.write_all(&bytes)?;
@@ -133,7 +132,7 @@ impl SstableWriter {
 
 /// Reads an SSTable file, keeping all entries and the bloom filter in memory.
 pub struct SstableReader {
-    path: PathBuf,
+    _path: PathBuf,
     entries: Vec<(RecordKey, FunRecord)>,
     bloom: BloomFilter,
 }
@@ -174,7 +173,7 @@ impl SstableReader {
         };
 
         Ok(Self {
-            path: path.to_path_buf(),
+            _path: path.to_path_buf(),
             entries,
             bloom,
         })
@@ -204,9 +203,7 @@ impl SstableReader {
         to: &'a RecordKey,
     ) -> impl Iterator<Item = Result<(RecordKey, FunRecord)>> + 'a {
         // Binary search for the start of the range.
-        let start = self
-            .entries
-            .partition_point(|(k, _)| k < from);
+        let start = self.entries.partition_point(|(k, _)| k < from);
 
         self.entries[start..]
             .iter()
@@ -224,6 +221,11 @@ impl SstableReader {
     /// Number of entries in this SSTable.
     pub fn len(&self) -> usize {
         self.entries.len()
+    }
+
+    /// Returns `true` if this SSTable contains no entries.
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
     }
 }
 
@@ -453,10 +455,7 @@ mod tests {
         let from = &keys[10];
         let to = &keys[40];
 
-        let results: Vec<_> = reader
-            .range(from, to)
-            .collect::<Result<Vec<_>>>()
-            .unwrap();
+        let results: Vec<_> = reader.range(from, to).collect::<Result<Vec<_>>>().unwrap();
 
         assert_eq!(
             results.len(),

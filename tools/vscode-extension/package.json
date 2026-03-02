@@ -1,0 +1,261 @@
+{
+  "name": "fundb",
+  "displayName": "FunDB",
+  "description": "FunSQL language support, query execution, and connection management for FunDB",
+  "version": "0.1.0",
+  "publisher": "fundb",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/matheusmelchiades/fundb"
+  },
+  "license": "Apache-2.0",
+  "icon": "assets/icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "fundb",
+    "funsql",
+    "sql",
+    "ai",
+    "database",
+    "cognitive"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "funsql",
+        "aliases": [
+          "FunSQL",
+          "funsql"
+        ],
+        "extensions": [
+          ".funsql",
+          ".fsql"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./assets/funsql-icon-light.svg",
+          "dark": "./assets/funsql-icon-dark.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "funsql",
+        "scopeName": "source.funsql",
+        "path": "./syntaxes/funsql.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "fundb.connect",
+        "title": "FunDB: Connect"
+      },
+      {
+        "command": "fundb.disconnect",
+        "title": "FunDB: Disconnect"
+      },
+      {
+        "command": "fundb.executeQuery",
+        "title": "FunDB: Execute Query",
+        "icon": "$(play)"
+      },
+      {
+        "command": "fundb.executeSelection",
+        "title": "FunDB: Execute Selection"
+      },
+      {
+        "command": "fundb.exportJson",
+        "title": "FunDB: Export Results as JSON"
+      },
+      {
+        "command": "fundb.exportCsv",
+        "title": "FunDB: Export Results as CSV"
+      },
+      {
+        "command": "fundb.newConnection",
+        "title": "FunDB: New Connection",
+        "icon": "$(add)"
+      },
+      {
+        "command": "fundb.editConnection",
+        "title": "FunDB: Edit Connection",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "fundb.removeConnection",
+        "title": "FunDB: Remove Connection",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "fundb.refreshExplorer",
+        "title": "FunDB: Refresh Explorer",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "fundb.browseCollection",
+        "title": "FunDB: View Collection Data",
+        "icon": "$(table)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "fundb.executeQuery",
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "editorTextFocus && editorLangId == funsql"
+      },
+      {
+        "command": "fundb.executeSelection",
+        "key": "ctrl+shift+enter",
+        "mac": "cmd+shift+enter",
+        "when": "editorTextFocus && editorLangId == funsql"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "fundb-explorer",
+          "title": "FunDB",
+          "icon": "assets/fundb-sidebar.svg"
+        }
+      ]
+    },
+    "views": {
+      "fundb-explorer": [
+        {
+          "id": "fundb.explorer",
+          "name": "Explorer",
+          "contextualTitle": "FunDB Explorer"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "fundb.newConnection",
+          "when": "view == fundb.explorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "fundb.refreshExplorer",
+          "when": "view == fundb.explorer",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "fundb.connect",
+          "when": "view == fundb.explorer && viewItem == profile",
+          "group": "inline@1"
+        },
+        {
+          "command": "fundb.editConnection",
+          "when": "view == fundb.explorer && viewItem == profile",
+          "group": "context@1"
+        },
+        {
+          "command": "fundb.removeConnection",
+          "when": "view == fundb.explorer && viewItem == profile",
+          "group": "context@2"
+        },
+        {
+          "command": "fundb.disconnect",
+          "when": "view == fundb.explorer && viewItem == connectedProfile",
+          "group": "inline@1"
+        },
+        {
+          "command": "fundb.editConnection",
+          "when": "view == fundb.explorer && viewItem == connectedProfile",
+          "group": "context@1"
+        },
+        {
+          "command": "fundb.removeConnection",
+          "when": "view == fundb.explorer && viewItem == connectedProfile",
+          "group": "context@2"
+        },
+        {
+          "command": "fundb.browseCollection",
+          "when": "view == fundb.explorer && viewItem == collection",
+          "group": "inline@1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "FunDB",
+      "properties": {
+        "fundb.connections": {
+          "type": "array",
+          "default": [],
+          "description": "Connection profiles for FunDB instances",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Profile name"
+              },
+              "host": {
+                "type": "string",
+                "default": "localhost"
+              },
+              "port": {
+                "type": "number",
+                "default": 5433
+              },
+              "database": {
+                "type": "string",
+                "default": "fundb"
+              },
+              "user": {
+                "type": "string",
+                "default": "fundb"
+              },
+              "password": {
+                "type": "string",
+                "default": ""
+              },
+              "ssl": {
+                "type": "boolean",
+                "default": false
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        },
+        "fundb.defaultConnection": {
+          "type": "string",
+          "default": "",
+          "description": "Name of the default connection profile"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "webpack --mode production",
+    "watch": "webpack --mode development --watch",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package",
+    "vscode:prepublish": "npm run build"
+  },
+  "dependencies": {
+    "@fundb/client": "file:../../sdks/nodejs"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.0.0",
+    "webpack": "^5.90.0",
+    "webpack-cli": "^5.1.0"
+  }
+}

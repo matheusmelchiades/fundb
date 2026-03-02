@@ -1,8 +1,6 @@
 // fundb-semantic — STORY-6-1: Semantic Interface: Intent-to-FunQL (Tier 1, rule-based)
 
-use fundb_sql::{
-    AggExpr, AggFunc, Catalog, Expr, LogicalPlan, UnderstandOptions,
-};
+use fundb_sql::{AggExpr, AggFunc, Catalog, Expr, LogicalPlan, UnderstandOptions};
 
 // ── Public types ──────────────────────────────────────────────────────────────
 
@@ -37,8 +35,8 @@ impl SemanticInterface {
         }
 
         let lower = trimmed.to_lowercase();
-        let collection = extract_collection(&lower, catalog)
-            .unwrap_or_else(|| "records".to_string());
+        let collection =
+            extract_collection(&lower, catalog).unwrap_or_else(|| "records".to_string());
 
         // ── Rule matching — evaluated in priority order ────────────────────────
 
@@ -101,6 +99,7 @@ impl SemanticInterface {
 
         // Determine the winning rule by highest score.  Ties are broken by the
         // order in which rules appear below (most-specific first).
+        #[allow(dead_code)]
         struct Match {
             score: f32,
             base_score: f32, // the rule's intrinsic confidence ceiling
@@ -172,10 +171,7 @@ impl SemanticInterface {
                 0.35,
             ),
             (
-                format!(
-                    "UNDERSTAND \"{}\" MIN_CONFIDENCE 0.5 DEPTH 2",
-                    intent
-                ),
+                format!("UNDERSTAND \"{}\" MIN_CONFIDENCE 0.5 DEPTH 2", intent),
                 0.3,
             ),
         ];
@@ -338,10 +334,7 @@ fn score_multi(intent: &str, keywords: &[&str]) -> f32 {
     if keywords.is_empty() {
         return 0.0;
     }
-    let matches = keywords
-        .iter()
-        .filter(|&&kw| intent.contains(kw))
-        .count();
+    let matches = keywords.iter().filter(|&&kw| intent.contains(kw)).count();
     if matches == 0 {
         return 0.0;
     }
@@ -482,7 +475,10 @@ mod tests {
         let cat = open_catalog();
         let result = si.parse_intent("", &cat);
         assert!(
-            matches!(result, IntentResult::Failed(_) | IntentResult::Candidates(_)),
+            matches!(
+                result,
+                IntentResult::Failed(_) | IntentResult::Candidates(_)
+            ),
             "expected Failed or Candidates for empty input, got {:?}",
             result
         );
@@ -575,7 +571,11 @@ mod tests {
         match result {
             IntentResult::Candidates(cands) => {
                 let all_contain = cands.iter().all(|(s, _)| s.contains("metrics"));
-                assert!(all_contain, "candidates should reference 'metrics': {:?}", cands);
+                assert!(
+                    all_contain,
+                    "candidates should reference 'metrics': {:?}",
+                    cands
+                );
             }
             IntentResult::Confident(_, _) => { /* a single keyword match is also fine */ }
             other => panic!("unexpected result {:?}", other),

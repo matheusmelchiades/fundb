@@ -3,9 +3,9 @@
 // STORY-3-1: B+Tree scalar index backed by std::collections::BTreeMap.
 // Supports equality and range queries over integer, string, and timestamp keys.
 
+use anyhow::Result;
 use std::collections::BTreeMap;
 use std::ops::Bound;
-use anyhow::Result;
 
 /// A generic in-memory B+Tree index backed by `std::collections::BTreeMap`.
 ///
@@ -149,14 +149,18 @@ mod tests {
 
         assert_eq!(idx.len(), 100);
 
-        let entries: Vec<(&i64, &i64)> =
-            idx.range(Bound::Unbounded, Bound::Unbounded).collect();
+        let entries: Vec<(&i64, &i64)> = idx.range(Bound::Unbounded, Bound::Unbounded).collect();
 
         assert_eq!(entries.len(), 100);
 
         // Verify ascending order.
         for w in entries.windows(2) {
-            assert!(w[0].0 < w[1].0, "expected ascending order: {:?} < {:?}", w[0].0, w[1].0);
+            assert!(
+                w[0].0 < w[1].0,
+                "expected ascending order: {:?} < {:?}",
+                w[0].0,
+                w[1].0
+            );
         }
     }
 
@@ -173,17 +177,14 @@ mod tests {
 
         let lo = 25i32;
         let hi = 75i32;
-        let entries: Vec<(&i32, &i32)> =
-            idx.range(Bound::Included(&lo), Bound::Included(&hi)).collect();
+        let entries: Vec<(&i32, &i32)> = idx
+            .range(Bound::Included(&lo), Bound::Included(&hi))
+            .collect();
 
         assert_eq!(entries.len(), 51, "expected 51 entries (25..=75 inclusive)");
 
         for (k, _v) in &entries {
-            assert!(
-                **k >= 25 && **k <= 75,
-                "key {} is outside [25, 75]",
-                k
-            );
+            assert!(**k >= 25 && **k <= 75, "key {} is outside [25, 75]", k);
         }
     }
 
@@ -204,8 +205,9 @@ mod tests {
         let lo = "fun".to_string();
         let hi = "fuo".to_string();
 
-        let entries: Vec<(&String, &u32)> =
-            idx.range(Bound::Included(&lo), Bound::Excluded(&hi)).collect();
+        let entries: Vec<(&String, &u32)> = idx
+            .range(Bound::Included(&lo), Bound::Excluded(&hi))
+            .collect();
 
         let keys: Vec<&str> = entries.iter().map(|(k, _)| k.as_str()).collect();
 
@@ -217,11 +219,7 @@ mod tests {
         );
 
         for (k, _) in &entries {
-            assert!(
-                k.starts_with("fun"),
-                "unexpected key in prefix scan: {}",
-                k
-            );
+            assert!(k.starts_with("fun"), "unexpected key in prefix scan: {}", k);
         }
 
         // Exact membership check.
@@ -235,8 +233,7 @@ mod tests {
     // -----------------------------------------------------------------------
     #[test]
     fn test_concurrent_read() {
-        let shared: Arc<RwLock<BTree<i32, String>>> =
-            Arc::new(RwLock::new(BTree::new()));
+        let shared: Arc<RwLock<BTree<i32, String>>> = Arc::new(RwLock::new(BTree::new()));
 
         let num_readers = 8usize;
         let reads_per_thread = 1_000usize;

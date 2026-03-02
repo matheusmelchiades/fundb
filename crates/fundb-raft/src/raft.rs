@@ -329,7 +329,7 @@ impl RaftState {
 
     /// Update commit_index based on majority match_index (leader only).
     /// Returns true if commit_index advanced.
-    fn advance_commit_index(&mut self, my_id: NodeId, peer_ids: &[NodeId]) -> bool {
+    fn advance_commit_index(&mut self, _my_id: NodeId, peer_ids: &[NodeId]) -> bool {
         let mut all_match: Vec<u64> = peer_ids
             .iter()
             .map(|id| *self.match_index.get(id).unwrap_or(&0))
@@ -372,9 +372,7 @@ impl RaftState {
         }
 
         // 2. If we see a higher or equal term from a leader, revert to follower
-        if req.term > self.current_term
-            || matches!(self.role, RaftRole::Candidate)
-        {
+        if req.term > self.current_term || matches!(self.role, RaftRole::Candidate) {
             self.become_follower(req.term, Some(req.leader_id));
         } else {
             // Same term, update heartbeat and leader_id
@@ -427,10 +425,7 @@ impl RaftState {
     }
 
     /// Process a RequestVote request and return response + whether to persist state.
-    fn handle_request_vote(
-        &mut self,
-        req: &RequestVoteRequest,
-    ) -> (RequestVoteResponse, bool) {
+    fn handle_request_vote(&mut self, req: &RequestVoteRequest) -> (RequestVoteResponse, bool) {
         // 1. Reply false if term < currentTerm
         if req.term < self.current_term {
             return (
@@ -449,8 +444,7 @@ impl RaftState {
 
         // 3. Grant vote if we haven't voted or already voted for this candidate,
         //    and candidate's log is at least as up-to-date as ours
-        let can_vote = self.voted_for.is_none()
-            || self.voted_for == Some(req.candidate_id);
+        let can_vote = self.voted_for.is_none() || self.voted_for == Some(req.candidate_id);
         let log_ok = self.is_log_up_to_date(req.last_log_index, req.last_log_term);
 
         if can_vote && log_ok {
@@ -503,11 +497,7 @@ pub struct RaftNode {
 
 impl RaftNode {
     /// Create a new RaftNode. Loads persisted hard state from storage if available.
-    pub fn new(
-        id: NodeId,
-        peers: Vec<(NodeId, PeerAddr)>,
-        storage: Arc<dyn RaftStorage>,
-    ) -> Self {
+    pub fn new(id: NodeId, peers: Vec<(NodeId, PeerAddr)>, storage: Arc<dyn RaftStorage>) -> Self {
         let mut raft_state = RaftState::new();
 
         // Restore persisted state
@@ -566,7 +556,7 @@ impl RaftNode {
         };
 
         self.storage
-            .append_entries(&[entry.clone()])
+            .append_entries(std::slice::from_ref(&entry))
             .map_err(RaftError::Storage)?;
 
         debug!(id = self.id, index = entry.index, "proposed entry");
@@ -582,7 +572,9 @@ impl RaftNode {
                 commit: state.commit_index,
             };
             drop(state);
-            self.storage.save_hard_state(hs).map_err(RaftError::Storage)?;
+            self.storage
+                .save_hard_state(hs)
+                .map_err(RaftError::Storage)?;
             return Ok(());
         }
 
@@ -743,10 +735,7 @@ impl RaftNode {
     // -----------------------------------------------------------------------
 
     /// Handle an incoming AppendEntries RPC (called by transport layer).
-    pub async fn handle_append_entries(
-        &self,
-        req: AppendEntriesRequest,
-    ) -> AppendEntriesResponse {
+    pub async fn handle_append_entries(&self, req: AppendEntriesRequest) -> AppendEntriesResponse {
         let mut state = self.state.write().await;
         let (resp, persist) = state.handle_append_entries(&req, self.id);
 
@@ -879,7 +868,9 @@ impl RaftNode {
                         commit: state.commit_index,
                     };
                     drop(state);
-                    self.storage.save_hard_state(hs).map_err(RaftError::Storage)?;
+                    self.storage
+                        .save_hard_state(hs)
+                        .map_err(RaftError::Storage)?;
                 }
             }
         }
@@ -965,9 +956,24 @@ mod tests {
     fn test_memory_storage_append_get() {
         let storage = MemoryRaftStorage::new();
         let entries = vec![
-            LogEntry { index: 1, term: 1, data: b"a".to_vec(), entry_type: EntryType::Normal },
-            LogEntry { index: 2, term: 1, data: b"b".to_vec(), entry_type: EntryType::Normal },
-            LogEntry { index: 3, term: 2, data: b"c".to_vec(), entry_type: EntryType::Normal },
+            LogEntry {
+                index: 1,
+                term: 1,
+                data: b"a".to_vec(),
+                entry_type: EntryType::Normal,
+            },
+            LogEntry {
+                index: 2,
+                term: 1,
+                data: b"b".to_vec(),
+                entry_type: EntryType::Normal,
+            },
+            LogEntry {
+                index: 3,
+                term: 2,
+                data: b"c".to_vec(),
+                entry_type: EntryType::Normal,
+            },
         ];
 
         storage.append_entries(&entries).unwrap();
@@ -1107,7 +1113,10 @@ mod tests {
 
         storage.save_snapshot(snap.clone()).unwrap();
 
-        let loaded = storage.load_snapshot().unwrap().expect("snapshot should exist");
+        let loaded = storage
+            .load_snapshot()
+            .unwrap()
+            .expect("snapshot should exist");
         assert_eq!(loaded.index, 100);
         assert_eq!(loaded.term, 5);
         assert_eq!(loaded.data, b"snapshot data");
@@ -1126,14 +1135,12 @@ mod tests {
     // 9. test_append_entries_request_fields
     #[test]
     fn test_append_entries_request_fields() {
-        let entries = vec![
-            LogEntry {
-                index: 5,
-                term: 3,
-                data: b"entry".to_vec(),
-                entry_type: EntryType::Normal,
-            }
-        ];
+        let entries = vec![LogEntry {
+            index: 5,
+            term: 3,
+            data: b"entry".to_vec(),
+            entry_type: EntryType::Normal,
+        }];
 
         let req = AppendEntriesRequest {
             term: 3,
@@ -1199,10 +1206,7 @@ mod tests {
             last_log_term: 0,
         };
         let stale_resp = node.handle_request_vote(stale_req).await;
-        assert!(
-            !stale_resp.vote_granted,
-            "stale term vote should be denied"
-        );
+        assert!(!stale_resp.vote_granted, "stale term vote should be denied");
 
         // Vote request for term 2 from candidate 2 again — granted (new term)
         let req3 = RequestVoteRequest {

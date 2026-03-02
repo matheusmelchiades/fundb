@@ -1,0 +1,46 @@
+-- ============================================================================
+-- FunDB Temporal Queries
+-- Time-travel, bi-temporal analysis, and point-in-time queries
+-- (requires seed data from 02-seed-data.funsql)
+-- ============================================================================
+
+-- Query data as it was at a specific point in time
+SELECT name, price
+FROM products
+AS OF SYSTEM TIME '2025-07-01T00:00:00Z';
+
+-- Compare prices: current vs historical snapshot
+-- (run both queries to compare results side-by-side)
+SELECT name, price AS current_price
+FROM products
+ORDER BY name;
+
+SELECT name, price AS old_price
+FROM products
+AS OF SYSTEM TIME '2025-06-01T00:00:00Z'
+ORDER BY name;
+
+-- Valid-time queries (business-level time)
+SELECT name, email, role
+FROM users
+AS OF VALID TIME '2025-03-01T00:00:00Z';
+
+-- Find all changes to a specific record over time
+SELECT name, role, _valid_from, _valid_to
+FROM users
+WHERE email = 'alice@example.com'
+ORDER BY _valid_from ASC;
+
+-- Orders placed in a date range
+SELECT o.*, u.name AS user_name
+FROM orders o
+JOIN users u ON o.user_id = u.id
+WHERE o.ordered_at >= '2025-06-01T00:00:00Z'
+  AND o.ordered_at < '2025-07-01T00:00:00Z'
+ORDER BY o.ordered_at;
+
+-- Snapshot of the entire catalog at a past date
+SELECT *
+FROM products
+AS OF SYSTEM TIME '2025-06-15T00:00:00Z'
+ORDER BY name;

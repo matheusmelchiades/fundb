@@ -242,18 +242,21 @@ impl MetricsRegistry {
     }
 
     pub fn register_counter(&mut self, c: Counter) -> &Counter {
-        self.counters.insert(c.name.clone(), c);
-        self.counters.values().last().unwrap()
+        let name = c.name.clone();
+        self.counters.insert(name.clone(), c);
+        self.counters.get(&name).unwrap()
     }
 
     pub fn register_gauge(&mut self, g: Gauge) -> &Gauge {
-        self.gauges.insert(g.name.clone(), g);
-        self.gauges.values().last().unwrap()
+        let name = g.name.clone();
+        self.gauges.insert(name.clone(), g);
+        self.gauges.get(&name).unwrap()
     }
 
     pub fn register_histogram(&mut self, h: Histogram) -> &Histogram {
-        self.histograms.insert(h.name.clone(), h);
-        self.histograms.values().last().unwrap()
+        let name = h.name.clone();
+        self.histograms.insert(name.clone(), h);
+        self.histograms.get(&name).unwrap()
     }
 
     pub fn counter(&self, name: &str) -> Option<&Counter> {

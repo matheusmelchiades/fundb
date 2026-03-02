@@ -1,0 +1,319 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "scopeName": "source.funsql",
+  "name": "FunSQL",
+  "fileTypes": ["funsql", "fsql"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#vector-literals" },
+    { "include": "#params" },
+    { "include": "#operators-fundb" },
+    { "include": "#operators-standard" },
+    { "include": "#keywords-fundb-compound" },
+    { "include": "#keywords-fundb" },
+    { "include": "#keywords-sql" },
+    { "include": "#constants" },
+    { "include": "#functions" },
+    { "include": "#identifiers" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-dash.funsql",
+          "match": "--.*$"
+        },
+        {
+          "name": "comment.block.funsql",
+          "begin": "/\\*",
+          "end": "\\*/",
+          "captures": {
+            "0": { "name": "punctuation.definition.comment.funsql" }
+          }
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.funsql",
+          "begin": "'",
+          "end": "'",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.funsql" } },
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.funsql" } },
+          "patterns": [
+            {
+              "name": "constant.character.escape.funsql",
+              "match": "''"
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.funsql",
+          "match": "\\b\\d+\\.\\d+\\b|\\.\\d+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.funsql",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "vector-literals": {
+      "name": "meta.vector-literal.funsql",
+      "begin": "\\[",
+      "end": "\\]",
+      "beginCaptures": { "0": { "name": "punctuation.definition.vector.begin.funsql" } },
+      "endCaptures": { "0": { "name": "punctuation.definition.vector.end.funsql" } },
+      "patterns": [
+        { "include": "#numbers" },
+        { "include": "#params" },
+        { "match": ",", "name": "punctuation.separator.funsql" }
+      ]
+    },
+    "params": {
+      "patterns": [
+        {
+          "name": "variable.parameter.funsql",
+          "match": ":[a-zA-Z_][a-zA-Z0-9_]*"
+        }
+      ]
+    },
+    "operators-fundb": {
+      "patterns": [
+        {
+          "name": "keyword.operator.vector-distance.funsql",
+          "match": "<->"
+        },
+        {
+          "name": "keyword.operator.arrow.funsql",
+          "match": "->"
+        },
+        {
+          "name": "keyword.operator.range.funsql",
+          "match": "\\.\\."
+        }
+      ]
+    },
+    "operators-standard": {
+      "patterns": [
+        {
+          "name": "keyword.operator.comparison.funsql",
+          "match": "<=|>=|<>|!=|="
+        },
+        {
+          "name": "keyword.operator.comparison.funsql",
+          "match": "<|>"
+        },
+        {
+          "name": "keyword.operator.arithmetic.funsql",
+          "match": "\\+|\\-|\\*|/|%"
+        }
+      ]
+    },
+    "keywords-fundb-compound": {
+      "patterns": [
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(AS\\s+OF\\s+SYSTEM\\s+TIME)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(AS\\s+OF\\s+VALID\\s+TIME)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(TRACE\\s+CAUSALITY)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(WITHIN\\s+CONTEXT)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(RECALL\\s+BY)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(AGENT\\s+MEMORY)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(CREATE\\s+COLLECTION)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(CREATE\\s+CAUSAL\\s+MODEL)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(CAUSAL_STRUCTURE|CAUSAL\\s+STRUCTURE)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(STORE\\s+AS)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(FOR\\s+AGENT)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(ORDER\\s+BY)\\b"
+        },
+        {
+          "name": "keyword.other.sql.funsql",
+          "match": "(?i)\\b(GROUP\\s+BY)\\b"
+        },
+        {
+          "name": "keyword.other.sql.funsql",
+          "match": "(?i)\\b(INSERT\\s+INTO)\\b"
+        },
+        {
+          "name": "keyword.other.sql.funsql",
+          "match": "(?i)\\b(NOT\\s+NULL)\\b"
+        },
+        {
+          "name": "keyword.other.sql.funsql",
+          "match": "(?i)\\b(IS\\s+NOT\\s+NULL)\\b"
+        },
+        {
+          "name": "keyword.other.sql.funsql",
+          "match": "(?i)\\b(IS\\s+NULL)\\b"
+        },
+        {
+          "name": "keyword.other.sql.funsql",
+          "match": "(?i)\\b(NOT\\s+IN)\\b"
+        },
+        {
+          "name": "keyword.other.sql.funsql",
+          "match": "(?i)\\b(NOT\\s+LIKE)\\b"
+        },
+        {
+          "name": "keyword.other.sql.funsql",
+          "match": "(?i)\\b(LEFT\\s+JOIN|RIGHT\\s+JOIN|INNER\\s+JOIN|CROSS\\s+JOIN|FULL\\s+JOIN|FULL\\s+OUTER\\s+JOIN)\\b"
+        }
+      ]
+    },
+    "keywords-fundb": {
+      "patterns": [
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(UNDERSTAND|REMEMBER|RECALL|FORGET|TRAVERSE|RETURN|DEPTH|START|PATH|COUNTERFACTUAL|ESTIMATE_EFFECT|PREDICT|HAD|GIVEN|INTERVENE|DISCOVER|INFER|EQUILIBRIUM|STRUCTURE|EQUATIONS|VARIABLES|CONSOLIDATE)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(IMPORTANCE|SEMANTIC_SIMILARITY|RECENCY|DECAY|COLLECTION)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(MAX_TOKENS|COHERENCE|DIVERSITY|INCLUDE_CONTRADICTIONS|PRIORITY)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(MAX_DEPTH|MIN_STRENGTH|MIN_STABILITY|MIN_CONFIDENCE|ALGORITHM)\\b"
+        },
+        {
+          "name": "keyword.control.fundb.funsql",
+          "match": "(?i)\\b(CONFIDENCE|SOURCE_COUNT|CONTRADICTION_COUNT|TIME_TRAVEL)\\b"
+        },
+        {
+          "name": "support.function.fundb.funsql",
+          "match": "(?i)\\b(_vector|_confidence|_source_count|_contradiction_count|_sources|_vectors|_edges|_timeseries|_caused_by|_effects)\\b"
+        }
+      ]
+    },
+    "keywords-sql": {
+      "patterns": [
+        {
+          "name": "keyword.other.DML.funsql",
+          "match": "(?i)\\b(SELECT|FROM|WHERE|INSERT|INTO|VALUES|UPDATE|SET|DELETE)\\b"
+        },
+        {
+          "name": "keyword.other.DDL.funsql",
+          "match": "(?i)\\b(CREATE|DROP|TABLE|INDEX|ON)\\b"
+        },
+        {
+          "name": "keyword.other.clause.funsql",
+          "match": "(?i)\\b(AS|BY|ORDER|GROUP|HAVING|LIMIT|OFFSET|UNION|ALL|DISTINCT|WITH|FOR|VALUE|EXPLAIN)\\b"
+        },
+        {
+          "name": "keyword.other.join.funsql",
+          "match": "(?i)\\b(JOIN|INNER|LEFT|RIGHT|OUTER|CROSS|FULL)\\b"
+        },
+        {
+          "name": "keyword.operator.logical.funsql",
+          "match": "(?i)\\b(AND|OR|NOT|IN|IS|BETWEEN|LIKE|EXISTS)\\b"
+        },
+        {
+          "name": "keyword.control.conditional.funsql",
+          "match": "(?i)\\b(CASE|WHEN|THEN|ELSE|END)\\b"
+        },
+        {
+          "name": "keyword.other.funsql",
+          "match": "(?i)\\b(ASC|DESC|INTERVAL|NOW|AGENT|MEMORY|STORE|TRACE|CAUSALITY|CONTENT)\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.null.funsql",
+          "match": "(?i)\\bNULL\\b"
+        },
+        {
+          "name": "constant.language.boolean.funsql",
+          "match": "(?i)\\b(TRUE|FALSE)\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()",
+          "captures": {
+            "1": { "name": "entity.name.function.funsql" }
+          }
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "variable.other.funsql",
+          "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.separator.comma.funsql",
+          "match": ","
+        },
+        {
+          "name": "punctuation.terminator.semicolon.funsql",
+          "match": ";"
+        },
+        {
+          "name": "punctuation.accessor.dot.funsql",
+          "match": "\\."
+        },
+        {
+          "name": "punctuation.section.parens.funsql",
+          "match": "[\\(\\)]"
+        },
+        {
+          "name": "punctuation.section.braces.funsql",
+          "match": "[\\{\\}]"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,61 @@
+-- ============================================================================
+-- FunDB Causal Inference & Agent Memory
+-- AI-native features: causal analysis, counterfactuals, agent memory
+-- (requires seed data from 02-seed-data.funsql)
+-- ============================================================================
+
+-- ── Causal Inference ───────────────────────────────────────────────────────
+
+-- Trace causal chain: what caused a user to buy a product?
+TRACE CAUSALITY FROM users WHERE name = 'Alice Silva'
+TO orders WHERE status = 'delivered';
+
+-- Estimate the effect of a price change on sales
+ESTIMATE EFFECT OF price ON quantity
+FROM products
+JOIN orders ON products.id = orders.product_id
+WHERE category = 'hardware';
+
+-- Counterfactual: what would have happened with a different price?
+COUNTERFACTUAL
+  SELECT SUM(total)
+  FROM orders
+  JOIN products ON orders.product_id = products.id
+  WHERE products.name = 'Holo Monitor'
+INTERVENE SET price = 999.99;
+
+-- Discover causal relationships in the data
+DISCOVER CAUSAL STRUCTURE
+FROM orders
+JOIN products ON orders.product_id = products.id
+VARIABLES price, quantity, rating, total;
+
+-- ── Agent Memory ───────────────────────────────────────────────────────────
+
+-- Store a fact for an AI agent
+REMEMBER 'User Alice prefers hardware products under $300'
+WITHIN CONTEXT 'shopping_assistant';
+
+-- Recall facts with relevance weighting
+RECALL BY 'product recommendations for Alice'
+WITHIN CONTEXT 'shopping_assistant'
+WHERE _confidence > 0.5;
+
+-- Semantic understanding of natural language intent
+UNDERSTAND 'Show me the best reviewed products from last month';
+
+-- Store agent observation with confidence
+REMEMBER 'Neural Keyboard has 95% satisfaction rate'
+WITHIN CONTEXT 'product_analytics'
+WITH _confidence = 0.95;
+
+-- Recall all memories in a context
+RECALL BY 'customer preferences'
+WITHIN CONTEXT 'shopping_assistant'
+ORDER BY _confidence DESC
+LIMIT 10;
+
+-- Forget outdated memories
+FORGET
+WITHIN CONTEXT 'shopping_assistant'
+WHERE _confidence < 0.3;

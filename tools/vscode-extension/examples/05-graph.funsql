@@ -1,0 +1,35 @@
+-- ============================================================================
+-- FunDB Graph Traversal Queries
+-- Relationship navigation, path finding, and graph patterns
+-- (requires seed data from 02-seed-data.funsql)
+-- ============================================================================
+
+-- Find all products purchased by a user (graph traversal)
+TRAVERSE users -> orders -> products
+WHERE users.name = 'Alice Silva';
+
+-- Find users who bought the same product (common neighbors)
+TRAVERSE products -> orders -> users
+WHERE products.name = 'Neural Keyboard';
+
+-- Multi-hop: find users connected through shared purchases
+TRAVERSE users -> orders -> products -> orders -> users
+WHERE users.name = 'Alice Silva'
+  AND depth <= 3;
+
+-- Find all reviews for products a user purchased
+TRAVERSE users -> orders -> products -> reviews
+WHERE users.email = 'alice@example.com';
+
+-- Recommendation: products bought by users who bought similar items
+TRAVERSE products -> orders -> users -> orders -> products
+WHERE products.name = 'Neural Keyboard'
+  AND products.category = 'hardware'
+LIMIT 5;
+
+-- Graph traversal with aggregation
+SELECT target.name, COUNT(*) AS purchase_count
+FROM TRAVERSE users -> orders -> products AS target
+GROUP BY target.name
+ORDER BY purchase_count DESC
+LIMIT 10;

@@ -1,0 +1,164 @@
+-- ============================================================================
+-- FunDB Full Demo
+-- End-to-end showcase combining all FunSQL features
+-- ============================================================================
+
+/*
+  This file demonstrates the complete FunSQL language.
+  Open it in VSCode with the FunDB extension to see syntax highlighting.
+  Execute individual queries with Cmd+Shift+Enter (select + run).
+*/
+
+-- ── 1. Basic Queries ───────────────────────────────────────────────────────
+
+-- Connectivity check
+SELECT 1;
+SELECT VERSION();
+
+-- Standard SQL
+SELECT name, email, role
+FROM users
+WHERE role = 'admin'
+ORDER BY name ASC
+LIMIT 10;
+
+-- Aggregations
+SELECT
+  category,
+  COUNT(*) AS total_products,
+  AVG(price) AS avg_price,
+  MIN(price) AS min_price,
+  MAX(price) AS max_price
+FROM products
+GROUP BY category
+HAVING COUNT(*) > 1
+ORDER BY avg_price DESC;
+
+-- ── 2. Joins ───────────────────────────────────────────────────────────────
+
+-- Inner join: orders with user and product names
+SELECT
+  u.name AS customer,
+  p.name AS product,
+  o.quantity,
+  o.total,
+  o.status
+FROM orders o
+INNER JOIN users u ON o.user_id = u.id
+INNER JOIN products p ON o.product_id = p.id
+ORDER BY o.ordered_at DESC;
+
+-- Left join: all users with their order count
+SELECT
+  u.name,
+  u.email,
+  COUNT(o.id) AS order_count
+FROM users u
+LEFT JOIN orders o ON u.id = o.user_id
+GROUP BY u.name, u.email
+ORDER BY order_count DESC;
+
+-- ── 3. Vector Similarity Search ────────────────────────────────────────────
+
+-- Find products similar to "AI keyboard" concept
+SELECT name, price, description
+FROM products
+WHERE _vector <-> [0.15, 0.82, 0.30, 0.70, 0.88, 0.25, 0.42, 0.80] < 0.5
+ORDER BY _vector <-> [0.15, 0.82, 0.30, 0.70, 0.88, 0.25, 0.42, 0.80]
+LIMIT 3;
+
+-- Semantic article search with confidence
+SELECT title, author, _confidence
+FROM articles
+WHERE _vector <-> [0.50, 0.70, 0.20, 0.85, 0.40, 0.55, 0.50, 0.30] < 0.6
+  AND _confidence > 0.7
+ORDER BY _confidence DESC;
+
+-- ── 4. Temporal Queries ────────────────────────────────────────────────────
+
+-- Time-travel: see products as they were last month
+SELECT name, price
+FROM products
+AS OF SYSTEM TIME '2025-06-01T00:00:00Z';
+
+-- Bi-temporal: valid-time query
+SELECT name, role
+FROM users
+AS OF VALID TIME '2025-04-01T00:00:00Z';
+
+-- ── 5. Graph Traversal ─────────────────────────────────────────────────────
+
+-- What products did Alice buy?
+TRAVERSE users -> orders -> products
+WHERE users.name = 'Alice Silva';
+
+-- Recommendation path
+TRAVERSE products -> orders -> users -> orders -> products
+WHERE products.name = 'Neural Keyboard'
+LIMIT 5;
+
+-- ── 6. Causal Analysis ─────────────────────────────────────────────────────
+
+-- What caused this sale?
+TRACE CAUSALITY FROM users WHERE name = 'Bob Santos'
+TO orders WHERE total > 1000;
+
+-- What-if analysis
+COUNTERFACTUAL
+  SELECT COUNT(*) AS order_count
+  FROM orders
+  JOIN products ON orders.product_id = products.id
+  WHERE products.name = 'Holo Monitor'
+INTERVENE SET price = 799.99;
+
+-- ── 7. Agent Memory ────────────────────────────────────────────────────────
+
+-- Store knowledge
+REMEMBER 'Top seller in hardware category is Neural Keyboard with 5-star average'
+WITHIN CONTEXT 'sales_dashboard';
+
+-- Recall with semantic matching
+RECALL BY 'what are our best selling products?'
+WITHIN CONTEXT 'sales_dashboard'
+WHERE _confidence > 0.6;
+
+-- Natural language understanding
+UNDERSTAND 'Show me customers who might churn based on recent activity';
+
+-- ── 8. Subqueries & Complex Patterns ───────────────────────────────────────
+
+-- Users who bought above-average priced products
+SELECT DISTINCT u.name, u.email
+FROM users u
+JOIN orders o ON u.id = o.user_id
+JOIN products p ON o.product_id = p.id
+WHERE p.price > (
+  SELECT AVG(price) FROM products
+);
+
+-- Products with no orders
+SELECT p.name, p.category, p.price
+FROM products p
+WHERE NOT EXISTS (
+  SELECT 1 FROM orders o WHERE o.product_id = p.id
+);
+
+-- Running total of orders per user
+SELECT
+  u.name,
+  o.ordered_at,
+  o.total,
+  SUM(o.total) AS running_total
+FROM orders o
+JOIN users u ON o.user_id = u.id
+ORDER BY u.name, o.ordered_at;
+
+-- ── 9. Parameters (for prepared queries) ───────────────────────────────────
+
+-- Parameterized query with :named parameters
+SELECT name, price, description
+FROM products
+WHERE category = :category
+  AND price BETWEEN :min_price AND :max_price
+ORDER BY price ASC
+LIMIT :limit;

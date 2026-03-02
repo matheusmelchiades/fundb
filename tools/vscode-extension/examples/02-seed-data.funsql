@@ -1,0 +1,137 @@
+-- ============================================================================
+-- FunDB Seed Data
+-- Creates collections and populates with sample data
+-- (requires full query pipeline — will return empty results with StubHandler)
+-- ============================================================================
+
+-- ── Collections ────────────────────────────────────────────────────────────
+
+CREATE COLLECTION users;
+CREATE COLLECTION products;
+CREATE COLLECTION orders;
+CREATE COLLECTION reviews;
+CREATE COLLECTION articles;
+
+-- ── Users ──────────────────────────────────────────────────────────────────
+
+INSERT INTO users (name, email, role, created_at)
+VALUES ('Alice Silva', 'alice@example.com', 'admin', '2025-01-15T10:00:00Z');
+
+INSERT INTO users (name, email, role, created_at)
+VALUES ('Bob Santos', 'bob@example.com', 'user', '2025-02-20T14:30:00Z');
+
+INSERT INTO users (name, email, role, created_at)
+VALUES ('Carol Souza', 'carol@example.com', 'user', '2025-03-10T09:15:00Z');
+
+INSERT INTO users (name, email, role, created_at)
+VALUES ('Dave Oliveira', 'dave@example.com', 'moderator', '2025-04-05T16:45:00Z');
+
+INSERT INTO users (name, email, role, created_at)
+VALUES ('Eva Lima', 'eva@example.com', 'user', '2025-05-12T11:20:00Z');
+
+-- ── Products ───────────────────────────────────────────────────────────────
+
+INSERT INTO products (name, category, price, description, _vector)
+VALUES (
+  'Neural Keyboard',
+  'hardware',
+  299.99,
+  'Mechanical keyboard with AI-powered adaptive key mapping',
+  [0.12, 0.85, 0.33, 0.67, 0.91, 0.22, 0.45, 0.78]
+);
+
+INSERT INTO products (name, category, price, description, _vector)
+VALUES (
+  'Quantum Mouse',
+  'hardware',
+  149.99,
+  'Precision mouse with predictive tracking',
+  [0.88, 0.15, 0.42, 0.71, 0.29, 0.63, 0.51, 0.37]
+);
+
+INSERT INTO products (name, category, price, description, _vector)
+VALUES (
+  'Holo Monitor',
+  'display',
+  1299.99,
+  '32-inch holographic display with eye tracking',
+  [0.55, 0.92, 0.18, 0.44, 0.76, 0.31, 0.89, 0.60]
+);
+
+INSERT INTO products (name, category, price, description, _vector)
+VALUES (
+  'Cloud Dock',
+  'accessories',
+  89.99,
+  'Universal docking station with auto-config',
+  [0.33, 0.47, 0.81, 0.19, 0.55, 0.72, 0.28, 0.94]
+);
+
+INSERT INTO products (name, category, price, description, _vector)
+VALUES (
+  'Smart Cable Kit',
+  'accessories',
+  39.99,
+  'Self-organizing cable management system',
+  [0.21, 0.68, 0.53, 0.87, 0.14, 0.46, 0.79, 0.35]
+);
+
+-- ── Orders ──────────────────────────────────────────────────────────────────
+
+INSERT INTO orders (user_id, product_id, quantity, total, status, ordered_at)
+VALUES (1, 1, 1, 299.99, 'delivered', '2025-06-01T08:00:00Z');
+
+INSERT INTO orders (user_id, product_id, quantity, total, status, ordered_at)
+VALUES (2, 3, 1, 1299.99, 'shipped', '2025-06-15T12:00:00Z');
+
+INSERT INTO orders (user_id, product_id, quantity, total, status, ordered_at)
+VALUES (1, 2, 2, 299.98, 'delivered', '2025-06-20T15:30:00Z');
+
+INSERT INTO orders (user_id, product_id, quantity, total, status, ordered_at)
+VALUES (3, 5, 3, 119.97, 'pending', '2025-07-01T09:00:00Z');
+
+INSERT INTO orders (user_id, product_id, quantity, total, status, ordered_at)
+VALUES (4, 4, 1, 89.99, 'delivered', '2025-07-10T17:00:00Z');
+
+-- ── Reviews ─────────────────────────────────────────────────────────────────
+
+INSERT INTO reviews (user_id, product_id, rating, text, _confidence)
+VALUES (1, 1, 5, 'Best keyboard I have ever used. The AI mapping is incredible.', 0.95);
+
+INSERT INTO reviews (user_id, product_id, rating, text, _confidence)
+VALUES (2, 3, 4, 'Great display but takes a while to calibrate.', 0.82);
+
+INSERT INTO reviews (user_id, product_id, rating, text, _confidence)
+VALUES (3, 5, 3, 'Works fine, nothing special about the smart features.', 0.71);
+
+INSERT INTO reviews (user_id, product_id, rating, text, _confidence)
+VALUES (4, 4, 5, 'Plug and play, auto-detected everything instantly.', 0.93);
+
+-- ── Articles (for semantic search) ──────────────────────────────────────────
+
+INSERT INTO articles (title, body, author, published_at, _vector)
+VALUES (
+  'Introduction to FunDB',
+  'FunDB is an AI-native database designed for the next generation of applications...',
+  'Alice Silva',
+  '2025-08-01T10:00:00Z',
+  [0.45, 0.78, 0.12, 0.93, 0.34, 0.67, 0.55, 0.21]
+);
+
+INSERT INTO articles (title, body, author, published_at, _vector)
+VALUES (
+  'Vector Search Deep Dive',
+  'Understanding how vector similarity search works under the hood...',
+  'Bob Santos',
+  '2025-08-15T14:00:00Z',
+  [0.82, 0.19, 0.64, 0.37, 0.91, 0.28, 0.73, 0.46]
+);
+
+INSERT INTO articles (title, body, author, published_at, _vector)
+VALUES (
+  'Graph Databases vs FunDB',
+  'Comparing traditional graph databases with FunDB integrated graph traversal...',
+  'Carol Souza',
+  '2025-09-01T09:00:00Z',
+  [0.56, 0.41, 0.88, 0.23, 0.69, 0.52, 0.17, 0.84]
+);

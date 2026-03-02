@@ -1,0 +1,37 @@
+-- ============================================================================
+-- FunDB Vector Search Queries
+-- Semantic similarity, nearest neighbors, and vector operations
+-- (requires seed data from 02-seed-data.funsql)
+-- ============================================================================
+
+-- Find products similar to a query vector (semantic search)
+SELECT name, price, description
+FROM products
+WHERE _vector <-> [0.10, 0.80, 0.30, 0.65, 0.90, 0.20, 0.40, 0.75] < 0.5
+ORDER BY _vector <-> [0.10, 0.80, 0.30, 0.65, 0.90, 0.20, 0.40, 0.75]
+LIMIT 3;
+
+-- Find articles semantically related to "AI database"
+SELECT title, author, published_at
+FROM articles
+WHERE _vector <-> [0.50, 0.75, 0.15, 0.90, 0.40, 0.60, 0.50, 0.25] < 0.8
+ORDER BY _vector <-> [0.50, 0.75, 0.15, 0.90, 0.40, 0.60, 0.50, 0.25];
+
+-- Combine vector search with traditional filters
+SELECT name, category, price
+FROM products
+WHERE category = 'hardware'
+  AND _vector <-> [0.12, 0.85, 0.33, 0.67, 0.91, 0.22, 0.45, 0.78] < 0.3
+ORDER BY price ASC;
+
+-- Top-K nearest neighbors
+SELECT name, description
+FROM products
+ORDER BY _vector <-> [0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50]
+LIMIT 5;
+
+-- Vector search with confidence threshold
+SELECT title, body, _confidence
+FROM articles
+WHERE _vector <-> [0.82, 0.19, 0.64, 0.37, 0.91, 0.28, 0.73, 0.46] < 0.4
+  AND _confidence > 0.7;
